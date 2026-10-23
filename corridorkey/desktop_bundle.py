@@ -68,6 +68,7 @@ for package in {PACKAGES!r}:
     datas += copy_metadata(package)
 a = Analysis([{str(root / 'bundle_entry.py')!r}], pathex={[str(root), str(root / 'third_party/MoGe')]!r},
              binaries=[], datas=datas, hiddenimports=hidden, hookspath=[], runtime_hooks=[],
+             module_collection_mode={{'corridorkey': 'py', 'moge': 'py'}},
              excludes=['tests', 'tkinter', 'PyQt5', 'PyQt6', 'PySide2'])
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='CorridorKey',

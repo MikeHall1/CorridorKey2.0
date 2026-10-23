@@ -82,17 +82,33 @@ def jobs_from_data(manifest, path):
 
 
 def run_batch(jobs, *, weights=None, report_path=None, session_factory=InferenceSession,
-              cancellation=None, progress=None):
+              cancellation=None, progress=None, manifest_path=None):
+    from .output_paths import prepare_report_destination, validate_batch_output_paths
+    jobs = tuple(jobs)
+    report_context = {'manifest_path': manifest_path, 'weights': weights}
+    validate_batch_output_paths(jobs, **report_context)
+    admit_report = None
+    if report_path is not None:
+        admit_report = prepare_report_destination(report_path, jobs, **report_context)
     report = {"schema_version": 1, "kind": "inference_batch", "status": "running", "jobs": [],
               "note": "Single process, persistent model; not a cold-process benchmark. No source media uploaded."}
+    report_admitted = False
 
     def persist():
-        if report_path is not None:
+        if report_path is not None and report_admitted:
+            assert admit_report is not None
+            admit_report()
             write_json_atomic(report_path, report)
 
-    persist()
     try:
         with session_factory(weights=weights) as session:
+            report_context.update(package_root=session.package_root, asset_root=session.asset_root,
+                                  weights=session.weights)
+            validate_batch_output_paths(jobs, **report_context)
+            if report_path is not None:
+                admit_report = prepare_report_destination(report_path, jobs, **report_context)
+                report_admitted = True
+                persist()
             for job in jobs:
                 # Stop on the first failure. Completed earlier jobs remain in the report.
                 try:
@@ -126,7 +142,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         jobs, weights = load_jobs(args.manifest)
-        run_batch(jobs, weights=weights, report_path=args.report)
+        run_batch(jobs, weights=weights, report_path=args.report, manifest_path=args.manifest)
     except (KeyboardInterrupt, CancelledError):
         return 130
     except Exception as exc:

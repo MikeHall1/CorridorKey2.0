@@ -89,8 +89,12 @@ def load_manifest(path):
     repeats = manifest.get("repetitions", 3)
     if type(repeats) is not int or repeats < 3:
         raise ValueError("at least three measured repetitions are required")
-    if manifest['kind'] == 'cpu_correctness' and set(manifest) - {'schema_version', 'kind', 'repetitions', 'description'}:
-        raise ValueError('unknown CPU benchmark manifest field')
+    if manifest['kind'] == 'cpu_correctness':
+        if set(manifest) - {'schema_version', 'kind', 'repetitions', 'description', 'timeout_seconds'}:
+            raise ValueError('unknown CPU benchmark manifest field')
+        timeout = manifest.get('timeout_seconds', 600)
+        if type(timeout) not in (int, float) or not 0 < timeout <= 3600:
+            raise ValueError('CPU timeout_seconds must be finite, positive and at most 3600 seconds')
     if manifest['kind'] == 'decode_reuse':
         from .benchmark_decode_reuse import validate_manifest
 
@@ -116,11 +120,14 @@ def run(manifest_path, *, progress: Callable[[str, int, int], None] | None = Non
         return run_inference_benchmark(manifest_path, manifest, progress=progress)
     if manifest['kind'] == 'decode_reuse':
         return run_decode_reuse_benchmark(manifest_path, manifest, progress=progress)
+    timeout = manifest.get('timeout_seconds', 600)
     report = {"schema_version": 1, "kind": "cpu_correctness",
               "created_utc": datetime.now(timezone.utc).isoformat(),
               "manifest": manifest, "manifest_sha256": sha256(manifest_path),
               "repository": repository_identity(), "environment": environment(),
               "cache": {"model": "not_loaded", "filesystem": "uncontrolled"},
+              "cpu_timeout": {"requested_seconds": manifest.get('timeout_seconds'),
+                              "effective_seconds": timeout, "scope": "each CPU test subprocess"},
               "weights": {str(p.relative_to(ROOT)): sha256(p)
                           for folder in (ROOT / "weights", ROOT / "vfms")
                           for p in sorted(folder.rglob("*"))
@@ -139,7 +146,7 @@ def run(manifest_path, *, progress: Callable[[str, int, int], None] | None = Non
             start = time.perf_counter()
             result = subprocess.run(
                 module_command('unittest', 'discover', '-s', 'tests', '-v'),
-                cwd=ROOT, capture_output=True, text=True, timeout=120)
+                cwd=ROOT, capture_output=True, text=True, timeout=timeout)
             report["runs"].append({"index": index, "elapsed_seconds": time.perf_counter() - start,
                                    "returncode": result.returncode,
                                    "stdout": result.stdout, "stderr": result.stderr})
@@ -196,8 +203,9 @@ def correction_identity(path, source):
 
 def run_inference_benchmark(manifest_path, manifest, *, progress: Callable[[str, int, int], None] | None = None):
     from dataclasses import replace
-    from .batch import load_jobs
+    from .batch import jobs_from_data
     from .diagnostics import write_json_atomic
+    from .local_json import read_object
     from .session import InferenceSession
     import tempfile
 
@@ -217,8 +225,9 @@ def run_inference_benchmark(manifest_path, manifest, *, progress: Callable[[str,
                            "No automated alternating baseline/candidate performance run or power/process-tree resource sampler is implemented."],
               "summary": {"success": False}}
     try:
-        report["batch_manifest_sha256"] = sha256(batch_path)
-        jobs, weights = load_jobs(batch_path)
+        batch_data, batch_raw = read_object(batch_path, max_bytes=4 * 1024 * 1024)
+        report["batch_manifest_sha256"] = hashlib.sha256(batch_raw).hexdigest()
+        jobs, weights = jobs_from_data(batch_data, batch_path)
         quality_templates = None
         if "quality_manifests" in manifest:
             from .benchmark_quality import prepare_quality_templates
@@ -289,13 +298,13 @@ def run_inference_benchmark(manifest_path, manifest, *, progress: Callable[[str,
                     progress('cold_repetition', repeat, manifest.get('repetitions', 3))
                 # The child batch uses the same session/core; this is a fresh
                 # interpreter per repetition, not merely reloading a model.
-                batch = json.loads(batch_path.read_text())
-                batch["weights"] = str(paths.weights)
-                for index, (entry, job) in enumerate(zip(batch["jobs"], jobs)):
-                    entry.update({"input": job.input_path, "output_dir": str(run_root / str(repeat) / str(index)),
-                                  "hint_first_frame": job.initial_hint_path, "hint_video": job.hint_video_path})
-                    settings = json.loads(job.config_json)
-                    entry["settings"] = settings
+                # Only execute the validated preflight snapshots. Rereading the
+                # original batch could alter settings or append unisolated jobs.
+                batch = {"schema_version": 1, "kind": "inference_batch", "weights": str(paths.weights),
+                         "jobs": [{"input": job.input_path, "output_dir": str(run_root / str(repeat) / str(index)),
+                                   "hint_first_frame": job.initial_hint_path, "hint_video": job.hint_video_path,
+                                   "settings": json.loads(job.config_json), "writer": json.loads(job.writer_json),
+                                   "profile_stages": job.profile_stages} for index, job in enumerate(jobs)]}
                 child_manifest = run_root / f"batch-{repeat}.json"
                 child_report = run_root / f"report-{repeat}.json"
                 write_json_atomic(child_manifest, batch)
@@ -322,9 +331,92 @@ def run_inference_benchmark(manifest_path, manifest, *, progress: Callable[[str,
             report["inference"]["quality"] = evaluate_run_quality(quality_templates, report["runs"])
             report["summary"]["success"] = report["inference"]["quality"]["success"]
     except BaseException as exc:
+        report["summary"]["success"] = False
         report["error"] = {"type": type(exc).__name__, "message": str(exc)}
         report["inference"]["status"] = "cancelled" if isinstance(exc, KeyboardInterrupt) else "unavailable_or_failed"
     return report
+
+
+def _report_admission(manifest_path, output):
+    """Snapshot report dependencies without decoding media or loading a model.
+
+    Quality loaders remain the schema authority. Their metadata is pre-admitted
+    at 4MiB and its returned digest must match the bounded captured bytes.
+    Revalidation is a cooperating-process fence, not a filesystem reservation.
+    """
+    from .batch import jobs_from_data
+    from .local_json import read_object
+    from .output_paths import validate_report_destination
+
+    manifest_lexical = Path(manifest_path).absolute()
+    manifest_path = manifest_lexical.resolve()
+    manifest, raw = read_object(manifest_path, max_bytes=4 * 1024**2, regular_file=True)
+    if manifest != load_manifest(manifest_path):
+        raise ValueError('Benchmark manifest changed during report admission')
+    metadata = {manifest_path: hashlib.sha256(raw).hexdigest()}
+    bindings = {manifest_lexical: manifest_path}
+    protected = []
+    jobs, weights = [], None
+    if manifest['kind'] == 'inference':
+        batch_lexical = manifest_path.parent / manifest['batch_manifest']
+        batch = batch_lexical.resolve()
+        bindings[batch_lexical] = batch
+        data, raw = read_object(batch, max_bytes=4 * 1024**2, regular_file=True)
+        metadata[batch] = hashlib.sha256(raw).hexdigest()
+        jobs, weights = jobs_from_data(data, batch)
+        quality_paths = manifest.get('quality_manifests')
+        if quality_paths is not None:
+            from .evaluation_colour_media import ROLES as COLOUR_ROLES
+            from .evaluation_colour_media import load_colour_manifest
+            from .evaluation_media import ROLES as ALPHA_ROLES
+            from .evaluation_media import load_sequence_manifest
+            from .evaluation_temporal_media import ALPHA_ROLES as TEMPORAL_ALPHA
+            from .evaluation_temporal_media import (
+                TRANSITION_ROLES,
+                load_temporal_manifest,
+            )
+
+            if len(quality_paths) != len(jobs):
+                raise ValueError('quality_manifests must have one path or null per batch job')
+            loaders = {'alpha_sequence_evaluation': (load_sequence_manifest, ALPHA_ROLES),
+                       'colour_sequence_evaluation': (load_colour_manifest, COLOUR_ROLES),
+                       'temporal_sequence_evaluation': (load_temporal_manifest, TEMPORAL_ALPHA | TRANSITION_ROLES)}
+            for value in quality_paths:
+                if value is None:
+                    continue
+                lexical = manifest_path.parent / value
+                path = lexical.resolve()
+                bindings[lexical] = path
+                header, raw = read_object(path, max_bytes=4 * 1024**2, regular_file=True)
+                if header.get('kind') not in loaders:
+                    raise ValueError('Unsupported benchmark quality manifest kind')
+                loader, roles = loaders[header['kind']]
+                quality, digest = loader(path)
+                if digest != hashlib.sha256(raw).hexdigest():
+                    raise ValueError('Quality manifest changed during report admission')
+                metadata[path] = digest
+                if 'source' in quality:
+                    protected.append(quality['source'])
+                protected.extend(frame[role] for frame in quality['frames'] for role in roles if role in frame)
+
+    def admit(report=None):
+        if any(lexical.resolve() != resolved for lexical, resolved in bindings.items()):
+            raise ValueError('Benchmark dependency path changed before report publication')
+        for path, digest in metadata.items():
+            _, current = read_object(path, max_bytes=4 * 1024**2, regular_file=True)
+            if hashlib.sha256(current).hexdigest() != digest:
+                raise ValueError('Benchmark dependency metadata changed before report publication')
+        directories = ()
+        if report is not None and report.get('artifact_dir') is not None:
+            artifact = report['artifact_dir']
+            if not isinstance(artifact, str) or not artifact.strip():
+                raise ValueError('Benchmark artifact directory is malformed')
+            directories = (artifact,)
+        return validate_report_destination(output, jobs, manifest_path=manifest_path, weights=weights,
+                                           package_root=ROOT, protected_paths=(*metadata, *protected),
+                                           protected_directories=directories)
+
+    return admit
 
 
 def main():
@@ -332,11 +424,17 @@ def main():
     parser.add_argument("--manifest", default=str(ROOT / "benchmarks/suites/cpu.json"))
     parser.add_argument("--output", default=str(ROOT / "benchmark-results/cpu.json"))
     args = parser.parse_args()
-    report = run(args.manifest, progress=lambda stage, completed, total: print(f'{stage}: {completed}/{total}', flush=True))
     output = Path(args.output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    from .diagnostics import write_json_atomic
-    write_json_atomic(output, report)
+    try:
+        admit = _report_admission(args.manifest, output)
+        admit()
+        report = run(args.manifest, progress=lambda stage, completed, total: print(f'{stage}: {completed}/{total}', flush=True))
+        admit(report)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        from .diagnostics import write_json_atomic
+        write_json_atomic(output, report)
+    except (OSError, ValueError, TypeError) as exc:
+        parser.error(str(exc))
     print(f"{report['kind']}: {'passed' if report['summary']['success'] else 'failed'}; report: {output}")
     if report.get('status') == 'cancelled' or report.get("inference", {}).get("status") == "cancelled":
         return 130

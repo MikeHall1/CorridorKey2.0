@@ -86,6 +86,9 @@ class BackgroundDialog(QDialog):
         self.prepare.setEnabled(not waiting)
         self.status.setText(message[:4096])
 
+    def reject(self):
+        self.close()
+
     def closeEvent(self, event):
         if self.waiting:
             self.cancel_requested.emit()

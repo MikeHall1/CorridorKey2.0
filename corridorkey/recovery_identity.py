@@ -40,7 +40,9 @@ def tree_identity(path, *, check=None):
 
 def implementation_identity(root, *, check=None):
     root = Path(root).resolve()
-    files = sorted({file for name in ('corridorkey', 'third_party') for file in (root / name).rglob('*.py')
+    # Source-only bundles may import collected moge or the vendored tree that
+    # runtime prepends. Both must participate; development has no root/moge.
+    files = sorted({file for name in ('corridorkey', 'third_party', 'moge') for file in (root / name).rglob('*.py')
                     if file.is_file()})
     if not files or not (root / 'corridorkey/runtime.py').is_file():
         raise ValueError('implementation root must contain the shared runtime source')

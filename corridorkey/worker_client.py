@@ -382,15 +382,32 @@ def run_worker_batch(manifest, report_path, *, capacity=4, workspace=None, max_c
     from .batch import load_jobs
     from .diagnostics import write_json_atomic
     from .lifecycle import cleanup_all
+    from .output_paths import prepare_report_destination, validate_batch_output_paths
 
     report = {'schema_version': 1, 'kind': 'worker_batch', 'status': 'running', 'jobs': [],
               'note': 'Local child process; normal jobs share a model, recovery requests own fresh batch sessions. '
                       'No automatic retry; lost work may have partial output.'}
     client = None
     started = time.perf_counter()
+    jobs, weights = (), None
+    report_admitted = False
+    report['report_write'] = {'status': 'not_written', 'reason': 'Protected job inventory and report destination not admitted.'}
+
+    admit_report = None
 
     def persist():
-        write_json_atomic(report_path, report)
+        nonlocal report_admitted
+        if not report_admitted:
+            return
+        try:
+            assert admit_report is not None
+            admit_report()
+            report['report_write'] = {'status': 'written'}
+            write_json_atomic(report_path, report)
+        except BaseException as exc:
+            report_admitted = False
+            report['report_write'] = {'status': 'not_written', 'reason': f'{type(exc).__name__}: {exc}'}
+            raise
 
     def record(event):
         status = 'complete' if event['kind'] == 'result' else event['kind']
@@ -398,9 +415,15 @@ def run_worker_batch(manifest, report_path, *, capacity=4, workspace=None, max_c
         if status != 'complete':
             report['status'] = 'cancelled' if status == 'cancelled' else 'failed'
 
-    persist()
     try:
-        jobs, weights = load_jobs(manifest)
+        loaded_jobs, weights = load_jobs(manifest)
+        jobs = tuple(loaded_jobs)
+        validate_batch_output_paths(jobs, weights=weights, manifest_path=manifest)
+        admit_report = prepare_report_destination(
+            report_path, jobs, manifest_path=manifest, weights=weights,
+            protected_directories=() if workspace is None else (workspace,))
+        report_admitted = True
+        persist()
         client = client_factory(capacity=capacity, weights=weights)
         report['worker'] = {'generation': client.generation, 'pid': client.process.pid, 'capacity': client.capacity}
         persist()

@@ -53,12 +53,14 @@ class ProgressivePreviewPanel(QDialog):
         self.retained_workspace = None
         self.worker_id: str | None = None
         self.cancel_sent = False
+        self.cancel_error: str | None = None
         self.failure: str | None = None
         self.io_thread: threading.Thread | None = None
         self.io_token: CancellationToken | None = None
         self.io_events: queue.Queue = queue.Queue(maxsize=1)
         self.context_key = None
         self.desired_frame = 0
+        self.desired_playing = False
         self.validated_frame: int | None = None
         self.last_focus = time.monotonic()
         self.closing = False
@@ -185,7 +187,7 @@ class ProgressivePreviewPanel(QDialog):
             self.context_key = key
             self.failure = None
             self.validated_frame = None
-            self.desired_frame = self.workspace.frame.value()
+            self.desired_frame, self.desired_playing = self.workspace.playback.progressive_focus(job)
             self._io('capture', lambda check: prepare_preview(job, scratch_parent=parent, declared_fps=config.frame_dir_fps, draft_scale=scale, model_references=references, check=check))
             self.status.setText('Capturing bounded source/settings identity; no model loaded yet.')
         except (ValueError, OSError, TypeError, RuntimeError) as exc:
@@ -208,10 +210,10 @@ class ProgressivePreviewPanel(QDialog):
             self.scheduler.set_enabled(False)
         if self.io_token is not None:
             self.io_token.cancel(message)
-        self._cancel_worker()
         self.recipe = None
         self.validated_frame = None
         self.status.setText(message)
+        self._cancel_worker()
 
     def suspend_for_export(self):
         self.enabled.setChecked(False)
@@ -219,11 +221,17 @@ class ProgressivePreviewPanel(QDialog):
 
     def _cancel_worker(self):
         if self.worker_id is not None and not self.cancel_sent:
+            if self.cancel_error is not None:
+                self.status.setText(self.cancel_error)
+                return
             try:
                 self.workspace.bridge.send('cancel', {'target': self.worker_id, 'reason': 'Progressive preview superseded or disabled'})
                 self.cancel_sent = True
-            except (RuntimeError, ValueError, queue.Full):
-                pass  # Ownership remains until terminal/lost or verified bridge shutdown.
+                self.cancel_error = None
+                self.status.setText('Cancellation requested; waiting for owned preview cleanup.')
+            except (RuntimeError, ValueError, queue.Full) as exc:
+                self.cancel_error = f'Preview cancellation delivery failed: {exc or type(exc).__name__}. Ownership retained; choose Retry retained cleanup to retry cancellation.'
+                self.status.setText(self.cancel_error)
 
     def observe(self, event):
         if self.worker_id is None or event.get('request_id') != self.worker_id:
@@ -234,6 +242,7 @@ class ProgressivePreviewPanel(QDialog):
         if kind in {'result', 'failed', 'cancelled', 'rejected', 'lost'}:
             self.worker_id = None
             self.cancel_sent = False
+            self.cancel_error = None
             prepared, request, scheduler = self.prepared, self.request, self.scheduler
             if prepared is None or request is None or scheduler is None:
                 self.failure = 'Preview ownership metadata missing; no further preview scheduled.'
@@ -322,11 +331,18 @@ class ProgressivePreviewPanel(QDialog):
             else:
                 if kind == 'capture':
                     if error is None and self._capture_matches(token):
-                        self.recipe = result
-                        self.scheduler = ProgressivePreview(result.context, result.stages, enabled=True)
-                        self.scheduler.focus(self.desired_frame)
-                        self.validated_frame = self.desired_frame
-                        self.details.setPlainText(json.dumps({'summary': result.summary(), 'requested_job': json.loads(result.context.requested_settings_json), 'provenance': json.loads(result.context.provenance_json), 'preview_stages': [{'name': stage.name, 'effective_settings': json.loads(stage.effective_settings_json), 'estimated_work_bytes': stage.estimated_work_bytes} for stage in result.stages]}, indent=2))
+                        try:
+                            frame, playing = self.workspace.playback.progressive_focus(self.workspace.job(preview_only=True))
+                            if not result.context.source_start <= frame < result.context.source_end:
+                                raise ValueError(f'Progressive source frame {frame} is outside captured range [{result.context.source_start}, {result.context.source_end}); select a frame within that range and capture again.')
+                            scheduler = ProgressivePreview(result.context, result.stages, enabled=True)
+                            scheduler.focus(frame, playing=playing)
+                            self.details.setPlainText(json.dumps({'summary': result.summary(), 'requested_job': json.loads(result.context.requested_settings_json), 'provenance': json.loads(result.context.provenance_json), 'preview_stages': [{'name': stage.name, 'effective_settings': json.loads(stage.effective_settings_json), 'estimated_work_bytes': stage.estimated_work_bytes} for stage in result.stages]}, indent=2))
+                            self.recipe, self.scheduler = result, scheduler
+                            self.desired_frame, self.desired_playing = frame, playing
+                            self.validated_frame = frame
+                        except (ValueError, OSError, TypeError, RuntimeError) as exc:
+                            self.failure = str(exc)
                     elif error is not None:
                         self.failure = str(error)
                 elif kind == 'prepare':
@@ -339,6 +355,8 @@ class ProgressivePreviewPanel(QDialog):
                                     raise RuntimeError('Prepared preview has no owned scheduler request.')
                                 scheduler.check(request)
                                 self.worker_id = self.workspace.bridge.send('preview', {'job': job_to_wire(result.job)})
+                            except CancelledError:
+                                pass  # Superseded preparation still owns its workspace until cleanup.
                             except (ValueError, RuntimeError, queue.Full) as exc:
                                 self.failure = str(exc)
                         if self.worker_id is None:
@@ -369,10 +387,13 @@ class ProgressivePreviewPanel(QDialog):
                 elif kind == 'validate':
                     if error is None:
                         self.validated_frame = result
-                    else:
+                    elif not isinstance(error, CancelledError):
                         self.failure = str(error)
         if self.worker_id is not None and self.workspace.bridge.done.is_set():
             self.observe({'request_id': self.worker_id, 'kind': 'lost', 'payload': {'error': self.workspace.bridge.failure or 'Worker stopped'}})
+        if self.cancel_error:
+            self.status.setText(self.cancel_error)
+            return
         if self.failure:
             self.enabled.setChecked(False)
             self.status.setText(self.failure)
@@ -384,12 +405,11 @@ class ProgressivePreviewPanel(QDialog):
                 self.enabled.setChecked(False)
                 self.invalidate('Source/settings/model selection changed; capture a new snapshot.')
                 return
-            frame = self.workspace.frame.value()
-            if frame != self.desired_frame:
-                self.desired_frame = frame
+            frame, playing = self.workspace.playback.progressive_focus(self.workspace.job(preview_only=True))
+            if frame != self.desired_frame or playing != self.desired_playing:
+                self.desired_frame, self.desired_playing = frame, playing
                 self.validated_frame = None
                 self.last_focus = time.monotonic()
-                playing = self.workspace.playback.engine is not None and self.workspace.playback.engine.playing
                 self.scheduler.focus(frame, playing=playing)
                 self._hide_pixels(f'Pending source frame {frame}; previous pixels are stale.')
                 self._cancel_worker()
@@ -426,6 +446,10 @@ class ProgressivePreviewPanel(QDialog):
             self.failure = str(error)
 
     def retry_cleanup(self):
+        if self.worker_id is not None and not self.cancel_sent:
+            self.cancel_error = None
+            self._cancel_worker()
+            return
         workspace = self.retained_workspace or (self.prepared.workspace if self.prepared is not None else None)
         if workspace is not None and self.worker_id is None and not self.io_busy:
             self.failure = None
@@ -440,6 +464,9 @@ class ProgressivePreviewPanel(QDialog):
             self.hide()
             return True
         return False
+
+    def reject(self):
+        self.close()
 
     def closeEvent(self, event: QCloseEvent):
         self.enabled.setChecked(False)

@@ -20,7 +20,7 @@ PUBLIC_METADATA_KEYS = ("public_model_name", "pre_recurrence", "shape_quantum", 
 
 
 def convert_checkpoint(src: Path, dst: Path) -> None:
-    ckpt = torch.load(src, map_location="cpu", weights_only=False, mmap=True)
+    ckpt = torch.load(src, map_location="cpu", weights_only=True, mmap=True)
     if ckpt.get("format") != "corridorkey_v2_runtime_checkpoint":
         raise RuntimeError(f"{src} is not a CorridorKey v2 runtime checkpoint")
     metadata = {k: ckpt["metadata"][k] for k in PUBLIC_METADATA_KEYS if k in ckpt.get("metadata", {})}
@@ -36,7 +36,7 @@ def convert_checkpoint(src: Path, dst: Path) -> None:
 
 
 def convert_stats(src: Path, dst: Path) -> None:
-    stats = torch.load(src, map_location="cpu", weights_only=False)
+    stats = torch.load(src, map_location="cpu", weights_only=True)
     tensors = {k: stats[k].contiguous() for k in STATS_KEYS if k in stats}
     save_file(tensors, str(dst))
     print(f"wrote {dst} ({len(tensors)} tensors)")

@@ -208,7 +208,7 @@ def probe_video_meta(video_path: str, *, num_frames: int, shape_quantum: int,
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Could not open video: {video_path}")
-    native_fps = cap.get(cv2.CAP_PROP_FPS) or 24.0
+    native_fps = cap.get(cv2.CAP_PROP_FPS)
     w_native = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h_native = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     n_total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -388,6 +388,8 @@ def _spatial_model_views(linear, review_linear, meta, *, need_model):
 def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: bool):
     if frame_bgr.dtype != np.uint8:
         raise ValueError("legacy OpenCV video path requires uint8 decoded RGB; use a validated high-bit/linear sequence")
+    if frame_bgr.ndim != 3 or frame_bgr.shape[2] != 3 or tuple(frame_bgr.shape[:2]) != tuple(meta["native_hw"]):
+        raise ValueError("Decoded video geometry differs from the probed native RGB geometry")
     h_out, w_out = meta["shape_hw"]
     h_model, w_model = meta["model_native_hw"]
     frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
@@ -458,9 +460,10 @@ def _seek_video(capture: cv2.VideoCapture, index: int, source: str) -> None:
 
 
 class SequentialVideoWindowReader:
-    def __init__(self, video_path: str, meta: dict):
+    def __init__(self, video_path: str, meta: dict, *, include_review: bool = True):
         self.video_path = video_path
         self.meta = meta
+        self.include_review = include_review
         self.cap = cv2.VideoCapture(video_path)
         if not self.cap.isOpened():
             self.cap.release()
@@ -492,7 +495,7 @@ class SequentialVideoWindowReader:
         self._read_until(t1, retain_from=t0)
         model = torch.stack([self.cache[t][0] for t in range(t0, t1)])
         foundation = torch.stack([self.cache[t][1] for t in range(t0, t1)])
-        review = torch.stack([self.cache[t][2] for t in range(t0, t1)])
+        review = torch.stack([self.cache[t][2] for t in range(t0, t1)]) if self.include_review else None
         for old_t in [k for k in self.cache if k < t0]:
             del self.cache[old_t]
         return model, foundation, review
@@ -546,9 +549,10 @@ class DraftSourceReader:
 
 
 class SequentialFrameDirWindowReader:
-    def __init__(self, frame_dir: str, meta: dict):
+    def __init__(self, frame_dir: str, meta: dict, *, include_review: bool = True):
         self.frame_dir = frame_dir
         self.meta = meta
+        self.include_review = include_review
         self.paths = meta["frame_paths"]
         self.next_t = 0
         self.cache: dict[int, tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = {}
@@ -569,7 +573,7 @@ class SequentialFrameDirWindowReader:
         self._read_until(t1, retain_from=t0)
         model = torch.stack([self.cache[t][0] for t in range(t0, t1)])
         foundation = torch.stack([self.cache[t][1] for t in range(t0, t1)])
-        review = torch.stack([self.cache[t][2] for t in range(t0, t1)])
+        review = torch.stack([self.cache[t][2] for t in range(t0, t1)]) if self.include_review else None
         for old_t in [k for k in self.cache if k < t0]:
             del self.cache[old_t]
         return model, foundation, review

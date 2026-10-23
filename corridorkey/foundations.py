@@ -11,15 +11,15 @@ Outputs are normalized per-channel via precomputed mean/std (loaded via
 Stats are precomputed and shipped alongside the model weights.
 """
 
+import hashlib
 import importlib.util
 import os
-from pathlib import Path
 import sys
 import types
+from pathlib import Path
 
 import torch
 import torch.nn as nn
-
 
 # ---------------------------------------------------------------------------
 # MoGe loader
@@ -30,10 +30,9 @@ def build_moge_vitb(device='cuda', checkpoint='Ruicheng/moge-2-vitb-normal'):
     from moge.model.v2 import MoGeModel
     m = MoGeModel.from_pretrained(checkpoint)
     m = m.to(device).eval()
-    try:
-        m.enable_pytorch_native_sdpa()
-    except Exception:
-        pass
+    # Bundled MoGe supports this setup; a failure can leave partially changed
+    # attention blocks and must not be mistaken for a ready foundation model.
+    m.enable_pytorch_native_sdpa()
     for p in m.parameters():
         p.requires_grad_(False)
     return m
@@ -52,11 +51,13 @@ def _load_local_cradio_so400m(repo_path: Path):
     ~/.cache/huggingface/modules state while still using the official C-RADIO
     implementation and safetensors weights from the snapshot.
     """
+    repo_path = repo_path.resolve()
     hf_model_path = repo_path / "hf_model.py"
     if not hf_model_path.is_file():
         raise FileNotFoundError(f"C-RADIO snapshot is missing {hf_model_path}")
 
-    package_name = "_corridorkey_cradio_snapshot"
+    identity = hashlib.sha256(os.fsencode(repo_path)).hexdigest()
+    package_name = f"_corridorkey_cradio_snapshot_{identity}"
     package = sys.modules.get(package_name)
     if package is None:
         package = types.ModuleType(package_name)
@@ -72,7 +73,14 @@ def _load_local_cradio_so400m(repo_path: Path):
             raise RuntimeError(f"Could not import bundled C-RADIO module at {hf_model_path}")
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
-        spec.loader.exec_module(module)
+        try:
+            spec.loader.exec_module(module)
+        except BaseException:
+            # Relative imports may have published children before failing.
+            for name in list(sys.modules):
+                if name == package_name or name.startswith(package_name + "."):
+                    del sys.modules[name]
+            raise
 
     config = module.RADIOConfig.from_pretrained(
         str(repo_path), local_files_only=True,
@@ -168,7 +176,7 @@ class FrozenFoundations(nn.Module):
             self.register_buffer('cradio_mean', torch.zeros(cradio_c))
             self.register_buffer('cradio_std',  torch.ones(cradio_c))
 
-        if stats_path is not None and os.path.isfile(stats_path):
+        if stats_path is not None:
             self.load_stats(stats_path)
 
         # Make sure the wrapper's own buffers land on the right device.
@@ -197,22 +205,34 @@ class FrozenFoundations(nn.Module):
             {'cradio_mean': (C_c,), 'cradio_std': (C_c,),
              'moge_mean': (C_m,), 'moge_std': (C_m,),
              'rvm_mean': (C_r,), 'rvm_std': (C_r,)}
-        Silently skips any key we don't have a buffer for."""
+        Only enabled foundations require statistics; validate before mutation."""
+        if not Path(path).is_file():
+            raise FileNotFoundError(f"Foundation stats must be a regular file: {path}")
         if str(path).endswith('.safetensors'):
             from safetensors.torch import load_file
             stats = load_file(str(path), device='cpu')
         else:
-            stats = torch.load(path, map_location='cpu', weights_only=False)
-        for key in ('moge_mean', 'moge_std', 'rvm_mean', 'rvm_std',
-                    'cradio_mean', 'cradio_std'):
-            if key in stats and hasattr(self, key):
+            stats = torch.load(path, map_location='cpu', weights_only=True)
+        if not isinstance(stats, dict):
+            raise TypeError(f"Foundation stats must contain a tensor dictionary: {path}")
+        validated = {}
+        for foundation in ('moge', 'rvm', 'cradio'):
+            if not getattr(self, f'use_{foundation}'):
+                continue
+            for suffix in ('mean', 'std'):
+                key = f'{foundation}_{suffix}'
                 buf = getattr(self, key)
-                val = stats[key].to(buf.device, buf.dtype)
-                if val.shape != buf.shape:
-                    print(f"[FrozenFoundations] {key}: stats shape "
-                          f"{tuple(val.shape)} != buffer shape {tuple(buf.shape)} — skipping")
-                    continue
-                buf.copy_(val)
+                val = stats.get(key)
+                if not isinstance(val, torch.Tensor) or val.shape != buf.shape:
+                    raise ValueError(f"Foundation stats {key} must be a tensor of shape {tuple(buf.shape)}: {path}")
+                if val.is_complex():
+                    raise ValueError(f"Foundation stats {key} must be real: {path}")
+                val = val.to(buf.device, buf.dtype)
+                if not torch.isfinite(val).all() or (suffix == 'std' and not (val > 0).all()):
+                    raise ValueError(f"Foundation stats {key} must be finite with strictly positive std: {path}")
+                validated[key] = val
+        for key, val in validated.items():
+            getattr(self, key).copy_(val)
         print(f"[FrozenFoundations] loaded stats from {path}")
 
     @torch.no_grad()
@@ -241,10 +261,8 @@ class FrozenFoundations(nn.Module):
 
         if self.cradio is not None:
             assert rgb_cradio is not None, "C-RADIO enabled but rgb_cradio not provided"
-            try:
-                cradio_out = self.cradio(rgb_cradio, feature_fmt='NCHW')
-            except TypeError:
-                cradio_out = self.cradio(rgb_cradio)
+            # The supported HuggingFace RADIOModel.forward accepts only x.
+            cradio_out = self.cradio(rgb_cradio)
             cradio_feat = cradio_out.features
             if cradio_feat.dim() == 3:
                 Bc, n_tok, Cc = cradio_feat.shape

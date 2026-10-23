@@ -143,9 +143,12 @@ class WorkerProcessTests(unittest.TestCase):
         self.assertTrue(report['jobs'][1]['record']['model_reused'])
         self.assertEqual(json.loads(report_path.read_text())['status'], 'complete')
         self.assertTrue(report['worker_clean_stop'])
+        previous_report = report_path.read_bytes()
         failed = run_worker_batch(self.root / 'missing.json', report_path)
         self.assertEqual(failed['status'], 'failed')
-        self.assertEqual(json.loads(report_path.read_text())['error']['type'], 'FileNotFoundError')
+        self.assertEqual(failed['error']['type'], 'FileNotFoundError')
+        self.assertEqual(failed['report_write']['status'], 'not_written')
+        self.assertEqual(report_path.read_bytes(), previous_report)
 
     def test_production_child_reports_unsupported_backend_without_fixture_fallback(self):
         client = WorkerClient()

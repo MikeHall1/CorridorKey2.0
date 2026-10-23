@@ -9,6 +9,7 @@ at pinned revisions, under their own licenses (see THIRD_PARTY_NOTICES.md):
 - MoGe-2 ViT-B      (Microsoft, MIT)
 - RVM small         (Google DeepMind, CC-BY 4.0)
 
+The CorridorKey branch/tag is resolved once to an immutable commit for both files.
 Files land in `weights/` and `vfms/` under the package root, which is where
 the runtime looks for them. Re-running skips anything already present.
 """
@@ -18,11 +19,12 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import re
 import shutil
 import urllib.request
 from pathlib import Path
 
-from huggingface_hub import hf_hub_download, snapshot_download
+from huggingface_hub import HfApi, hf_hub_download, snapshot_download
 
 CORRIDORKEY_REPO = "nikopueringer/CorridorKey2.0"
 CORRIDORKEY_FILES = ("corridorkey_v2.safetensors", "foundation_stats.safetensors")
@@ -47,6 +49,11 @@ def _md5_b64(path: Path) -> str:
 
 
 def download_corridorkey(root: Path, repo: str, revision: str | None) -> None:
+    if revision is None or re.fullmatch(r'[0-9a-f]{40}', revision) is None:
+        revision = HfApi().model_info(repo, revision=revision, timeout=30, token=False).sha
+    if not isinstance(revision, str) or re.fullmatch(r'[0-9a-f]{40}', revision) is None:
+        raise ValueError('CorridorKey download requires an immutable publisher commit revision')
+    print(f"[corridorkey] {repo}@{revision}")
     for name in CORRIDORKEY_FILES:
         print(f"[corridorkey] {name}")
         hf_hub_download(repo, name, revision=revision, local_dir=root / "weights")

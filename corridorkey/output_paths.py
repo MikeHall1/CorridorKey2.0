@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import re
 import stat
+import unicodedata
 from itertools import chain
 from pathlib import Path
 from typing import Any
@@ -74,8 +75,223 @@ def _is_alias(info):
     return stat.S_ISLNK(info.st_mode) or bool(getattr(info, 'st_file_attributes', 0) & 0x400)
 
 
+def prepare_report_destination(path, jobs, *, manifest_path=None, weights=None,
+                                package_root=None, asset_root=None, check=None,
+                                protected_paths=(), protected_directories=()):
+    """Admit one report without overwriting job inputs, assets or generated media.
+
+    Missing declared paths remain protected. The returned callable rechecks the
+    destination without rescanning unchanged media. This cooperating-process
+    guard is not a hostile-filesystem reservation.
+    """
+    from .corrections import CorrectionDocument
+    from .local_json import read_object
+    from .runtime_paths import RuntimePaths
+    from .session import JobRequest
+
+    jobs = tuple(jobs)
+    protected_paths, protected_directories = tuple(protected_paths), tuple(protected_directories)
+    check = check or (lambda: None)
+    def path_key(value):
+        # Conservative across native case/normalization rules, including names
+        # that do not exist yet and therefore cannot be compared by inode.
+        return tuple(unicodedata.normalize('NFC', part).casefold() for part in value.parts)
+
+    target = _lexical(path)
+    target_info = _info(target)
+    if target_info is not None and (_is_alias(target_info) or not stat.S_ISREG(target_info.st_mode)):
+        raise ValueError('report destination must be a regular file, not an alias or special entry')
+    files, directories, inodes, directory_ids = set(), set(), set(), set()
+    count = 0
+
+    def charge():
+        nonlocal count
+        check()
+        count += 1
+        if count > MAX_SCAN_ENTRIES:
+            raise ValueError('report protection inventory entry limit exceeded')
+
+    def protect(value, *, directory=False, recursive=False):
+        charge()
+        lexical = _lexical(value)
+        resolved = lexical.resolve()
+        lexical_info = _info(lexical)
+        if recursive and lexical_info is not None and _is_alias(lexical_info):
+            raise ValueError('model report protection cannot inventory a linked/reparse root')
+        info = _info(resolved)
+        directory = directory or (info is not None and stat.S_ISDIR(info.st_mode))
+        if directory:
+            directories.update((lexical, resolved))
+            if info is None:
+                return
+            if not stat.S_ISDIR(info.st_mode):
+                raise ValueError('protected report directory has an incompatible filesystem type')
+            directory_ids.add((info.st_dev, info.st_ino))
+            with os.scandir(resolved) as entries:
+                for entry in entries:
+                    check()
+                    entry_info = entry.stat(follow_symlinks=False)
+                    if recursive and _is_alias(entry_info):
+                        raise ValueError('model report protection cannot inventory linked/reparse children')
+                    if entry.is_file(follow_symlinks=True):
+                        protect(entry.path)
+                    elif recursive and entry.is_dir(follow_symlinks=False):
+                        protect(entry.path, directory=True, recursive=True)
+                    elif recursive:
+                        raise ValueError('model report protection cannot inventory a special entry')
+        else:
+            files.update((lexical, resolved))
+            if info is not None:
+                if not stat.S_ISREG(info.st_mode):
+                    raise ValueError('protected report input must be a regular file or directory')
+                inodes.add((info.st_dev, info.st_ino))
+
+    if manifest_path is not None:
+        protect(manifest_path)
+    for value in protected_paths:
+        protect(value)
+    for value in protected_directories:
+        protect(value, directory=True, recursive=True)
+    for job in jobs:
+        charge()
+        if type(job) is not JobRequest:
+            raise TypeError('report admission requires immutable JobRequest instances')
+        config, _ = job.configurations()
+        protect(job.input_path)
+        for hint in (job.initial_hint_path, job.hint_video_path):
+            if hint is not None:
+                protect(hint)
+        if config.corrections_path is not None:
+            protect(config.corrections_path)
+            correction = Path(config.corrections_path).resolve()
+            data, _ = read_object(correction, max_bytes=MAX_CORRECTION_BYTES, regular_file=True)
+            document = CorrectionDocument.parse(data, correction.parent)
+            for asset in document.asset_paths():
+                protect(asset)
+        layout = output_layout(job.input_path, config)
+        for name in layout['metadata']:
+            protect(Path(job.output_dir) / name)
+        for planned in layout['outputs'].values():
+            protect(Path(job.output_dir) / planned['path'], directory=planned['is_directory'])
+        # Witness names are generated per render and later consumed by sealing.
+        output = _lexical(job.output_dir)
+        witness_name = re.compile(r'source-witness-[0-9a-f]{32}\.bin\Z', re.IGNORECASE)
+        if path_key(target.parent) == path_key(output) and witness_name.fullmatch(target.name):
+            protect(target)
+        if output.is_dir():
+            with os.scandir(output) as entries:
+                for entry in entries:
+                    charge()
+                    if witness_name.fullmatch(entry.name):
+                        protect(entry.path)
+    root = Path(package_root) if package_root is not None else Path(__file__).resolve().parents[1]
+    assets = RuntimePaths.from_package(root, weights, asset_root=asset_root)
+    for value in (assets.weights, assets.foundation_stats, assets.rvm_ckpt, assets.moge_checkpoint):
+        protect(value)
+    protect(assets.cradio_dir, directory=True, recursive=True)
+    protected_keys = {path_key(value) for value in files | directories}
+
+    def admit(*, refresh_hardlinks=True):
+        resolved_target = target.resolve()
+        target_info = _info(target)
+        if target_info is not None and (_is_alias(target_info) or not stat.S_ISREG(target_info.st_mode)):
+            raise ValueError('report destination must be a regular file, not an alias or special entry')
+        if any(key[:len(protected)] == protected
+               for key in (path_key(target), path_key(resolved_target)) for protected in protected_keys):
+            raise ValueError('report destination overlaps protected inputs, assets or generated outputs')
+        for depth, ancestor in enumerate(chain((target,), target.parents)):
+            check()
+            if depth >= MAX_PATH_ANCESTORS:
+                raise ValueError('report ancestry inspection limit exceeded')
+            info = _info(ancestor.resolve())
+            if info is not None and stat.S_ISDIR(info.st_mode) and (info.st_dev, info.st_ino) in directory_ids:
+                raise ValueError('report ancestry overlaps a protected directory')
+        if target_info is not None:
+            if (target_info.st_dev, target_info.st_ino) in inodes:
+                raise ValueError('report destination is a hard-link alias of protected data')
+            if refresh_hardlinks and target_info.st_nlink > 1:
+                # Only a multiply-linked destination needs new export inode discovery.
+                fresh = prepare_report_destination(
+                    target, jobs, manifest_path=manifest_path, weights=weights,
+                    package_root=package_root, asset_root=asset_root, check=check,
+                    protected_paths=protected_paths, protected_directories=protected_directories)
+                return fresh(refresh_hardlinks=False)
+        check()
+        return target
+
+    admit(refresh_hardlinks=False)
+    return admit
+
+
+def validate_report_destination(path, jobs, **kwargs):
+    """One-shot admission; repeated publishers retain prepare_report_destination()."""
+    return prepare_report_destination(path, jobs, **kwargs)(refresh_hardlinks=False)
+
+
+def validate_batch_output_paths(jobs, *, weights=None, package_root=None, asset_root=None,
+                                manifest_path=None, check=None, protected_paths=(), protected_directories=()):
+    """Protect the entire admitted batch before any job can mutate its outputs."""
+    from .corrections import CorrectionDocument
+    from .local_json import read_object
+    from .runtime_paths import RuntimePaths
+
+    check = check or (lambda: None)
+    jobs = tuple(jobs)
+    protected = list(protected_paths)
+    for job in jobs:
+        check()
+        config, _ = job.configurations()
+        protected.append(job.input_path)
+        protected.extend(hint for hint in (job.initial_hint_path, job.hint_video_path) if hint is not None)
+        if config.corrections_path is not None:
+            correction = Path(config.corrections_path).resolve()
+            protected.append(correction)
+            data, _ = read_object(correction, max_bytes=MAX_CORRECTION_BYTES, regular_file=True)
+            protected.extend(CorrectionDocument.parse(data, correction.parent).asset_paths())
+    root = Path(package_root) if package_root is not None else Path(__file__).resolve().parents[1]
+    assets = RuntimePaths.from_package(root, weights, asset_root=asset_root)
+    protected.extend((assets.weights, assets.foundation_stats, assets.rvm_ckpt, assets.moge_checkpoint))
+    if manifest_path is not None:
+        protected.append(manifest_path)
+    pending = [assets.cradio_dir, *(Path(value) for value in protected_directories)]
+    model_directories = []
+    visited = set()
+    inspected = 0
+    while pending:
+        check()
+        directory = pending.pop()
+        resolved = directory.resolve()
+        if resolved in visited:
+            continue
+        visited.add(resolved)
+        model_directories.append(directory)
+        info = _info(directory)
+        if info is None:
+            continue
+        if _is_alias(info) or not stat.S_ISDIR(info.st_mode):
+            raise ValueError('model output protection requires real directories')
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                check()
+                inspected += 1
+                if inspected > MAX_SCAN_ENTRIES:
+                    raise ValueError('model output protection inventory entry limit exceeded')
+                if _is_alias(entry.stat(follow_symlinks=False)):
+                    raise ValueError('model output protection cannot inventory linked/reparse children')
+                if entry.is_dir(follow_symlinks=False):
+                    pending.append(Path(entry.path))
+                else:
+                    protected.append(entry.path)
+    for job in jobs:
+        config, _ = job.configurations()
+        validate_output_paths(job.input_path, job.output_dir, config,
+                              initial_hint_path=job.initial_hint_path, hint_video_path=job.hint_video_path,
+                              protected_paths=protected, protected_directories=model_directories, check=check)
+
+
 def validate_output_paths(input_path, output_dir, cfg, *, initial_hint_path=None,
-                          hint_video_path=None, correction_document=None, check=None):
+                          hint_video_path=None, correction_document=None, check=None,
+                          protected_paths=(), protected_directories=()):
     """Refuse output writes that overlap source, hints or authored assets.
 
     No source decoding, recursive traversal, output creation or model imports.
@@ -89,7 +305,7 @@ def validate_output_paths(input_path, output_dir, cfg, *, initial_hint_path=None
     existing = _info(output)
     if existing is not None and (_is_alias(existing) or not stat.S_ISDIR(existing.st_mode)):
         raise ValueError('output root must be a real directory, not a link/reparse or file')
-    protected = [Path(input_path)]
+    protected = [Path(input_path), *(Path(value) for value in protected_paths)]
     for value in (initial_hint_path, hint_video_path):
         if value is not None and str(value).strip().lower() not in {'', 'none', 'null', 'off', 'false', '-'}:
             protected.append(Path(value))
@@ -130,10 +346,19 @@ def validate_output_paths(input_path, output_dir, cfg, *, initial_hint_path=None
     def protect_file(path):
         lexical, resolved = _lexical(path), path.resolve()
         files.update((lexical, resolved))
-        info = resolved.stat()
+        info = _info(resolved)
+        if info is None:
+            return
         if not stat.S_ISREG(info.st_mode):
             raise ValueError('protected input must be a regular file or frame directory')
         inodes.add((info.st_dev, info.st_ino))
+
+    for value in protected_directories:
+        path = _lexical(value)
+        directories.update((path, path.resolve()))
+        info = _info(path.resolve())
+        if info is not None:
+            directory_ids.add((info.st_dev, info.st_ino))
 
     for path in protected:
         check()
@@ -165,6 +390,8 @@ def validate_output_paths(input_path, output_dir, cfg, *, initial_hint_path=None
     # differently named hard links in a planned output leaf elsewhere.
     for directory in sorted({path.resolve() for path in directories}):
         check()
+        if not directory.exists():
+            continue
         with os.scandir(directory) as children:
             for child in children:
                 charge()

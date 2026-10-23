@@ -86,6 +86,34 @@ class PlaybackControls(QWidget):
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
 
+    def progressive_focus(self, job: JobRequest) -> tuple[int, bool]:
+        """Use accepted playback pixels or the existing still coordinate mapping."""
+        owner = self.workspace
+        frame, playing = owner.frame.value(), False
+        view = None
+        if self.engine is not None and self.binding is not None:
+            view = self.engine.view
+            playing = self.engine.playing
+            if self.displayed_frame is not None:
+                frame = self.displayed_frame
+            elif self.engine.mode != 'Source' and self.engine.reference is None:
+                if not 0 <= frame < view.count:
+                    raise ValueError('Progressive export-local frame is outside the selected render range.')
+                frame += view.start
+        elif owner.view.currentText() != 'Source' and owner.selected() is not None:
+            view = owner.selected_render_view()
+            if owner.moving_reference is None:
+                if not 0 <= frame < view.count:
+                    raise ValueError('Progressive export-local frame is outside the selected render range.')
+                frame += view.start
+        if view is not None:
+            config, _ = job.configurations()
+            if Path(view.source).resolve() != Path(job.input_path).resolve():
+                raise ValueError('Progressive preview source must match the displayed playback/export source.')
+            if not math.isclose(view.fps, config.frame_dir_fps, rel_tol=1e-7, abs_tol=1e-7):
+                raise ValueError('Progressive preview timing must match the displayed playback/export sequence FPS.')
+        return frame, playing
+
     def play(self):
         owner = self.workspace
         try:

@@ -869,6 +869,9 @@ class CorrectionDialog(QDialog):
         if self.closing and self.service.done.is_set():
             self.close()
 
+    def reject(self):
+        self.close()
+
     def closeEvent(self, event: QCloseEvent):
         if self.canvas.dirty:
             self.status.setText('Commit or Clear draft before closing; committed edits have on-disk recovery snapshots.')
