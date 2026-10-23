@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import tempfile
 import unittest
 from contextlib import ExitStack, contextmanager, nullcontext
@@ -167,7 +168,7 @@ class DurableStage2Tests(unittest.TestCase):
         from corridorkey.recovery_store import _read_record_bounded
         path = self.root / 'metadata.json'
         path.write_bytes(b'{}')
-        original = Path.open
+        original = os.fdopen
         requested = []
         class GrowingReader:
             def __init__(self, stream):
@@ -180,13 +181,12 @@ class DurableStage2Tests(unittest.TestCase):
                 return self.stream.fileno()
             def read(self, size):
                 requested.append(size)
-                with original(path, 'ab') as writer:
+                with path.open('ab') as writer:
                     writer.write(b'x' * 1000)
                 return self.stream.read(size)
-        def opened(target, *args, **kwargs):
-            stream = original(target, *args, **kwargs)
-            return GrowingReader(stream) if target == path and args == ('rb',) else stream
-        with patch.object(Path, 'open', opened), self.assertRaises(CacheInvalid):
+        def opened(descriptor, *args, **kwargs):
+            return GrowingReader(original(descriptor, *args, **kwargs))
+        with patch('corridorkey.recovery_store.os.fdopen', opened), self.assertRaises(CacheInvalid):
             _read_record_bounded(path, 8)
         self.assertEqual(requested, [3])
         with BundleStore(self.root / 'entrybound', 2_000_000) as store:

@@ -136,3 +136,14 @@ GUI callers. Runtime repeats admission at output creation boundaries. Directory
 ancestry, resolved paths and existing file identities protect user inputs while
 ordinary unrelated rerenders remain supported. This is cooperating-process
 preflight, not a filesystem reservation against concurrent hostile changes.
+
+
+Final review read boundaries: queue SQL CASE projections validate persisted text
+types/byte extents before Python receives payloads, on the same SELECT snapshot.
+Metadata uses at most two rows; paging retains its129/128 lookahead contract.
+Recovery ownership records are bounded before opening/pruning, while generic
+completion manifests retain the configured store quota. RVM/Hann payloads use
+one pinned regular descriptor, admitted extent/hash and exact header/provenance
+checks before safetensors loading. Worker class-owned reaping and root signalling
+share one lock; timeout releases it before forced cleanup. See the final
+[review evidence and limits](review-2026-10-23.md).

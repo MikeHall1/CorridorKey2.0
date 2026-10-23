@@ -163,5 +163,17 @@ recheck1PASS1.660s). Failed966-case invocation retained. Complete325file static,
 compile/import/dependency/whitespace checks pass with0new vsactualM45;519Ruff and
 684Pyright errors17warnings remain. Actual output/hint and recovery-prune data
 loss reproduced then prevented; owned-process/preview/reconnect and correction
-selection guards verified. Review remains incomplete:252–254 bounded-read
-findings are open. [Review scope/evidence](review-2026-10-23.md).
+selection guards verified. That first checkpoint preceded final252–254 remediation below. [Review scope/evidence](review-2026-10-23.md).
+
+
+Final repository-review acceptance2026-10-23:985CPU tests PASS72.674s/no skips;
+327file full compile/import/dependency/static gate PASS;0new diagnostics vsactual
+M45 AND first review checkpoint, existing519Ruff/684Pyright errors17warnings
+retained. All confirmed locally resolvable review issues239–254 are verified and
+resolved, including bounded reads and the final concurrent-reap race. Independent
+review finds no further blocking local defect. Static005/nativeQt126 retain
+explicit dispositions. The review objective permits completion with the exact
+Git authentication push blocker documented; local checkpoint history is preserved,
+publication remains pending. This accepts the repository-review scope only;
+GPU/pretrained quality, target packaging and Resolve criteria above remain open.
+[Final review report](review-2026-10-23.md).

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import math
 
 import torch
 from safetensors import SafetensorError
@@ -9,10 +11,56 @@ from safetensors.torch import load, save
 
 from .durable_context import BoundModelCache
 from .recovery_identity import canonical
-from .recovery_store import CacheCapacity, CacheInvalid
+from .recovery_store import CacheCapacity, CacheInvalid, read_payload_bounded
 from .recurrent_identity import RvmChunkIdentity, rvm_chunk_identity
 
 STATE_DTYPES = (torch.float32, torch.bfloat16, torch.float16)
+
+MAX_METADATA_BYTES = 4 * 1024 * 1024
+MAX_HEADER_BYTES = 65536
+DTYPE_CODES = {'torch.float16': ('F16', 2), 'torch.bfloat16': ('BF16', 2), 'torch.float32': ('F32', 4)}
+
+
+def _unique_pairs(items):
+    result = {}
+    for name, value in items:
+        if name in result:
+            raise CacheInvalid('duplicate durable tensor header field')
+        result[name] = value
+    return result
+
+
+def validate_tensor_header(blob, descriptions):
+    """Validate exact declared tensor extents before safetensors allocation."""
+    if len(blob) < 8:
+        raise CacheInvalid('truncated durable tensor header')
+    length = int.from_bytes(blob[:8], 'little')
+    if not 1 <= length <= MAX_HEADER_BYTES or 8 + length > len(blob):
+        raise CacheInvalid('durable tensor header exceeds bounded extent')
+    header = json.loads(blob[8:8 + length], object_pairs_hook=_unique_pairs)
+    if not isinstance(header, dict) or set(header) != set(descriptions):
+        raise CacheInvalid('durable tensor header inventory differs')
+    intervals = []
+    for name, expected in descriptions.items():
+        item = header[name]
+        dtype, size = DTYPE_CODES[expected['dtype']]
+        if (not isinstance(item, dict) or set(item) != {'dtype', 'shape', 'data_offsets'}
+                or item['dtype'] != dtype or item['shape'] != expected['shape']
+                or not isinstance(item['shape'], list) or any(type(n) is not int for n in item['shape'])
+                or not isinstance(item['data_offsets'], list) or len(item['data_offsets']) != 2
+                or any(type(n) is not int for n in item['data_offsets'])):
+            raise CacheInvalid('durable tensor header dtype/shape differs')
+        first, last = item['data_offsets']
+        if first < 0 or last - first != math.prod(expected['shape']) * size:
+            raise CacheInvalid('durable tensor header offsets differ')
+        intervals.append((first, last))
+    end = 0
+    for first, last in sorted(intervals):
+        if first != end:
+            raise CacheInvalid('durable tensor header has gaps/overlapping extents')
+        end = last
+    if 8 + length + end != len(blob):
+        raise CacheInvalid('durable tensor payload length differs')
 
 
 def tensor_digest(value):
@@ -67,15 +115,38 @@ class DurableRvmChunks(BoundModelCache):
             raise ValueError('RVM features must be finite exact normalized float16 TCHW')
         self._state(state, data['channels'], data['grid_hw'])
 
-    def _record(self, state):
+    def _shapes(self, data):
+        height, width = data['grid_hw']
+        return {'features': [data['stop'] - data['start'], data['channels'], height, width],
+                'state': [1, 1 + height * width, data['channels']]}
+
+    def _payload_bound(self, data):
+        shapes = self._shapes(data)
+        return min(self.store.max_bytes, 8 + MAX_HEADER_BYTES
+                   + math.prod(shapes['features']) * 2 + math.prod(shapes['state']) * 4)
+
+    def _record_schema(self, dtype, shape):
         return {'stage': 'rvm_exact_chronological_call', 'parent_identity': self.parent.to_dict(),
-                'features_dtype': 'torch.float16', 'state_dtype': str(state.dtype),
-                'state_shape': list(state.shape), 'hann_output_resume': False}
+                'features_dtype': 'torch.float16', 'state_dtype': dtype,
+                'state_shape': shape, 'hann_output_resume': False}
+
+    def _record(self, state):
+        return self._record_schema(str(state.dtype), list(state.shape))
+
+    def _descriptions(self, data, record):
+        shapes = self._shapes(data)
+        dtype = record.get('state_dtype') if isinstance(record, dict) else None
+        if (not isinstance(dtype, str) or dtype not in DTYPE_CODES
+                or canonical(record) != canonical(self._record_schema(dtype, shapes['state']))):
+            raise CacheInvalid('RVM provenance differs from exact producer contract')
+        return {'features': {'dtype': 'torch.float16', 'shape': shapes['features']},
+                'state': {'dtype': dtype, 'shape': shapes['state']}}
 
     def get(self, identity):
         data = self._contract(identity)
         try:
-            manifest = self.store.lookup(identity, check=self.check)
+            manifest = self.store.lookup(identity, check=self.check, max_metadata_bytes=MAX_METADATA_BYTES,
+                                         max_entry_files=3, max_payload_bytes=self._payload_bound(data))
             if manifest is None:
                 self.misses += 1
                 return None
@@ -83,9 +154,10 @@ class DurableRvmChunks(BoundModelCache):
             if len(files) != 1 or files[0]['name'] != 'rvm.safetensors':
                 raise CacheInvalid('RVM checkpoint tensor inventory differs')
             file = self.store._entry(identity) / files[0]['blob']
-            blob = file.read_bytes()
-            if len(blob) != files[0]['bytes'] or hashlib.sha256(blob).hexdigest() != files[0]['sha256']:
-                raise CacheInvalid('RVM checkpoint changed while loading')
+            descriptions = self._descriptions(data, manifest.get('origin_record'))
+            blob = read_payload_bounded(file, expected_size=files[0]['bytes'], expected_sha256=files[0]['sha256'],
+                                        max_bytes=self._payload_bound(data), check=self.check)
+            validate_tensor_header(blob, descriptions)
             if self.check is not None:
                 self.check()
             tensors = load(blob)  # Immutable verified bytes; no pickle, live mmap or read/use race.
@@ -98,18 +170,29 @@ class DurableRvmChunks(BoundModelCache):
             self.frames_reused += data['stop'] - data['start']
             self.bytes_loaded += len(blob)
             return tensors
-        except (CacheInvalid, OSError, ValueError, SafetensorError) as exc:
+        except (CacheInvalid, OSError, ValueError, SafetensorError, RecursionError) as exc:
             self.corrupt += 1
             self.misses += 1
-            self.last_error = str(exc)
-            self.store.discard(identity)
+            self.last_error = str(exc)[:512]
+            self.store.discard(identity, max_metadata_bytes=MAX_METADATA_BYTES, max_entry_files=3)
             return None
 
     def put(self, identity, features, state):
         data = self._contract(identity)
         self._validate(data, features, state)
         minimum_bytes = sum(value.numel() * value.element_size() for value in (features, state))
-        if minimum_bytes > self.store.max_bytes:
+        record = self._record(state)
+        metadata_bytes = len(canonical(record).encode()) + len(identity.payload.encode()) + 4096
+        if minimum_bytes > self.store.max_bytes or metadata_bytes > MAX_METADATA_BYTES:
+            self.budget_rejected += 1
+            return False
+        # A lower bound on the actual sealed entry also avoids staging tensors
+        # when even data plus required metadata cannot fit this byte budget.
+        lower_manifest = {'schema_version': 1, 'key': identity.key, 'identity': identity.to_dict(),
+                          'files': [{'name': 'rvm.safetensors', 'blob': 'payload-000000.bin',
+                                     'bytes': minimum_bytes, 'sha256': '0' * 64}], 'origin_record': record}
+        lower_owner = {'owner': self.store.owner, 'manifest_sha256': '0' * 64}
+        if minimum_bytes + len(canonical(lower_manifest).encode()) + len(canonical(lower_owner).encode()) > self.store.max_bytes:
             self.budget_rejected += 1
             return False
         tensors = {name: value.detach().to(device='cpu', copy=True).contiguous()
@@ -117,12 +200,17 @@ class DurableRvmChunks(BoundModelCache):
         blob = save(tensors)
         if self.check is not None:
             self.check()
-        with self.store.private_stage() as folder:
+        if len(blob) > self._payload_bound(data):
+            self.budget_rejected += 1
+            return False
+        with self.store.private_stage(max_metadata_bytes=MAX_METADATA_BYTES, max_entry_files=3) as folder:
             file = folder / 'payload-000000.bin'
             file.write_bytes(blob)
             record = self._record(state)
             try:
-                self.store.publish(identity, {'rvm.safetensors': file}, record, check=self.check)
+                self.store.publish(identity, {'rvm.safetensors': file}, record, check=self.check,
+                                   max_metadata_bytes=MAX_METADATA_BYTES, max_payload_bytes=self._payload_bound(data),
+                                   target_max_entry_files=3)
             except CacheCapacity:
                 self.budget_rejected += 1
                 return False

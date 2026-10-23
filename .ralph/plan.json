@@ -5,14 +5,16 @@
     {
       "id": "fresh-repository-review",
       "title": "Fresh first-party review, confirmed-defect remediation, justified cleanup and fork checkpoints",
-      "status": "in_progress",
+      "status": "done",
       "acceptance": "All confirmed locally resolvable review issues fixed and verified; cleanup reviewed; integrated checks/dispositions recorded; no unresolved locally actionable blocking defects; final reviewed checkpoint committed and pushed or exact push blocker documented. Product external criteria remain unverified.",
       "evidence": [
         "docs/review-objective.md",
         "docs/review-2026-10-23.md",
-        ".ralph/issues.json"
+        ".ralph/issues.json",
+        "benchmark-results/fresh-review-final-source-verification.json",
+        "docs/checkpoint.md"
       ],
-      "next_action": "Finish current integrated gate then deliberately commit/push review checkpoint. Investigate bounded queue/durable reads only with focused evidence; do not invent findings."
+      "next_action": "Review scope complete with documented push-authentication exception. Authenticate Git, then publish the local branch; product acceptance remains separate."
     },
     {
       "id": "code-health",
@@ -644,35 +646,60 @@
     "cycles_completed": 13,
     "cumulative_cycles_since_m28_start": 19,
     "checkpoint_interval": 5,
-    "status": "review_checkpoint_ready_to_commit",
+    "status": "review_locally_accepted_push_authentication_blocked",
     "product_complete": false,
     "previous_goal_turn_classification": "progress: M44 and M45 implemented, independently reviewed, actual workflows and final916CPU/static evidence accepted.",
-    "current_goal_turn_classification": "progress: fresh 935-test baseline observed benchmark GUI test race plus one Ruff regression; independent review confirmed output/hint data loss, preview shutdown, selection, launcher status and stale records; source remediation underway.",
+    "current_goal_turn_classification": "complete: confirmed local review defects239\u2013254 resolved, final985CPU/327file gate and stable independent review pass; exact push-authentication blocker documented under objective exception.",
     "accepted_work_package": {
       "milestone": 46,
       "requirement": "CK-Q10-04",
       "status": "locally_verified",
       "full_product_accepted": false,
       "source_frozen": true,
-      "verification": "Explicit966-case composite CPU evidence; failed full invocation retained, finaltest-onlyrecheck; complete325file static0new vsM45."
+      "verification": "Final985CPU/327file integrated gate PASS; actualM46 Qt/sharedworker/pixel proof reused for unchanged numerical sources."
     },
     "evidence": [
-      "benchmark-results/fresh-review-checkpoint-verification.json",
-      "benchmark-results/fresh-review-source-verification.json",
-      "benchmark-results/m46-review-summary.json",
-      "benchmark-results/fresh-review-independent-ui-summary.json",
-      "benchmark-results/review-bounded-reads-probe.json"
+      "docs/review-objective.md",
+      "docs/review-2026-10-23.md",
+      ".ralph/issues.json",
+      "benchmark-results/fresh-review-final-source-verification.json",
+      "docs/checkpoint.md"
     ],
     "active_work_package": {
       "requirement": "fresh repository review",
-      "status": "in_progress",
-      "next_action": "Checkpoint reviewed fixes239\u2013251, then resolve bounded-read issues252\u2013254 with focused probes/regressions and final integration."
+      "status": "locally_accepted_with_documented_push_blocker",
+      "next_action": "Authenticate Git and publish review branch; target product acceptance stays unverified."
     },
     "active_agents": {},
     "running_processes": [],
-    "root_pending": "Deliberately stage, inspect, commit and push first review checkpoint; then release disjoint252 queue and253/254 durable source ownership.",
-    "review_batches_completed": 5
+    "root_pending": null,
+    "review_batches_completed": 6,
+    "push_status": "User-approved exactpush blocked by missing Git authentication; no remote publication.",
+    "review_complete": true,
+    "verification_summary": {
+      "evidence": "benchmark-results/fresh-review-final-source-verification.json",
+      "cpu_tests": 985,
+      "cpu_seconds": 72.674,
+      "skips": 0,
+      "static_files": 327,
+      "new_findings": 0,
+      "ruff_findings": 519,
+      "pyright_errors": 684,
+      "pyright_warnings": 17,
+      "static_clean": false,
+      "sources_unchanged": true,
+      "new_vs_actual_m45": {
+        "ruff": {},
+        "pyright": {}
+      },
+      "new_vs_checkpoint": {
+        "ruff": {},
+        "pyright": {}
+      }
+    },
+    "checkpoint_commit": "Final review checkpoint containing these records; resolve exact identity from Git history.",
+    "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Deliberately stage, inspect, commit and push first review checkpoint; then release disjoint252 queue and253/254 durable source ownership."
+  "next_action": "Review scope complete with documented push-authentication exception. Authenticate Git, then publish the local branch; product acceptance remains separate."
 }

@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sqlite3
+import stat
 import sys
 import tempfile
 import unicodedata
@@ -26,23 +27,77 @@ class CacheCapacity(ValueError):
     pass
 
 
+MAX_OWNER_RECORD_BYTES = 4 * 1024 * 1024
+
+
+def _file_identity(info):
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+
+@contextmanager
+def _open_regular(path):
+    flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
+    descriptor = os.open(path, flags)
+    with os.fdopen(descriptor, 'rb') as stream:
+        info = os.fstat(stream.fileno())
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                or getattr(info, 'st_file_attributes', 0) & 0x400):
+            raise CacheInvalid('cache read requires a regular single-link file')
+        yield stream, info
+
+
+def _read_extent(path, *, max_bytes, expected_size=None, expected_sha256=None, check=None):
+    if type(max_bytes) is not int or max_bytes < 0:
+        raise ValueError('cache read bound must be a nonnegative integer')
+    if expected_size is not None and (type(expected_size) is not int or expected_size < 0):
+        raise ValueError('expected payload size must be a nonnegative integer')
+    if check is not None:
+        check()
+    with _open_regular(path) as (stream, before):
+        size = before.st_size if expected_size is None else expected_size
+        if size > max_bytes or before.st_size != size:
+            raise CacheInvalid('cache file exceeds admitted read extent')
+        remaining, chunks = size, []
+        digest = hashlib.sha256()
+        while remaining:
+            if check is not None:
+                check()
+            block = stream.read(min(1024 * 1024, remaining + 1))
+            if not block or len(block) > remaining:
+                raise CacheInvalid('cache file changed during bounded read')
+            chunks.append(block)
+            digest.update(block)
+            remaining -= len(block)
+        if stream.read(1):
+            raise CacheInvalid('cache file grew beyond admitted read extent')
+        after = os.fstat(stream.fileno())
+        current = Path(path).stat(follow_symlinks=False)
+        if _file_identity(before) != _file_identity(after) or _file_identity(after) != _file_identity(current):
+            raise CacheInvalid('cache file changed during bounded read')
+    if expected_sha256 is not None and digest.hexdigest() != expected_sha256:
+        raise CacheInvalid('cache payload checksum changed during bounded read')
+    if check is not None:
+        check()
+    return b''.join(chunks)
+
+
+def read_payload_bounded(path, *, expected_size, expected_sha256, max_bytes, check=None):
+    """Admit exact bytes on one descriptor before returning an immutable blob."""
+    return _read_extent(path, max_bytes=max_bytes, expected_size=expected_size,
+                        expected_sha256=expected_sha256, check=check)
+
+
+def _owner_limit(explicit):
+    return MAX_OWNER_RECORD_BYTES if explicit is None else min(MAX_OWNER_RECORD_BYTES, explicit)
+
+
 def _read_record_bounded(path, max_bytes=None):
-    """Optional immutable metadata read bound, enforced on the opened descriptor."""
+    """Optional metadata bound; internal owner/manifest callers provide limits."""
     if max_bytes is None:
         return json.loads(Path(path).read_text())
     if type(max_bytes) is not int or max_bytes <= 0:
         raise ValueError('metadata read bound must be a positive integer')
-    with Path(path).open('rb') as stream:
-        before = os.fstat(stream.fileno())
-        if before.st_size > max_bytes:
-            raise CacheInvalid('cache metadata exceeds read bound')
-        blob = stream.read(before.st_size + 1)
-        after = os.fstat(stream.fileno())
-        current = Path(path).stat(follow_symlinks=False)
-    def identity(info):
-        return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-    if len(blob) != before.st_size or identity(before) != identity(after) or identity(after) != identity(current):
-        raise CacheInvalid('cache metadata changed during bounded read')
+    blob = _read_extent(path, max_bytes=max_bytes)
     try:
         return json.loads(blob)
     except RecursionError as exc:
@@ -122,8 +177,7 @@ def _file_sha256_bounded(path, expected_size, *, check=None):
     """Hash no more than the admitted file extent plus one growth sentinel."""
     digest = hashlib.sha256()
     seen = 0
-    with Path(path).open('rb') as stream:
-        before = os.fstat(stream.fileno())
+    with _open_regular(path) as (stream, before):
         if before.st_size != expected_size:
             raise CacheInvalid('artifact size changed before bounded hash')
         while True:
@@ -165,7 +219,7 @@ class BundleStore:
                 stream.flush()
                 os.fsync(stream.fileno())
             _sync_directory(self.root)
-        data = json.loads(marker.read_text())
+        data = _read_record_bounded(marker, MAX_OWNER_RECORD_BYTES)
         if (marker.is_symlink() or not isinstance(data, dict) or type(data.get('schema_version')) is not int or
                 data['schema_version'] != 1 or data.get('kind') != 'corridorkey_recovery' or
                 not re.fullmatch('[0-9a-f]{32}', data.get('owner', ''))):
@@ -252,7 +306,7 @@ class BundleStore:
             owner = path / 'owner.json'
             if not owner.is_file():
                 raise CacheInvalid('cache entry ownership cannot be established')
-            data = _read_record_bounded(owner, max_metadata_bytes)
+            data = _read_record_bounded(owner, _owner_limit(max_metadata_bytes))
             if not isinstance(data, dict) or data.get('owner') != self.owner:
                 raise CacheInvalid('cache entry ownership cannot be established')
         return files
@@ -286,8 +340,9 @@ class BundleStore:
             return None
         try:
             owned = self._owned(entry, max_metadata_bytes=max_metadata_bytes, max_entry_files=max_entry_files)
-            manifest = _read_record_bounded(entry / 'complete.json', max_metadata_bytes)
-            owner = _read_record_bounded(entry / 'owner.json', max_metadata_bytes)
+            manifest = _read_record_bounded(entry / 'complete.json',
+                                            self.max_bytes if max_metadata_bytes is None else min(self.max_bytes, max_metadata_bytes))
+            owner = _read_record_bounded(entry / 'owner.json', _owner_limit(max_metadata_bytes))
             if owner.get('manifest_sha256') != hashlib.sha256(canonical(manifest).encode()).hexdigest():
                 raise CacheInvalid('completion metadata checksum mismatch')
             if (type(manifest['schema_version']) is not int or manifest['schema_version'] != 1 or manifest['key'] != identity.key or
@@ -358,7 +413,7 @@ class BundleStore:
             raise CacheCapacity('managed workspace structural capacity lacks publication/transient headroom')
 
     def publish(self, identity, files, record, *, check=None, max_metadata_bytes=None, max_entry_files=None, max_payload_bytes=None,
-                expected_inventory=None):
+                expected_inventory=None, target_max_entry_files=None):
         self._require_owner()
         if self.structural_admission:
             from . import cache_maintenance as maintenance
@@ -372,7 +427,9 @@ class BundleStore:
                         or type(item['bytes']) is not int or item['bytes'] < 0
                         or not isinstance(item['sha256'], str) or re.fullmatch('[0-9a-f]{64}', item['sha256']) is None):
                     raise CacheInvalid('invalid artifact receipt size/hash')
-        existing = self.lookup(identity, check=check, max_metadata_bytes=max_metadata_bytes, max_entry_files=max_entry_files, max_payload_bytes=max_payload_bytes)
+        existing = self.lookup(identity, check=check, max_metadata_bytes=max_metadata_bytes,
+                               max_entry_files=max_entry_files if target_max_entry_files is None else target_max_entry_files,
+                               max_payload_bytes=max_payload_bytes)
         if existing is not None:
             if expected_inventory is not None and {item['name']: {'bytes': item['bytes'], 'sha256': item['sha256']}
                                                     for item in existing['files']} != expected_inventory:
@@ -425,7 +482,9 @@ class BundleStore:
             _sync_directory(self.root / 'entries')
         finally:
             if stage.exists():
-                cleanup_all([lambda: self._discard(stage, max_metadata_bytes=max_metadata_bytes, max_entry_files=max_entry_files)], primary_error=sys.exception())
+                cleanup_all([lambda: self._discard(stage, max_metadata_bytes=max_metadata_bytes,
+                                                    max_entry_files=max_entry_files if target_max_entry_files is None else target_max_entry_files)],
+                            primary_error=sys.exception())
         return manifest
 
     def discard(self, identity, *, max_metadata_bytes=None, max_entry_files=None):

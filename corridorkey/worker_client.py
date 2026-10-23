@@ -299,8 +299,13 @@ class WorkerClient:
             self.cleanup_error = f'owned descendant cleanup NOT VERIFIED: {exc}'
             self.clean_stop = False
 
+    def poll(self):
+        """Observe/reap the owned Popen under the root-signal authority lock."""
+        with self.kill_lock:
+            return self.process.poll()
+
     def restart(self):
-        if self.process.poll() is None:
+        if self.poll() is None:
             raise RuntimeError('cannot restart a worker confirmed still running')
         self.close()
         if self.cleanup_error is not None:
@@ -314,13 +319,16 @@ class WorkerClient:
         self.expected_close = True
         with self.kill_lock:
             self._capture_descendants()
-        if self.process.poll() is None and self.failure is None:
+        if self.poll() is None and self.failure is None:
             try:
                 self.send('shutdown', {'drain': False})
             except (OSError, WorkerLost, ValueError, BufferError):
                 pass
         try:
-            self.process.wait(timeout=self.shutdown_timeout)
+            # Reaping releases numeric PID/group authority. Keep it atomic
+            # with the failure owner's poll -> group-signal critical section.
+            with self.kill_lock:
+                self.process.wait(timeout=self.shutdown_timeout)
         except subprocess.TimeoutExpired:
             self._terminate_owned()
         with self.kill_lock:
@@ -406,7 +414,7 @@ def run_worker_batch(manifest, report_path, *, capacity=4, workspace=None, max_c
                     event = client.next_event(timeout=60)
                 except TimeoutError:
                     report['observation'] = {'state': 'waiting_on_same_worker', 'pid': client.process.pid,
-                                             'returncode': client.process.poll()}
+                                             'returncode': client.poll()}
                     persist()
                     continue
                 if event['request_id'] == request_id and event['kind'] in ('result', 'failed', 'cancelled', 'rejected', 'lost'):

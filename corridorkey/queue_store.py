@@ -114,6 +114,100 @@ def _imported_path(path: Path, *, directory: bool = False) -> None:
         raise ValueError('Imported queue paths must be regular owned objects without links/reparse points.')
 
 
+def _require_utf8(db: sqlite3.Connection) -> None:
+    # CAST(TEXT AS BLOB) counts database-encoding bytes. App-created/imported
+    # histories are UTF-8; refuse other encodings rather than undercount their
+    # eventual UTF-8 Python payload or rewriting historical data.
+    if db.execute('PRAGMA encoding').fetchone()[0] != 'UTF-8':
+        raise ValueError('Queue inspection requires UTF-8 SQLite history; no history was transcoded or changed.')
+
+
+def _projection(text_fields, numeric_fields):
+    columns: list[str] = []
+    parameters: dict[str, Any] = {}
+    for expression, name, limit, _ in text_fields:
+        parameters[name + '_limit'] = limit
+        columns.extend(((f"CASE WHEN typeof({expression})='text' AND length(CAST({expression} AS BLOB)) <= :{name}_limit "
+                         f"THEN {expression} END AS {name}"),
+                        f"typeof({expression}) AS _{name}_type",
+                        f"length(CAST({expression} AS BLOB)) AS _{name}_bytes"))
+    for expression, name, _, integer_only in numeric_fields:
+        kinds = "'integer','null'" if integer_only else "'integer','real','null'"
+        columns.extend((f"CASE WHEN typeof({expression}) IN ({kinds}) THEN {expression} END AS {name}",
+                        f"typeof({expression}) AS _{name}_type"))
+    return ','.join(columns), parameters
+
+
+def _admit_record(row, text_fields, numeric_fields) -> dict[str, Any]:
+    record = dict(row)
+    for _, name, limit, nullable in text_fields:
+        kind = record.pop('_' + name + '_type')
+        size = record.pop('_' + name + '_bytes')
+        if nullable and kind == 'null':
+            continue
+        if kind != 'text' or type(size) is not int or not 0 <= size <= limit:
+            raise ValueError('Queue observation content checksum/size/type mismatch.')
+        if name.endswith('_hash') and (size != 64 or any(c not in '0123456789abcdef' for c in record[name])):
+            raise ValueError('Queue observation content checksum/size/type mismatch.')
+    for _, name, nullable, integer_only in numeric_fields:
+        kind = record.pop('_' + name + '_type')
+        if nullable and kind == 'null':
+            continue
+        if kind not in ({'integer'} if integer_only else {'integer', 'real'}):
+            raise ValueError('Queue observation numeric type mismatch.')
+    return record
+
+
+def _metadata_record(db: sqlite3.Connection, queue_id: str) -> None:
+    _require_utf8(db)
+    text_fields = (('queue_id', 'queue_id', 64, False),)
+    numeric_fields = (('schema_version', 'schema_version', False, True),)
+    columns, parameters = _projection(text_fields, numeric_fields)
+    # Two rows suffice to reject duplicate ownership without allocating an
+    # unbounded corrupt metadata table in Python.
+    rows = db.execute('SELECT ' + columns + ' FROM metadata LIMIT 2', parameters).fetchall()
+    if len(rows) != 1:
+        raise ValueError('Queue database ownership/version mismatch.')
+    record = _admit_record(rows[0], text_fields, numeric_fields)
+    if record['queue_id'] != queue_id or record['schema_version'] != 1:
+        raise ValueError('Queue database ownership/version mismatch.')
+
+
+def _detail_record(db: sqlite3.Connection, request_id: str) -> dict[str, Any]:
+    # Each field is admitted inside one SELECT before crossing SQLite's Python
+    # adapter. A separate length-then-fetch would race a live queue writer.
+    # Protocol payloads have independent limits; a valid combined row may exceed
+    # one frame. SHA strings are exactly 64 ASCII hex bytes. Other text metadata
+    # retains the general frame bound rather than introducing a narrower limit.
+    fields = (('id', 'id', 64, False), ('session', 'session', MAX_FRAME_BYTES, False),
+              ('action', 'action', 7, False), ('request', 'request', MAX_FRAME_BYTES, False),
+              ('request_hash', 'request_hash', 64, False), ('status', 'status', MAX_FRAME_BYTES, False),
+              ('event', 'event', MAX_FRAME_BYTES, True), ('event_hash', 'event_hash', 64, True),
+              ('batch_hash', 'batch_hash', 64, True))
+    numeric_fields = (('created', 'created', True, False), ('updated', 'updated', True, False))
+    columns, parameters = _projection(fields, numeric_fields)
+    parameters['id'] = identifier(request_id)
+    row = db.execute('SELECT ' + columns + ' FROM requests WHERE id=:id', parameters).fetchone()
+    if row is None:
+        raise ValueError('No such queue request.')
+    return _admit_record(row, fields, numeric_fields)
+
+
+def _history_rows(db: sqlite3.Connection, before: int | None):
+    fields = (('r.id', 'id', 64, False), ('r.action', 'action', 7, False),
+              ('r.status', 'status', MAX_FRAME_BYTES, False), ('r.session', 'session', MAX_FRAME_BYTES, False),
+              ('s.generation', 'generation', 64, True))
+    numeric_fields = (('r.rowid', 'ordinal', False, True), ('r.created', 'created', True, False),
+                      ('s.worker_pid', 'worker_pid', True, False), ('s.closed', 'closed', True, False),
+                      ('s.clean', 'clean', True, False))
+    columns, parameters = _projection(fields, numeric_fields)
+    parameters['before'] = before if before is not None else 2**63 - 1
+    query = ('SELECT ' + columns + ' FROM requests r JOIN sessions s ON r.session=s.id '
+             'WHERE r.rowid < :before ORDER BY r.rowid DESC LIMIT 129')
+    rows = db.execute(query, parameters).fetchall()
+    return [_admit_record(row, fields, numeric_fields) for row in rows]
+
+
 class QueueStore:
     @classmethod
     def create(cls, parent: Path) -> Path:
@@ -156,9 +250,7 @@ class QueueStore:
             self.db = sqlite3.connect((self.root / 'queue.sqlite').as_uri() + '?mode=rw', uri=True, timeout=0)
             self.db.row_factory = sqlite3.Row
             self.db.execute('PRAGMA synchronous=FULL')
-            rows = self.db.execute('SELECT queue_id,schema_version FROM metadata').fetchall()
-            if len(rows) != 1 or rows[0]['queue_id'] != marker['queue_id'] or rows[0]['schema_version'] != 1:
-                raise ValueError('Queue database ownership/version mismatch.')
+            _metadata_record(self.db, marker['queue_id'])
             if 'batch_hash' not in {row[1] for row in self.db.execute('PRAGMA table_info(requests)')}:
                 with self.db:
                     self.db.execute('ALTER TABLE requests ADD COLUMN batch_hash TEXT')
@@ -276,26 +368,18 @@ class QueueStore:
         _regular(root / 'queue.sqlite')
         with closing(sqlite3.connect((root.absolute() / 'queue.sqlite').as_uri() + '?mode=ro', uri=True, timeout=0)) as db:
             db.row_factory = sqlite3.Row
-            metadata = db.execute('SELECT queue_id,schema_version FROM metadata').fetchall()
-            if len(metadata) != 1 or metadata[0]['queue_id'] != marker['queue_id'] or metadata[0]['schema_version'] != 1:
-                raise ValueError('Queue database ownership/version mismatch.')
+            _metadata_record(db, marker['queue_id'])
             if request_id is None:
                 # Admission sequence avoids duplicates/skips when timestamps tie
                 # or a writer adds newer observations while history is paged.
-                rows = db.execute('''SELECT r.rowid AS ordinal,r.id,r.action,r.status,r.session,r.created,s.worker_pid,s.generation,s.closed,s.clean
-                                     FROM requests r JOIN sessions s ON r.session=s.id
-                                     WHERE r.rowid < ? ORDER BY r.rowid DESC LIMIT 129''',
-                                  (before if before is not None else 2**63 - 1,)).fetchall()
+                rows = _history_rows(db, before)
                 next_before = rows[127]['ordinal'] if len(rows) > 128 else None
                 headers = [dict(row) for row in rows[:128]]
                 for header in headers:
                     header.pop('ordinal')
                 return {'queue_id': marker['queue_id'], 'archive': archive, 'rows': headers, 'before': before, 'next_before': next_before,
                         'scope': 'Saved observations only. Old PIDs/process state and outputs NOT VERIFIED; no work resubmitted.'}
-            row = db.execute('SELECT * FROM requests WHERE id=?', (identifier(request_id),)).fetchone()
-            if row is None:
-                raise ValueError('No such queue request.')
-            record = dict(row)
+            record = _detail_record(db, request_id)
             for name in ('request', 'event'):
                 text = record[name]
                 if text is not None:

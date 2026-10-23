@@ -153,13 +153,14 @@ class DurableHannTests(unittest.TestCase):
             assert restored is not None
             torch.testing.assert_close(restored['baton'], outputs['baton'], rtol=0, atol=0)
             torch.testing.assert_close(restored['aux'], outputs['aux'][:, :, :1], rtol=0, atol=0)
-            original = Path.read_bytes
+            from corridorkey import durable_hann as adapter_module
+            original = adapter_module.read_payload_bounded
 
-            def mutate(file):
+            def mutate(file, **kwargs):
                 file.write_bytes(save({'baton': outputs['baton'] + 1, 'aux': outputs['aux'][:, :, :1].contiguous()}))
-                return original(file)
+                return original(file, **kwargs)
 
-            with patch.object(Path, 'read_bytes', mutate):
+            with patch.object(adapter_module, 'read_payload_bounded', mutate), patch.object(adapter_module, 'load', side_effect=AssertionError('changed payload must not deserialize')):
                 self.assertIsNone(adapter.get(identity))
             self.assertEqual(adapter.corrupt, 1)
             self.assertEqual(list((store.root / 'entries').iterdir()), [])

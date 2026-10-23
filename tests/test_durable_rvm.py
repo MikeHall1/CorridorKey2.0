@@ -219,13 +219,14 @@ with BundleStore(sys.argv[1],100000) as store:
             adapter = self.adapter(store)
             identity = self.identity(adapter)
             adapter.put(identity, self.features, self.state)
-            original = Path.read_bytes
+            from corridorkey import durable_rvm as adapter_module
+            original = adapter_module.read_payload_bounded
 
-            def mutate(file):
+            def mutate(file, **kwargs):
                 file.write_bytes(save({'features': self.features, 'state': self.state + 1}))
-                return original(file)
+                return original(file, **kwargs)
 
-            with patch.object(Path, 'read_bytes', mutate):
+            with patch.object(adapter_module, 'read_payload_bounded', mutate), patch.object(adapter_module, 'load', side_effect=AssertionError('changed payload must not deserialize')):
                 self.assertIsNone(adapter.get(identity))
             self.assertEqual(adapter.corrupt, 1)
             self.assertEqual(list((store.root / 'entries').iterdir()), [])

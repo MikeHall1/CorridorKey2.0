@@ -143,7 +143,8 @@
         "Milestone11 final:227 tests pass;117 Python files/0 syntax errors;523 Ruff findings and826 Pyright errors/17 warnings remain,0 new fingerprints. No baseline refresh/ignores.",
         "Milestone12 final:249 tests pass;123 Python files/0 syntax errors;523 Ruff findings and826 Pyright errors/17 warnings remain,0 new fingerprints. Baseline/diagnostic settings unchanged.",
         "Milestone13 final:280 tests pass;131 Python files/0 syntax errors;523 Ruff findings and826 Pyright errors/17 warnings remain,0 new fingerprints. No baseline refresh/ignore rules.",
-        "Fresh review2026-10-23:325files,519Ruff/684Pyright errors17warnings retained,0new vsactualM45; distribution/selected high-risk diagnostic triage in benchmark-results/fresh-review-static-triage.json. Still not static-clean; remaining warnings are not blanket-dismissed or suppressed."
+        "Fresh review2026-10-23:325files,519Ruff/684Pyright errors17warnings retained,0new vsactualM45; distribution/selected high-risk diagnostic triage in benchmark-results/fresh-review-static-triage.json. Still not static-clean; remaining warnings are not blanket-dismissed or suppressed.",
+        "Final review2026-10-23:985CPU tests PASS72.674s;327files/519Ruff/684Pyright errors17warnings,0new vs actualM45 and first review checkpoint. This does not resolve the static backlog or prove the nativeQt fault mechanism; existing dispositions/prerequisites retained."
       ],
       "blockers": []
     },
@@ -2656,7 +2657,8 @@
         "benchmark-results/m22-final-verification.txt:440 tests pass; full gate success",
         "Milestone23 fresh440-test baseline and final451-test full gate pass with no skips; repeated CPU correctness3 runs also pass.",
         "benchmark-results/m23-editor-lifetime-before.txt retained native children2/3/4/5; after explicit production retirement1/1/1/1. This is a confirmed leak fix, not proof of native crash cause.",
-        "M38 boundedcurrentQt probe: two6cycleprofiles defaultGC2.827s/frequentGC2.408s,8GCcollections insidepaintEvent; nativeeditor census1/retiredvalid0/parenttopLevels0/threadowners0; ownedworkers40626/40643 terminal0, sourcepreserved. m38-qt-lifetime-summary.json. No nativefault/rootcause reproduced; issue staysOPEN/interactiveNOTVERIFIED."
+        "M38 boundedcurrentQt probe: two6cycleprofiles defaultGC2.827s/frequentGC2.408s,8GCcollections insidepaintEvent; nativeeditor census1/retiredvalid0/parenttopLevels0/threadowners0; ownedworkers40626/40643 terminal0, sourcepreserved. m38-qt-lifetime-summary.json. No nativefault/rootcause reproduced; issue staysOPEN/interactiveNOTVERIFIED.",
+        "Final review2026-10-23:985CPU tests PASS72.674s;327files/519Ruff/684Pyright errors17warnings,0new vs actualM45 and first review checkpoint. This does not resolve the static backlog or prove the nativeQt fault mechanism; existing dispositions/prerequisites retained."
       ],
       "blockers": [
         "Native LLDB target launch unavailable in this environment; native crash mechanism and interactive target acceptance NOT VERIFIED."
@@ -4905,7 +4907,11 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Trimap import resolved/hashed before bounded lexical admission.",
+      "owner": "root coordinator with disjoint native agents",
+      "requirement": "Development brief reliability, shared engine, desktop ownership and source preservation; docs/review-objective.md",
+      "acceptance": "Trimap-only bounded loader on original lexical path first, reuse admitted exactbytes/hash, and forward original paths in preflight/raster/view. Preserve legacy coverage behavior."
     },
     {
       "id": "HEALTH-TRIMAP-240",
@@ -4931,7 +4937,11 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "New optional inferred types and fixture setup/exception expectations did not express the actual runtime contract.",
+      "owner": "root coordinator with disjoint native agents",
+      "requirement": "Development brief reliability, shared engine, desktop ownership and source preservation; docs/review-objective.md",
+      "acceptance": "Fix expected domain/OS refusals, declare actual types and narrow observed nonnull states without suppressions or arithmetic changes."
     },
     {
       "id": "HEALTH-STRESS-241",
@@ -4954,7 +4964,11 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Inventory assumed a queued owned scratch directory remained present until scandir.",
+      "owner": "root coordinator with disjoint native agents",
+      "requirement": "Development brief reliability, shared engine, desktop ownership and source preservation; docs/review-objective.md",
+      "acceptance": "Handle only legitimate disappearing owned descendants without concealing permission/alias/untrusted errors; deterministic interleaving regression and actual cancellation/recovery recheck."
     },
     {
       "id": "HEALTH-OUTPUT-242",
@@ -4980,7 +4994,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Deterministic generated output names were not checked against authored input paths before writer creation."
     },
     {
       "id": "HEALTH-PREVIEW-243",
@@ -5006,7 +5021,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Main close ownership predicate omitted the preview thread."
     },
     {
       "id": "HEALTH-CORRECTION-244",
@@ -5032,7 +5048,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Qt currentRow retains a current item after highlighted selection is cleared."
     },
     {
       "id": "HEALTH-LAUNCHER-245",
@@ -5058,7 +5075,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Launcher prompt commands replaced the child interpreter exit status."
     },
     {
       "id": "HEALTH-BENCHMARK-246",
@@ -5084,7 +5102,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Worker terminal event can precede the next GUI poll that renders its report."
     },
     {
       "id": "HEALTH-DOCS-247",
@@ -5110,7 +5129,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "root_cause": "Current-facing records and external task locators were not reconciled after later implementation."
     },
     {
       "id": "HEALTH-LIFECYCLE-248",
@@ -5123,21 +5143,30 @@
       "problem": "Cleanup may signal a numeric root process group after Popen has reaped its leader; ordinary benchmark cleanup has same gap. Replacement worker admission can lose cleanup uncertainty.",
       "evidence": [
         "Independent safe fake-process/killpg spy: already reaped PID424242 receives SIGKILL from WorkerClient.close; no destructive PID-reuse experiment performed.",
-        "Source inspection: BenchmarkTask non-stress cleanup also calls root killpg after reap; DesktopWindow.new_worker only checks bridge.done."
+        "Source inspection: BenchmarkTask non-stress cleanup also calls root killpg after reap; DesktopWindow.new_worker only checks bridge.done.",
+        "Safe deterministic two-thread fakePopen probe: mainclose wait reaps between readerfailure pollNone and SIGKILL spy; no real signals/PID-reuse experiment."
       ],
-      "root_cause": "Numeric group presence was treated as termination authority after leader ownership ended.",
+      "root_cause": "Poll-before-signal without serializing competing owned waits can lose leader authority; startup/close uncertainty also crossed untyped boundaries.",
       "proposed_action": "Never terminate by a reaped root group ID; preserve live group kill and birth-pinned observed-descendant cleanup, explicitly retain unverified cleanup and prevent replacement owner admission.",
       "acceptance": "No destructive signal after leader reap in either owner; actual known descendants stop, cleanup remains bounded; clean crash can reconnect while uncertain cleanup cannot.",
-      "owner": "cache_review; cache_ui desktop boundary",
+      "owner": "cache_review; cache_ui independent final review",
       "verification": [
         "benchmark-results/fresh-review-checkpoint-verification.json",
         "benchmark-results/fresh-review-final-focused.log",
         "benchmark-results/m46-review-summary.json",
-        "benchmark-results/fresh-review-independent-ui-summary.json"
+        "benchmark-results/fresh-review-independent-ui-summary.json",
+        "benchmark-results/fresh-review-bounds-and-authority-focused.log",
+        "benchmark-results/fresh-review-final-source-verification.json",
+        "985 CPU tests PASS in72.674s;327file complete compile/import/dependency/static gate PASS;0new diagnostics vs actualM45 and first review checkpoint; independent stable source review PASS."
       ],
       "blockers": [],
-      "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "resolution": "Class-owned poll/wait/reap and root-group signalling share kill_lock. Timeout releases the lock before forced cleanup. Retained birth-pinned descendant cleanup and explicit startup/close uncertainty; clean crash reconnect remains supported.",
+      "relevant_commit": "Final bounded-read and process-authority review checkpoint on review/corridorkey-audit-20261023; exact identity in Git history.",
+      "requirement": "Development brief reliability, bounded resources and source preservation; docs/review-objective.md",
+      "attempts": [
+        "Initial rootpoll guard +birth-pinned descendant cleanup verified; independent review added startup uncertainty and partialthread acquisition handling.",
+        "Final second opinion identified mainclose wait outsidekill_lock, leaving a concurrent-reap gap. Sharedlock serialization is the next justified correction."
+      ]
     },
     {
       "id": "HEALTH-ADMISSION-249",
@@ -5151,7 +5180,7 @@
       "evidence": [
         "cache_ui source trace: DesktopWindow.job -> desktop_state.settings_job -> JobRequest.validate_source -> newly added output collision inventory."
       ],
-      "root_cause": "Shared request validation is also a synchronous GUI admission boundary; only Session.run/direct runtime own bulk I/O.",
+      "root_cause": "Bulk engine I/O was inserted in a generic validation function also called synchronously by Qt.",
       "proposed_action": "Keep request validation lightweight; run collision guard at authoritative engine boundaries before model loading/output mutation.",
       "acceptance": "Generic request validation never invokes bulk guard; Session.run invokes guard before loader, direct runtime still refuses protected outputs.",
       "owner": "root",
@@ -5163,7 +5192,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "requirement": "Development brief reliability, shared engine, desktop ownership and source preservation; docs/review-objective.md"
     },
     {
       "id": "HEALTH-TEST-250",
@@ -5177,7 +5207,7 @@
       "evidence": [
         "benchmark-results/fresh-review-focused-initial.log:82tests19.126s,4errors+1failure share disabled-EXR diagnostic; other77 passed."
       ],
-      "root_cause": "Test-order dependence on another module initializing the codec environment.",
+      "root_cause": "Standalone EXR test depended on another module enabling the codec before first use.",
       "proposed_action": "Set EXR environment opt-in before first test codec use, consistent with existing dedicated EXR fixtures.",
       "acceptance": "Standalone output-safety tests and affected existing raster/stress cases pass from a fresh interpreter.",
       "owner": "root",
@@ -5189,7 +5219,8 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "requirement": "Development brief reliability, shared engine, desktop ownership and source preservation; docs/review-objective.md"
     },
     {
       "id": "HEALTH-RECOVERY-251",
@@ -5203,7 +5234,7 @@
       "evidence": [
         "benchmark-results/review-251-probe.py/.json: actual sealed71byte validPNG mask deleted at quota0; owned-staging642byte validdocument pruned; both fail afterwards before engine calls."
       ],
-      "root_cause": "Store initialization mutates owned workspace before all authored input paths are admitted as protected.",
+      "root_cause": "Recovery store pruning occurred before correction document and asset paths were included in workspace separation.",
       "proposed_action": "Strict bounded correction path/asset inventory and workspace overlap rejection before BundleStore construction or pruning.",
       "acceptance": "Actual owned-store mask/doc collision attempts preserve all workspace bytes and refuse before model/engine/journal/reports; aliases reject; valid separate corrections remain supported.",
       "owner": "cache_maintenance",
@@ -5215,26 +5246,38 @@
       ],
       "blockers": [],
       "resolution": "Implemented, source-reviewed and verified in the first fresh-review checkpoint; composite CPU coverage966 distinct cases, complete325file static0new vsM45 plus final test-only recheck. Raw failed runs retained; no product/GPU acceptance claim.",
-      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history."
+      "relevant_commit": "First review checkpoint on review/corridorkey-audit-20261023; exact commit recorded by Git branch history.",
+      "requirement": "Development brief reliability, shared engine, desktop ownership and source preservation; docs/review-objective.md"
     },
     {
       "id": "HEALTH-QUEUE-252",
-      "component": "queue_store.py inspect detail admission",
+      "component": "queue_store.py detail, history-header and metadata read admission",
       "classification": "confirmed bounded-read defect",
       "severity": "medium",
       "priority": "P2",
-      "status": "open",
+      "status": "resolved",
       "origin": "Fresh independent durable/queue audit; tiny owned corruption/growth probes",
       "problem": "Oversized persisted request TEXT is materialized before its4MiB request limit is enforced.",
       "evidence": [
-        "benchmark-results/review-bounded-reads-probe.py/.json: Owned offline-edited8,390,906byte validenvelope+whitespace row with matchinghash; inspect rejects only after16,788,789byte tracedpeak."
+        "benchmark-results/review-bounded-reads-probe.py/.json: Owned offline-edited8,390,906byte validenvelope+whitespace row with matchinghash; inspect rejects only after16,788,789byte tracedpeak.",
+        "benchmark-results/fresh-review-252-header-metadata-probe.txt: 8MiB requeststatus and metadataqueue_id reached Python adapter before rejection; DBunchanged."
       ],
       "root_cause": "Read allocation precedes declared input-size admission.",
       "proposed_action": "Admit each stored request/event byte length before fetching/materializing TEXT, preserving separate4MiB bounds and valid combined rows.",
-      "acceptance": "Admit each stored request/event byte length before fetching/materializing TEXT, preserving separate4MiB bounds and valid combined rows. Add focused growth/oversize regressions and verify valid replay/queue workflows.",
-      "owner": "unassigned until current gate terminal",
-      "verification": [],
-      "blockers": []
+      "acceptance": "Admit all selected persisted detail/header/metadata field types and byte extents before Python materialization, metadata at most2rows, preserve perfield4MiB payloads/combined8MiB and128rowpaging, UTF8read-only admission.",
+      "owner": "cache_ui; cache_review independent review",
+      "verification": [
+        "tests/test_queue_detail_bounds.py",
+        "benchmark-results/fresh-review-bounds-and-authority-focused.log",
+        "benchmark-results/fresh-review-252-final-ruff.txt",
+        "benchmark-results/fresh-review-252-final-pyright.txt",
+        "benchmark-results/fresh-review-final-source-verification.json",
+        "985 CPU tests PASS in72.674s;327file complete compile/import/dependency/static gate PASS;0new diagnostics vs actualM45 and first review checkpoint; independent stable source review PASS."
+      ],
+      "blockers": [],
+      "resolution": "One SQL projection admits persisted UTF-8 text types/byte extents before Python materialization. Independent 4MiB request/event limits preserve valid combined rows; metadata fetch is limited to two rows and history paging remains 128 plus one lookahead. Non-UTF-8 histories are refused without transcoding.",
+      "requirement": "Development brief reliability, bounded resources and source preservation; docs/review-objective.md",
+      "relevant_commit": "Final bounded-read and process-authority review checkpoint on review/corridorkey-audit-20261023; exact identity in Git history."
     },
     {
       "id": "HEALTH-DURABLE-253",
@@ -5242,7 +5285,7 @@
       "classification": "confirmed bounded-read defect",
       "severity": "medium",
       "priority": "P2",
-      "status": "open",
+      "status": "resolved",
       "origin": "Fresh independent durable/queue audit; tiny owned corruption/growth probes",
       "problem": "RVM/Hann payload files grown after successful lookup are read without an admitted-extent limit before corruption fallback.",
       "evidence": [
@@ -5251,9 +5294,19 @@
       "root_cause": "Read allocation precedes declared input-size admission.",
       "proposed_action": "Use same-descriptor declared extent plus one bounded read and metadata/hash/header/shape checks before safetensors materialization; retain typed large-job compatibility and recompute corrupt entries.",
       "acceptance": "Use same-descriptor declared extent plus one bounded read and metadata/hash/header/shape checks before safetensors materialization; retain typed large-job compatibility and recompute corrupt entries. Add focused growth/oversize regressions and verify valid replay/queue workflows.",
-      "owner": "unassigned until current gate terminal",
-      "verification": [],
-      "blockers": []
+      "owner": "cache_maintenance; cache_review independent review",
+      "verification": [
+        "tests/test_durable_read_bounds.py",
+        "benchmark-results/review-253-254-final-new-tests.txt",
+        "benchmark-results/review-253-254-final-ruff.json",
+        "benchmark-results/review-253-254-final-pyright.json",
+        "benchmark-results/fresh-review-final-source-verification.json",
+        "985 CPU tests PASS in72.674s;327file complete compile/import/dependency/static gate PASS;0new diagnostics vs actualM45 and first review checkpoint; independent stable source review PASS."
+      ],
+      "blockers": [],
+      "resolution": "RVM/Hann read exact admitted immutable bytes from one regular single-link descriptor with bounded growth sentinel, checksum and path/descriptor identity checks. Geometry-derived bounds and exact safetensors header/provenance admission precede tensor allocation; corrupt entries recompute.",
+      "requirement": "Development brief reliability, bounded resources and source preservation; docs/review-objective.md",
+      "relevant_commit": "Final bounded-read and process-authority review checkpoint on review/corridorkey-audit-20261023; exact identity in Git history."
     },
     {
       "id": "HEALTH-DURABLE-254",
@@ -5261,7 +5314,7 @@
       "classification": "confirmed bounded-read defect",
       "severity": "medium",
       "priority": "P2",
-      "status": "open",
+      "status": "resolved",
       "origin": "Fresh independent durable/queue audit; tiny owned corruption/growth probes",
       "problem": "Legacy RVM ownership metadata accepts/repeatedly reads above existing managed record bounds.",
       "evidence": [
@@ -5270,9 +5323,19 @@
       "root_cause": "Read allocation precedes declared input-size admission.",
       "proposed_action": "Apply explicit bounded metadata admission for typed durable adapters and relevant store read/publication paths; do not silently weaken or blanket alter unrelated valid large-bundle interfaces.",
       "acceptance": "Apply explicit bounded metadata admission for typed durable adapters and relevant store read/publication paths; do not silently weaken or blanket alter unrelated valid large-bundle interfaces. Add focused growth/oversize regressions and verify valid replay/queue workflows.",
-      "owner": "unassigned until current gate terminal",
-      "verification": [],
-      "blockers": []
+      "owner": "cache_maintenance; cache_review independent review",
+      "verification": [
+        "tests/test_durable_read_bounds.py",
+        "benchmark-results/review-253-254-final-new-tests.txt",
+        "benchmark-results/review-253-254-final-ruff.json",
+        "benchmark-results/review-253-254-final-pyright.json",
+        "benchmark-results/fresh-review-final-source-verification.json",
+        "985 CPU tests PASS in72.674s;327file complete compile/import/dependency/static gate PASS;0new diagnostics vs actualM45 and first review checkpoint; independent stable source review PASS."
+      ],
+      "blockers": [],
+      "resolution": "Workspace/owner records have a 4MiB default bound before constructor/pruning/eviction. Typed RVM/Hann metadata is bounded; generic completed manifests retain their configured store quota. Typed publication entry limits do not reject unrelated valid mixed-cache entries.",
+      "requirement": "Development brief reliability, bounded resources and source preservation; docs/review-objective.md",
+      "relevant_commit": "Final bounded-read and process-authority review checkpoint on review/corridorkey-audit-20261023; exact identity in Git history."
     }
   ]
 }

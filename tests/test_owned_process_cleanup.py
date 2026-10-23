@@ -1,4 +1,5 @@
 """Reaped numeric process IDs never authorize signals to an unknown group."""
+import logging
 import os
 import queue
 import subprocess
@@ -114,6 +115,60 @@ class OwnedCleanupTests(unittest.TestCase):
         self.assertIn('NOT VERIFIED', client.cleanup_error)
         with self.assertRaisesRegex(RuntimeError, 'cleanup is unverified'):
             client.restart()
+
+    def test_close_wait_cannot_reap_during_failure_owner_root_signal(self):
+        client = self.client(live=True)
+        client.send = Mock()
+        client._capture_descendants = lambda: None
+        waiting, release_wait, reader_attempt = threading.Event(), threading.Event(), threading.Event()
+        errors, signals = [], []
+
+        def wait(timeout=None):
+            if threading.current_thread().name == 'close-owner':
+                waiting.set()
+                if not release_wait.wait(2):
+                    raise RuntimeError('test did not release owned wait')
+                client.process.returncode = 0
+            return client.process.returncode
+
+        def signal_group(pid, sig):
+            signals.append((int(sig), client.process.returncode))
+            if sig == 0:
+                raise ProcessLookupError
+
+        def run(close):
+            try:
+                if close:
+                    client.close()
+                else:
+                    reader_attempt.set()
+                    client._terminate_owned()
+            except BaseException as exc:
+                logging.getLogger(__name__).exception('Owned cleanup interleaving failed')
+                errors.append(exc)
+
+        client.process.wait.side_effect = wait
+        closer = threading.Thread(target=lambda: run(True), name='close-owner')
+        reader = threading.Thread(target=lambda: run(False), name='reader-failure')
+        with patch('corridorkey.worker_client.os.killpg', side_effect=signal_group):
+            closer.start()
+            try:
+                self.assertTrue(waiting.wait(2))
+                acquired = client.kill_lock.acquire(blocking=False)
+                if acquired:
+                    client.kill_lock.release()
+                self.assertFalse(acquired, 'Class-owned wait must hold root-signal authority until reaped')
+                reader.start()
+                self.assertTrue(reader_attempt.wait(2))
+            finally:
+                release_wait.set()
+                closer.join(3)
+                if reader.ident is not None:
+                    reader.join(3)
+        self.assertFalse(closer.is_alive() or reader.is_alive())
+        self.assertEqual(errors, [])
+        self.assertTrue(signals)
+        self.assertTrue(all(sig == 0 and returncode == 0 for sig, returncode in signals))
 
     def test_cleanly_reaped_crash_is_distinct_from_unverified_cleanup(self):
         client = self.client()

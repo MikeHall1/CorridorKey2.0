@@ -1,55 +1,52 @@
-# Checkpoint — M46 and first fresh review fixes locally verified
+# Current checkpoint — final repository review, 2026-10-23
 
-Current objective: [review-objective.md](review-objective.md). Product scope:
-[development-brief.md](development-brief.md); [acceptance](acceptance.md).
-Full product and review remain incomplete. Current review branch:
-`review/corridorkey-audit-20261023`, base `485f5e9`.
-Verified origin: MikeHall1/CorridorKey2.0; upstream must not receive pushes.
-The current user authorizes coherent commits and normal fork pushes. No installs,
-large downloads, media uploads, force pushes, default-branch merges or releases.
-Existing uncommitted work preserved; initial inventory is in ignored
-`benchmark-results/fresh-review-start-inventory.json`.
+The local repository-review acceptance conditions are met, using the explicit
+push-blocker exception in [review-objective.md](review-objective.md). Full product
+acceptance remains incomplete. [Review report](review-2026-10-23.md).
 
-## Verified checkpoint
+## Changes and verification
 
-M46 native trimap schema2/import/refinement/Qt save-reopen-attach-render is locally
-verified, not pretrained quality acceptance. See [trimap contract](trimap-refinement.md).
-Fresh review239–251 resolved output/hint overwrite, pre-prune recovery loss,
-preview/process ownership, startup cleanup reporting/reconnect, correction
-selection, launcher exit codes and documentation/fixture issues. Independent
-reviews and actual owned-fixture reproductions are retained.
+Resolved confirmed review issues239–254: source/hint/correction preservation,
+pre-prune recovery admission, owned preview/worker lifecycle and cleanup
+uncertainty, correction selection, launcher exit status, fixture synchronization,
+portable records, bounded queue projection/cache payload/ownership reads. Final
+248fix serializes class-owned reaping and root signalling. All fixes have focused
+regressions, main diff review and independent stable source review.
 
-CPU evidence is composite966 distinct cases:965 passed a966-case full run in
-72.390s; the sole old close-test wait was strengthened and rechecked1PASS1.660s.
-All production sources are unchanged between those runs. This is not a green
-full-gate invocation; original failed logs remain archived. Complete325file
-compile/import/dependency/whitespace/static checks pass with0new vsactualM45.
-Existing519Ruff/684Pyright errors17warnings remain, not static-clean.
-Focused groups:54M46pass2.477s;37correctedreviewpass11.418s;27finalreviewpass4.404s;
-8ownerchecks0.066s plus final affectedstress1pass0.003s. Bashlauncher1pass0.914s.
-ActualM46 Qt alpha maxerror5.960464477539063e-08 vsdeclared3e-6, sources/assets/
-oldoutputs preserved and owners terminal. Pixel proof reused with explicit
-non-numerical outputguard/naming/ownership changes covered by review regressions.
+Final frozen-source full invocation: **985CPU tests PASS72.674s, no skips**;
+327Python files,0syntax errors; compilation/import/dependency/VCS/whitespace PASS.
+Ruff519/Pyright684errors17warnings retained,0new vsbaseline, actualM45 and first
+review checkpoint. No checker weakening. Exact hashes and commands:
+`benchmark-results/fresh-review-final-source-verification.json`,
+`benchmark-results/fresh-review-final/`. Previous failed logs remain archived.
+ActualM46 Qt/pixel-oracle proof is reused for unchanged numerical behavior.
 
-Evidence: `benchmark-results/fresh-review-checkpoint-verification.json`,
-`fresh-review-integration-1/`, `m46-review-summary.json`,
-`fresh-review-independent-ui-summary.json`. [Portable review](review-2026-10-23.md).
+## Git and publication
 
-## Next cycle
+Branch: `review/corridorkey-audit-20261023`.
+Verified origin: `https://github.com/MikeHall1/CorridorKey2.0.git`.
+First local checkpoint: `56c067f21e0c685ab699e4eb3e0aa9db628cd743`.
+Final checkpoint: the commit containing this file; exact identity via
+`git log -1 --format=%H`. Source/tests/docs only; no footage, weights, caches,
+generated reports or private IDE settings. Licences/pinned SDK bytes preserved.
 
-252 queue detail TEXT allocation before size admission;253 RVM/Hann payload
-unbounded growth read;254 oversized ownership metadata. Independent tiny owned
-probes confirmed allthree; evidence `review-bounded-reads-probe.py/.json`.
-Next: deliberately stage/commit/push current checkpoint, then assign disjoint
-queue and durable/store fixes. Require contracts before shared API edits,
-focused success/failure regressions, independent stable review and one applicable
-final integration gate. No speculative cleanup or unchanged full-suite reruns.
+The user explicitly approved the first checkpoint push. It failed:
+`fatal: could not read Username for 'https://github.com': Device not configured`.
+GitHub CLI is absent; the existing SSH agent has no identities. No remote branch
+was created or alternate commit published. Git authentication is required before
+`git push --set-upstream origin review/corridorkey-audit-20261023`.
+Do not repeat the unchanged failed attempt or force-push.
 
-All sources/tests frozen, agents complete, no live process handles. Root alone
-updates ledgers/checkpoints. Never test or static-check another owner's mutable
-source; use the existing compatible Python3.12/NumPy1.26 environment without
-changing the user's environment. Checkpoint interval is not a stopping limit.
+## Remaining prerequisites
 
-NativeQt126/static005 remain open. CUDA unavailable; five configured model/
-foundation paths absent; ffmpeg/CMake/nvcc absent on PATH. GPU/weights/held-out
-quality, Windows packaging and Resolve host/SDK acceptance remain unverified.
+Static backlog005 remains visible; nativeQt126 needs native instrumentation and
+interactive target acceptance (LLDB target launch unavailable). CUDA is unavailable,
+all five configured model/foundation paths are absent, and ffmpeg/CMake/nvcc are
+absent from PATH. GPU/weights/representative held-out quality, actual Windows
+packaging and Resolve host/SDK acceptance are NOT VERIFIED. Reproduction commands
+and affected criteria remain in [acceptance.md](acceptance.md).
+
+No active source owners, live verification handles or extra supervisor remain.
+Next action: authenticate Git and publish the local review branch; resume product
+acceptance only with its actual target prerequisites. Do not restart this completed
+review or repeat unchanged full-suite evidence merely to demonstrate activity.

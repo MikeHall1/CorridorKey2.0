@@ -206,3 +206,16 @@ separate output folder in that case. Existing unrelated outputs can still be
 rerendered. Collision inspection is cancellable and limited to 100000 direct
 entries and 1024 path ancestors; it never recursively audits arbitrary trees.
 Source CLI/API callers receive this protection through the shared engine.
+
+
+Queue history reads require UTF-8 SQLite databases and preserve independent4MiB
+request/event limits. Oversized or ill-typed persisted fields are refused before
+Python text materialization; existing histories are never transcoded. This does
+not impose a hard cap on SQLite internal memory.
+
+Durable recovery workspace/owner records are limited to4MiB. RVM/Hann adapters
+also enforce4MiB metadata,64KiB safetensors headers and geometry/dtype-derived
+payload bounds within the configured cache budget. Invalid cache data recomputes;
+unverifiable ownership fails closed before pruning. Generic completed manifests
+retain the configured store quota rather than the tighter typed-adapter limit.
+No new inference flag or precision change is introduced.
