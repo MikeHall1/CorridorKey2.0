@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T13:41:19.666705+00:00",
-  "cycles_completed": 25,
+  "created_utc": "2026-10-23T14:01:27.820407+00:00",
+  "cycles_completed": 30,
   "checkpoint_interval": 5,
-  "boundary_reason": "Fifth coherent extension checkpoint: connected cleanplate guidance/provenance/admission and optional provider foundation locally verified; continue remaining implementation.",
+  "boundary_reason": "Sixth coherent extension checkpoint: connected subject clicks/CPU child/Keep provenance and native UI locally verified; continue portability and remaining workflows.",
   "completed": [
     {
       "id": "fresh-repository-review",
@@ -247,9 +247,9 @@
       "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
     }
   ],
-  "next_action": "Connect explicit optional CPU subject provider and native click/inspect/accept owner; no installation/download. Continue other locally actionable features.",
-  "last_verification_logs": "benchmark-results/ext03-connected-final",
+  "next_action": "Implement portable project inventory/selected collection/relinking with explicit preview and safe publication; preserve all settings/correction provenance.",
+  "last_verification_logs": "benchmark-results/ext04-connected-final",
   "product_complete": false,
-  "reviewed_source_identity": "9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae",
-  "local_increment": "Connected one-frame cleanplate workflow; schema4 accepted guidance; optional headless provider only"
+  "reviewed_source_identity": "91a14a89130bb237d9002551b6b085061ad464a72e11ca8fadb0681853a17a28",
+  "local_increment": "Connected optional CPUfloat32 subject click/inspect/Keep and tracking workflow; actualSAM2 NOT VERIFIED"
 }

@@ -1,8 +1,10 @@
 # Optional click guidance: provider investigation
 
-EXT-04 now has a headless optional-provider foundation, not a connected click UI.
-No provider/model was installed, downloaded or executed. Official-source research
-and deterministic provider fixtures are not latency/VRAM/quality or platform acceptance.
+EXT-04 now has a [connected optional CPU click workflow](subject-clicks.md),
+using a headless provider/session behind an owned child process. No provider/model
+was installed, downloaded or executed. Official-source research, deterministic
+provider fixtures and actual fixture-child transport are not latency/VRAM/quality
+or native platform acceptance.
 
 Recommend one optional **SAM2.1 image provider**, initially with a deliberately
 selected local tiny checkpoint/configuration. Its image API directly accepts
@@ -79,9 +81,9 @@ changing global settings. BF16 must be selected explicitly.
 
 Seventeen deterministic tests cover source/generation changes, positive/negative
 clicks and iterative logits, cancellation, lease/reset ownership, file mutation
-and precision drift. They do not execute SAM2. No provider controls are exposed
-until the connected owner can establish the resource handoff; an idle inference
-worker may still retain its GPU model. Accepted schema4 masks are ordinary
-corrections and do not need provider weights to render. Click UI, native-coordinate
-inspection/acceptance, integration with tracking and actual optional-model runtime
-acceptance remain pending.
+and precision drift. They do not execute SAM2. The connected controls select CPU float32 explicitly. CUDA/MPS guidance remains
+unavailable in that workflow: an idle inference worker may still retain its GPU
+model, and a verified resource handoff is not implemented. Accepted schema4 masks are ordinary
+corrections and do not need provider weights to render. Native-coordinate clicks, inspection/Keep acceptance and existing tracking are
+connected and fixture-tested. Actual optional-model runtime acceptance remains
+pending.

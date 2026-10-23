@@ -66,6 +66,8 @@ class CorrectionEditor:
                          'shots': [[0, self.binding['frame_count']]], 'entries': []}, parent)
         self.tracking_preview = None
         self.plate_preview = None
+        self.subject_preview = None
+        self.subject_cleanup_error = None
         self.tracking_cleanup_pending: list[Path] = []
         self.tracking_cleanup_warnings: list[str] = []
         self.history = CorrectionHistory(document, max_snapshots=128)
@@ -89,6 +91,8 @@ class CorrectionEditor:
                 'saved_path': str(self.saved_path) if self.saved_path else None,
                 'tracking_preview': self.tracking_summary(),
                 'plate_preview': self.plate_summary(),
+                'subject_preview': self.subject_summary(),
+                'subject_cleanup_error': self.subject_cleanup_error,
                 'tracking_cleanup_pending': [str(path) for path in self.tracking_cleanup_pending],
                 'tracking_cleanup_warnings': self.tracking_cleanup_warnings.copy()}
 
@@ -109,6 +113,7 @@ class CorrectionEditor:
         if not preserve_tracks:
             self.discard_tracking()
         self.discard_plate()
+        self.discard_subject()
 
     def prepare_tracking(self, **parameters):
         from .correction_tracking_editor import prepare_tracking
@@ -172,6 +177,34 @@ class CorrectionEditor:
         data['guidance'] = [origin for origin in data['guidance'] if origin['id'] != origin_id]
         entry['revision'] = self.revision + 1
         self._apply(data)
+
+    def prepare_subject(self, **parameters):
+        from .subject_guidance_editor import prepare_subject
+        prepare_subject(self, **parameters)
+
+    def predict_subject(self, **parameters):
+        from .subject_guidance_editor import predict_subject
+        predict_subject(self, **parameters)
+
+    def subject_summary(self):
+        from .subject_guidance_editor import subject_summary
+        return subject_summary(self)
+
+    def subject_view(self):
+        from .subject_guidance_editor import subject_view
+        return subject_view(self)
+
+    def clear_subject(self):
+        from .subject_guidance_editor import clear_subject
+        clear_subject(self)
+
+    def accept_subject(self):
+        from .subject_guidance_editor import accept_subject
+        accept_subject(self)
+
+    def discard_subject(self):
+        from .subject_guidance_editor import discard_subject
+        discard_subject(self)
 
     def _checkpoint(self, document: CorrectionDocument) -> None:
         self.check()
@@ -319,6 +352,7 @@ class CorrectionEditor:
         self.saved_path = None
         self.discard_tracking()
         self.discard_plate()
+        self.discard_subject()
 
     def redo(self) -> None:
         invalidated = self.history.redo()
@@ -331,6 +365,7 @@ class CorrectionEditor:
         self.saved_path = None
         self.discard_tracking()
         self.discard_plate()
+        self.discard_subject()
 
     def save(self) -> Path:
         if source_identity(self.job.input_path, check=self.check)['sha256'] != self.binding['sha256']:

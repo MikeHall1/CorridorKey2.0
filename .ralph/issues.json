@@ -6209,6 +6209,67 @@
         "20actualQt tests PASS3.878s; independent11plate/tracking PASS1.706s; final fullgate pending.",
         "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
       ]
+    },
+    {
+      "id": "HEALTH-SUBJECT-294",
+      "component": "Connected optional subject guidance",
+      "classification": "Independent source review confirmed by targeted regression contract",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Invalid newer prompts can preserve a previously inspected acceptable mask.",
+      "root_cause": "Result invalidation occurred after prompt validation.",
+      "proposed_action": "Invalidate before validation and before service cancellation pre-dispatch; four invalid prompt cases and canceled-beforemethod regression.",
+      "acceptance": "Latest prompt/cancellation cannot preserve obsolete acceptable guidance or revoke active cancellation.",
+      "owner": "root; readiness_review",
+      "evidence": [
+        "tests/test_subject_guidance_editor.py"
+      ],
+      "verification": [
+        "10focusedactualeditor/service tests PASS0.781s -Werror; independent review/fullgate pending.",
+        "Final frozen1232CPU PASS83.428s/no skips;372file fullgate0new vs baseline AND actual662707d. Source mapping 91a14a89130bb237d9002551b6b085061ad464a72e11ca8fadb0681853a17a28."
+      ]
+    },
+    {
+      "id": "HEALTH-SUBJECT-295",
+      "component": "Connected optional subject guidance",
+      "classification": "Independent source review confirmed by targeted regression contract",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Submitting another service request while an operation is active can clear its cancellation flag.",
+      "root_cause": "Service queue admission clears cancellation without an active-operation fence.",
+      "proposed_action": "Reject new requests while owned operation is pending, preserving cancellation until terminal publication; actual threaded service regression.",
+      "acceptance": "Latest prompt/cancellation cannot preserve obsolete acceptable guidance or revoke active cancellation.",
+      "owner": "root; readiness_review",
+      "evidence": [
+        "tests/test_subject_guidance_editor.py"
+      ],
+      "verification": [
+        "10focusedactualeditor/service tests PASS0.781s -Werror; independent review/fullgate pending.",
+        "Final frozen1232CPU PASS83.428s/no skips;372file fullgate0new vs baseline AND actual662707d. Source mapping 91a14a89130bb237d9002551b6b085061ad464a72e11ca8fadb0681853a17a28."
+      ]
+    },
+    {
+      "id": "HEALTH-SUBJECT-296",
+      "component": "Optional subject process result binding",
+      "classification": "Independent actual-child malformed reply reproduction",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Matching request IDs could contain mismatched provenance clicks/mask format; connected adapter independently guarded acceptance.",
+      "root_cause": "Parent transport validated frame/mask identity but omitted prompt and format provenance consistency.",
+      "proposed_action": "Require exact typed JSON prompt and mask-format consistency in transport and editor before publication; actual malformed-child regression covers wrongcoordinates/floatintegercoercion/format.",
+      "acceptance": "All malformed matching-ID replies reject and retire child; valid persistent refinement remains unchanged.",
+      "owner": "root; readiness_review",
+      "evidence": [
+        "tests/test_subject_guidance_process.py",
+        "benchmark-results/ext04-provenance-fixed.txt"
+      ],
+      "verification": [
+        "20process/editor tests PASS2.580s -Werror; independently20PASS2.569s; Ruff/Pyright0. Complete frozen gate pending.",
+        "Final frozen1232CPU PASS83.428s/no skips;372file fullgate0new vs baseline AND actual662707d. Source mapping 91a14a89130bb237d9002551b6b085061ad464a72e11ca8fadb0681853a17a28."
+      ]
     }
   ]
 }

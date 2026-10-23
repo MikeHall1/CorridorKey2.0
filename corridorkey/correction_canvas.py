@@ -4,8 +4,8 @@ from __future__ import annotations
 import cv2
 import numpy as np
 from numpy.typing import NDArray
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QImage, QMouseEvent, QPainter, QPaintEvent, QPixmap
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QImage, QMouseEvent, QPainter, QPaintEvent, QPixmap
 from PySide6.QtWidgets import QWidget
 
 
@@ -26,6 +26,8 @@ def native_point(x: float, y: float, rect: tuple[float, float, float, float],
 
 
 class CorrectionCanvas(QWidget):
+    native_clicked = Signal(int, int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumSize(360, 240)
@@ -37,6 +39,8 @@ class CorrectionCanvas(QWidget):
         self.radius, self.value = 12, 255
         self.previous: tuple[int, int] | None = None
         self.painting = True
+        self.click_mode = False
+        self.click_markers: list[tuple[int, int, bool]] = []
         self.dirty = False
 
     def set_frame(self, pixels: NDArray[np.uint8], width: int, height: int, overlay: NDArray[np.uint8] | None, *, overlay_kind: str = 'coverage'):
@@ -75,13 +79,18 @@ class CorrectionCanvas(QWidget):
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
+        if self.click_mode and event.button() == Qt.MouseButton.LeftButton:
+            point = self.point(event.position())
+            if point is not None:
+                self.native_clicked.emit(*point)
+            return
         if self.painting and event.button() == Qt.MouseButton.LeftButton:
             point = self.point(event.position())
             if point is not None:
                 self._stroke(point)
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        if self.painting and event.buttons() & Qt.MouseButton.LeftButton:
+        if self.painting and not self.click_mode and event.buttons() & Qt.MouseButton.LeftButton:
             point = self.point(event.position())
             if point is None:
                 self.previous = None  # Do not bridge strokes across letterboxing.
@@ -116,3 +125,11 @@ class CorrectionCanvas(QWidget):
                 rgba[:, :, 3] = (coverage.astype(np.uint16) * 100 // 255).astype(np.uint8)
             image = QImage(rgba.data, size[0], size[1], rgba.strides[0], QImage.Format.Format_RGBA8888).copy()
             painter.drawImage(target, image)
+
+        for index, (x, y, positive) in enumerate(self.click_markers):
+            center = QPointF(left + (x + .5) * width / self.native_width,
+                             top + (y + .5) * height / self.native_height)
+            painter.setPen(QColor('white'))
+            painter.setBrush(QColor(0, 210, 80) if positive else QColor(245, 85, 45))
+            painter.drawEllipse(center, 4., 4.)
+            painter.drawText(center + QPointF(6, -5), str(index + 1))

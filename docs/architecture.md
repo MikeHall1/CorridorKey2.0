@@ -207,3 +207,13 @@ encoded bytes after header geometry checks; `video_io` accepts those bytes throu
 the same channel/precision/association/color math as its existing path decoder.
 See [clean-plate guidance](clean-plate-guidance.md). Optional segmentation has a
 headless single-owner provider foundation only; no model is loaded at UI import.
+
+
+Optional subject clicks connect through the same correction service and native
+canvas mapping. Prepare captures bounded immutable source/proxy bytes; Predict
+owns one persistent isolated CPU float32 provider child with separate32MiB
+framing, bounded queues/logs and deadline/cancel termination. This does not reuse
+the render worker's4MiB protocol or GPU ownership. Captured source, exact native
+RGB, ordered prompts and provider provenance bind accepted schema4 Keep masks.
+The service admits one active operation, preserves cancellation until retirement
+and retains child ownership until verified shutdown. See [subject clicks](subject-clicks.md).

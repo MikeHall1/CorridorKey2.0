@@ -50,6 +50,8 @@ class CorrectionDialog(QDialog):
         self.presented_entry: str | None = None
         self.presented_strength: float | None = None
         self.tracking_anchors: list[str] = []
+        self.subject_clicks: list[dict[str, Any]] = []
+        self.subject_binding = None
         root = QVBoxLayout(self)
         self.help = QLabel('Trimaps are imported native classes: foreground green, background red, unknown transparent. Unknown is not 50% alpha. Fixed native 1-pixel RGB-guided refinement adjusts UNKNOWN; strength blends once, known classes are exact at strength 1. Trimaps affect final alpha only, not neural hints, carried mattes or flow; later entries can override. Global alpha refinement is separate. Quick/spatial draft remains approximate. Paint binary native regions (blue draft; green stored mask). Commit mask before saving. Matte defines full-frame coverage, including zero outside paint; keep/remove protect only painted regions. Directional ranges repeat a static raster, not motion tracking. Undo/redo operates on committed edits. This overlay is authored coverage, not a neural key.')
         self.help.setWordWrap(True)
@@ -125,6 +127,7 @@ class CorrectionDialog(QDialog):
         self.tracking_note.setWordWrap(True)
         root.addWidget(self.tracking_note)
         self._build_plate_controls(root)
+        self._build_subject_controls(root)
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(['Kind', 'Frame', 'Range [start,end)', 'Direction', 'Strength'])
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -141,6 +144,166 @@ class CorrectionDialog(QDialog):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll)
         self.timer.start(50)
+
+    def _build_subject_controls(self, root):
+        self.subject_toggle = QPushButton('Show optional subject clicks ▸')
+        self.subject_toggle.setCheckable(True)
+        root.addWidget(self.subject_toggle)
+        self.subject_panel = QWidget()
+        root.addWidget(self.subject_panel)
+        layout = QVBoxLayout(self.subject_panel)
+        self.subject_panel.hide()
+        self.subject_toggle.toggled.connect(self._toggle_subject)
+        row = QHBoxLayout()
+        self.subject_config = QLineEdit()
+        self.subject_checkpoint = QLineEdit()
+        self.subject_config.setPlaceholderText('Explicit local SAM2 configuration')
+        self.subject_checkpoint.setPlaceholderText('Explicit local compatible checkpoint')
+        row.addWidget(self.subject_config)
+        self._button('Configuration…', lambda: self.choose_subject_asset(False), row)
+        row.addWidget(self.subject_checkpoint)
+        self._button('Checkpoint…', lambda: self.choose_subject_asset(True), row)
+        row.addWidget(QLabel('CPU · float32 only'))
+        layout.addLayout(row)
+        row = QHBoxLayout()
+        self.subject_prepare_button = self._button('Prepare selected frame', self.prepare_subject, row)
+        self.subject_click_mode = QCheckBox('Click canvas')
+        self.subject_click_mode.toggled.connect(self._sync_subject_controls)
+        row.addWidget(self.subject_click_mode)
+        self.subject_positive = QComboBox()
+        self.subject_positive.addItem('Positive subject', True)
+        self.subject_positive.addItem('Negative exclusion', False)
+        row.addWidget(self.subject_positive)
+        self.subject_click_count = QLabel("Clicks 0/128")
+        row.addWidget(self.subject_click_count)
+        self.subject_x, self.subject_y = QSpinBox(), QSpinBox()
+        for name, widget in [('Native X', self.subject_x), ('Y', self.subject_y)]:
+            widget.setRange(0, 0)
+            row.addWidget(QLabel(name))
+            row.addWidget(widget)
+        self.subject_add = self._button('Add XY', self.add_subject_xy, row)
+        self.subject_undo = self._button('Undo click', self.undo_subject_click, row)
+        self.subject_clear = self._button('Clear clicks / prediction', lambda: self.request('subject_clear'), row)
+        layout.addLayout(row)
+        row = QHBoxLayout()
+        self.subject_predict = self._button('Predict coarse subject', self.predict_subject, row)
+        self.subject_inspect = self._button('Inspect subject result', lambda: self.request('subject_view'), row)
+        self.subject_accept = self._button('Accept as Keep', lambda: self.request('subject_accept'), row)
+        self.subject_discard = self._button('Discard / release provider', lambda: self.request('subject_discard'), row)
+        layout.addLayout(row)
+        self.subject_note = QLabel('Optional local SAM2 assistance for one captured image-sequence frame. Prepare captures source/configuration without loading a model; explicit Predict runs the isolated CPU float32 provider. No downloads or automatic predictions. Add positive/negative native-coordinate clicks (maximum 128); inspect before acceptance. Accept creates an ordinary Keep correction: mask interior becomes foreground at strength 1, outside remains unchanged. This is coarse subject guidance, not an alpha matte or verified hair quality. Existing strength/range/direction and tracking remain available after acceptance. Missing optional dependencies or incompatible local assets are reported as errors.')
+        self.subject_note.setWordWrap(True)
+        note_scroll = QScrollArea()
+        note_scroll.setWidgetResizable(True)
+        note_scroll.setMinimumHeight(48)
+        note_scroll.setMaximumHeight(88)
+        note_scroll.setWidget(self.subject_note)
+        layout.addWidget(note_scroll)
+        self.canvas.native_clicked.connect(self.add_subject_click)
+        self.frame.valueChanged.connect(self._sync_subject_controls)
+        self._sync_subject_controls()
+
+    def _toggle_subject(self, visible):
+        self.subject_panel.setVisible(visible)
+        self.subject_toggle.setText('Hide optional subject clicks ▾' if visible else 'Show optional subject clicks ▸')
+        if visible:
+            self.plate_toggle.setChecked(False)
+        else:
+            self.subject_click_mode.setChecked(False)
+
+    def choose_subject_asset(self, checkpoint):
+        if self.pending is not None or self.canvas.dirty:
+            self.status.setText('Finish current work and Commit/Clear draft before choosing local model assets.')
+            return
+        path, _ = QFileDialog.getOpenFileName(self, 'Choose local compatible checkpoint' if checkpoint else 'Choose local SAM2 configuration', '',
+                                            'Checkpoints (*.pt *.pth);;All files (*)' if checkpoint else 'Configuration (*.yaml *.yml *.json);;All files (*)')
+        if path:
+            (self.subject_checkpoint if checkpoint else self.subject_config).setText(path)
+
+    def prepare_subject(self):
+        config, checkpoint = self.subject_config.text().strip(), self.subject_checkpoint.text().strip()
+        if not config or not checkpoint:
+            self.status.setText('Choose an explicit local configuration and compatible checkpoint. Nothing is downloaded automatically.')
+            return
+        self.request('subject_prepare', frame=self.frame.value(), config_path=Path(config), checkpoint_path=Path(checkpoint))
+
+    def _subject_preview(self):
+        return self.snapshot.get('subject_preview') if self.snapshot is not None else None
+
+    def _sync_subject_controls(self, *_args):
+        preview = self._subject_preview()
+        record = preview or {}
+        idle = self.pending is None and not self.closing
+        retained = preview is not None and idle
+        captured = retained and record.get('state') in ('prepared', 'predicted') and not record.get('cleanup_error')
+        current_view = captured and self.displayed_role in ('subject_source', 'subject') and self.displayed_frame == record.get('frame') and self.frame.value() == record.get('frame')
+        self.canvas.click_mode = bool(current_view and self.subject_click_mode.isChecked())
+        self.canvas.click_markers = [(c['x'], c['y'], c['positive']) for c in self.subject_clicks] if self.displayed_role in ('subject_source', 'subject') else []
+        self.canvas.update()
+        self.subject_click_count.setText(f"Clicks {len(self.subject_clicks)}/128")
+        self.subject_click_mode.setEnabled(bool(current_view))
+        self.subject_add.setEnabled(bool(current_view) and len(self.subject_clicks) < 128)
+        self.subject_undo.setEnabled(bool(captured and self.subject_clicks))
+        self.subject_clear.setEnabled(bool(captured))
+        self.subject_discard.setEnabled(bool(retained))
+        self.subject_predict.setEnabled(bool(captured and any(c['positive'] for c in self.subject_clicks)))
+        matching = bool(preview is not None and record.get('state') == 'predicted' and record.get('clicks') == self.subject_clicks)
+        self.subject_inspect.setEnabled(bool(captured and matching))
+        self.subject_accept.setEnabled(bool(captured and matching and record.get('inspected')))
+        self.subject_prepare_button.setEnabled(idle)
+
+    def add_subject_xy(self):
+        self.add_subject_click(self.subject_x.value(), self.subject_y.value())
+
+    def add_subject_click(self, x, y):
+        preview = self._subject_preview()
+        if self.pending is not None or self.closing or preview is None or self.displayed_role not in ('subject_source', 'subject') or self.displayed_frame != preview.get('frame') or self.frame.value() != preview.get('frame'):
+            self.status.setText('Prepare and display the captured subject source frame before adding clicks.')
+            return
+        if len(self.subject_clicks) >= 128 or not 0 <= x < self.canvas.native_width or not 0 <= y < self.canvas.native_height:
+            self.status.setText('Clicks must be inside the native image; maximum 128 clicks per prediction.')
+            return
+        self.subject_x.setValue(x)
+        self.subject_y.setValue(y)
+        self.subject_clicks.append({'x': x, 'y': y, 'positive': self.subject_positive.currentData()})
+        self._clear_subject_overlay()
+        self._sync_subject_controls()
+        self.status.setText(f'{len(self.subject_clicks)} subject clicks staged. Predict explicitly; changed clicks need a new prediction and inspection.')
+
+    def undo_subject_click(self):
+        if self.pending is None and not self.closing and self.subject_clicks:
+            self.subject_clicks.pop()
+            self._clear_subject_overlay()
+            self._sync_subject_controls()
+
+    def _clear_subject_overlay(self):
+        if self.displayed_role in ('subject_source', 'subject'):
+            self.canvas.saved_overlay = None
+            self.displayed_role = 'subject_source'
+            self.frame_note.setText('Captured subject source; prediction overlay requires explicit inspection.')
+            self.canvas.update()
+
+    def predict_subject(self):
+        if self.request('subject_predict', clicks=[dict(c) for c in self.subject_clicks]):
+            self._clear_subject_overlay()
+
+    def _present_subject(self, snapshot, action):
+        preview = snapshot.get('subject_preview')
+        binding = None if preview is None else (preview.get('frame'), preview.get('source_frame'), preview.get('config_path'), preview.get('checkpoint_path'))
+        if binding != self.subject_binding or action in ('subject_prepare', 'subject_clear', 'subject_discard'):
+            self.subject_clicks = [] if preview is None else [dict(c) for c in preview.get('clicks', [])]
+        self.subject_binding = binding
+        if preview is not None:
+            self.subject_x.setMaximum(max(0, self.canvas.native_width - 1))
+            self.subject_y.setMaximum(max(0, self.canvas.native_height - 1))
+            result = preview.get('result') or {}
+            evidence = result.get('provenance', {}).get('evidence', 'No prediction performed.')
+            self.subject_note.setText(f"Captured selection frame {preview.get('frame')} / source frame {preview.get('source_frame')} · {preview.get('state')} · captured clicks {len(preview.get('clicks', []))} · inspected {preview.get('inspected')}\n"
+                                     f"CPU float32 only · native sRGB uint8 display proxy · local configuration {preview.get('config_path')} · checkpoint {preview.get('checkpoint_path')}\n"
+                                     f"Result {result.get('mask_format', 'not predicted')} · {evidence} · {preview.get('cleanup_error') or 'provider ownership retained until Discard or editor shutdown'}. Predict explicitly after changing clicks; inspect the matching result before Accept as Keep. Coarse mask interior becomes foreground at strength 1; outside stays unchanged. No alpha/hair quality guarantee. Current frame/assets prepare a new captured source; acceptance uses this snapshot.")
+        else:
+            self.subject_note.setText('No captured subject frame. Select explicit local configuration/checkpoint and Prepare selected frame; Predict is a separate action. CPU float32 only; no automatic model loading/downloads. Coarse masks become ordinary Keep corrections after explicit inspection and acceptance.')
+        self._sync_subject_controls()
 
     def _build_plate_controls(self, root):
         self.plate_toggle = QPushButton('Show clean-plate assistance ▸')
@@ -233,6 +396,8 @@ class CorrectionDialog(QDialog):
         root.addLayout(row)
 
     def _toggle_plate(self, visible):
+        if visible and hasattr(self, "subject_toggle"):
+            self.subject_toggle.setChecked(False)
         self.plate_panel.setVisible(visible)
         self.plate_toggle.setText('Hide clean-plate assistance ▾' if visible else 'Show clean-plate assistance ▸')
 
@@ -374,6 +539,7 @@ class CorrectionDialog(QDialog):
         try:
             self.pending = self.service.request(action, **payload)
             self.canvas.painting = False
+            self._sync_subject_controls()
             self.status.setText('Working: ' + action)
             return True
         except (RuntimeError, queue.Full) as exc:
@@ -436,7 +602,7 @@ class CorrectionDialog(QDialog):
         self.canvas.update()
         self.start.setValue(self.frame.value())
         self.end.setValue(self.frame.value() + 1)
-        if self.displayed_role == 'plate' or self.displayed_frame != self.frame.value():
+        if self.displayed_role in ('plate', 'subject', 'subject_source') or self.displayed_frame != self.frame.value():
             # Plate inspection may show reference/diagnostic pixels. Painting
             # becomes available only after the actual requested source arrives.
             self.canvas.painting = False
@@ -509,7 +675,7 @@ class CorrectionDialog(QDialog):
         data = snapshot['document']
         self.entries = data['entries']
         self.tracking_anchors = [key for key in self.tracking_anchors if any(e['id'] == key for e in self.entries)]
-        if action in ('brush', 'import', 'import_trimap', 'reset', 'plate_accept') and self.entries:
+        if action in ('brush', 'import', 'import_trimap', 'reset', 'plate_accept', 'subject_accept') and self.entries:
             selected = self.entries[-1]['id']
         count = data['source']['frame_count']
         self.frame.setMaximum(count - 1)
@@ -532,6 +698,7 @@ class CorrectionDialog(QDialog):
             events = ', '.join(f"{row['frame']}:{row['status']}" for row in preview['frames'])
             self.tracking_note.setText(f"Captured tracking request: {preview['request']} · Accept uses this inspected snapshot.\nTracking preview · complete={preview['complete']} · inspected={preview['inspected']} · charged bytes={preview['bytes_charged']}\n{events}\nReliability/occlusion are heuristic; inspect selected frame before explicit acceptance. Missing masks require another anchor or a shorter range.")
         self._present_plate(snapshot)
+        self._present_subject(snapshot, action)
         if snapshot.get('tracking_cleanup_pending'):
             self.timeline.setText(self.timeline.text() + '\nPrivate preview cleanup pending: ' + str(snapshot['tracking_cleanup_pending']))
             self.timeline.setToolTip('\n'.join(snapshot.get('tracking_cleanup_warnings', [])))
@@ -555,22 +722,28 @@ class CorrectionDialog(QDialog):
                 self.status.setText(event['error'] + extra)
                 continue
             action = event.get('action', 'ready')
-            if action in ('view', 'track_view', 'plate_view'):
+            if action in ('subject_predict', 'subject_clear'):
+                self._clear_subject_overlay()
+            if action in ('view', 'track_view', 'plate_view', 'subject_prepare', 'subject_view'):
                 self.snapshot = event['snapshot']
             else:
                 self.populate(event['snapshot'], action)
-            if action in ('view', 'track_view', 'plate_view'):
+            if action in ('view', 'track_view', 'plate_view', 'subject_prepare', 'subject_view'):
                 display, overlay = event['view']
-                self.displayed_role = 'plate' if action == 'plate_view' else ('tracking' if action == 'track_view' else 'authored')
+                self.displayed_role = {'plate_view': 'plate', 'track_view': 'tracking', 'subject_prepare': 'subject_source', 'subject_view': 'subject'}.get(action, 'authored')
                 self.canvas.set_frame(display.pixels, display.width, display.height, overlay,
                                       overlay_kind=event.get('overlay_kind', 'coverage'))
                 self.canvas.painting = action == 'view' and event.get('overlay_kind') != 'trimap' and not self.closing
-                self.displayed_frame = (event['snapshot'].get('plate_preview') or {}).get('frame') if action == 'plate_view' else self.view_requested_frame
-                role = 'derived clean-plate preview; heuristic guidance, read-only' if action == 'plate_view' else ('derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only')
+                if action in ('subject_prepare', 'subject_view'):
+                    self.displayed_frame = (event['snapshot'].get('subject_preview') or {}).get('frame')
+                else:
+                    self.displayed_frame = (event['snapshot'].get('plate_preview') or {}).get('frame') if action == 'plate_view' else self.view_requested_frame
+                role = 'subject source/coarse Keep preview; read-only' if action in ('subject_prepare', 'subject_view') else 'derived clean-plate preview; heuristic guidance, read-only' if action == 'plate_view' else ('derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only')
                 self.frame_note.setText(f"Displayed selected-frame {self.displayed_frame} (source start {event['snapshot']['document']['source']['start_frame']}) · {display.width}×{display.height} · {role}")
             elif action in ('brush', 'import', 'import_trimap'):
                 self.canvas.clear_draft()
             self._present_plate(event['snapshot'])
+            self._present_subject(event['snapshot'], action)
             if event.get('plate_reference') is not None:
                 thumbnail = event['plate_reference']
                 pixels = thumbnail.pixels
@@ -581,7 +754,7 @@ class CorrectionDialog(QDialog):
                 self.status.setText('Immutable snapshot saved: ' + event['snapshot']['saved_path'])
             else:
                 self.status.setText('Ready · ' + action)
-            if action in ('ready', 'brush', 'import', 'import_trimap', 'edit', 'undo', 'redo', 'remove', 'move', 'plate_accept'):
+            if action in ('ready', 'brush', 'import', 'import_trimap', 'edit', 'undo', 'redo', 'remove', 'move', 'plate_accept', 'subject_accept'):
                 self.load_frame()
         if self.closing and self.service.done.is_set():
             self.close()
@@ -592,6 +765,7 @@ class CorrectionDialog(QDialog):
             event.ignore()
             return
         self.closing = True
+        self.canvas.click_mode = False
         self.canvas.painting = False
         self.service.stop()
         if self.service.done.is_set():

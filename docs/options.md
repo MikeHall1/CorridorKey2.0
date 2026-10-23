@@ -276,3 +276,14 @@ changes. Schema4 adds generation provenance without changing existing schema1–
 behavior, inference flags or quality defaults. Bounds, detach semantics, formats
 and validation: [clean-plate guidance](clean-plate-guidance.md). The optional SAM2
 provider foundation is headless; there are no nonfunctional model controls.
+
+
+Correction editor **Subject clicks** is collapsed by default. **Prepare selected
+frame** captures the source with explicit local config/checkpoint; **Predict**
+starts the optional isolated CPU float32 provider only on request. Click mode,
+positive/negative native XY, Undo click, Clear selection, Inspect, **Accept as
+Keep** and Discard affect the captured selection. Keep at strength1 makes its
+interior opaque and leaves outside unchanged; existing strength/range controls
+apply after acceptance. Limits, cancellation and pending optional-model/frozen
+platform acceptance: [subject clicks](subject-clicks.md). No render defaults,
+precision aliases, queued requests or dependencies change.

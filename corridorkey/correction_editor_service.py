@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import queue
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,8 @@ class EditorService:
         self.events: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=2)
         self.stopping, self.done, self.ready = threading.Event(), threading.Event(), threading.Event()
         self.cancel_current = threading.Event()
+        self.operation_pending = threading.Event()
+        self.request_lock = threading.Lock()
         self.serial = 0
         self.thread = threading.Thread(target=self._run, name='correction-editor', daemon=True)
         self.thread.start()
@@ -30,15 +33,24 @@ class EditorService:
             raise CancelledError('Correction editor operation cancelled')
 
     def request(self, action: str, **payload: Any) -> int:
-        if not self.ready.is_set() or self.stopping.is_set() or self.done.is_set():
-            raise RuntimeError('Correction editor is not ready.')
-        serial = self.serial + 1
-        self.cancel_current.clear()
-        self.commands.put_nowait((serial, action, payload))
-        self.serial = serial
-        return serial
+        with self.request_lock:
+            if not self.ready.is_set() or self.stopping.is_set() or self.done.is_set():
+                raise RuntimeError('Correction editor is not ready.')
+            if self.operation_pending.is_set():
+                raise RuntimeError('Wait for the owned correction operation to retire before another request.')
+            serial = self.serial + 1
+            self.cancel_current.clear()
+            self.operation_pending.set()
+            try:
+                self.commands.put_nowait((serial, action, payload))
+            except queue.Full:
+                self.operation_pending.clear()
+                raise
+            self.serial = serial
+            return serial
 
     def _publish(self, event: dict[str, Any]):
+        self.operation_pending.clear()
         while not self.stopping.is_set():
             try:
                 self.events.put(event, timeout=.05)
@@ -61,6 +73,9 @@ class EditorService:
                 except queue.Empty:
                     continue
                 try:
+                    if action in ('subject_prepare', 'subject_predict', 'subject_clear', 'subject_discard'):
+                        from .subject_guidance_editor import invalidate_subject_result
+                        invalidate_subject_result(model)
                     self.check()
                     view = None
                     if action == 'plate_view':
@@ -107,6 +122,19 @@ class EditorService:
                         model.discard_plate()
                     elif action == 'detach_guidance':
                         model.detach_guidance(**payload)
+                    elif action == 'subject_prepare':
+                        model.prepare_subject(**payload)
+                        view = model.subject_view()
+                    elif action == 'subject_predict':
+                        model.predict_subject(**payload)
+                    elif action == 'subject_view':
+                        view = model.subject_view()
+                    elif action == 'subject_accept':
+                        model.accept_subject()
+                    elif action == 'subject_clear':
+                        model.clear_subject()
+                    elif action == 'subject_discard':
+                        model.discard_subject()
                     elif action == 'save':
                         model.save()
                     else:
@@ -142,6 +170,13 @@ class EditorService:
                 try:
                     model.discard_tracking()
                     model.discard_plate()
+                    model.discard_subject()
+                    # The dialog must retain its service owner while a failed
+                    # child teardown is still live/unverified. Never advertise
+                    # done merely because the editor thread reached finally.
+                    while model.subject_preview is not None:
+                        time.sleep(.1)
+                        model.discard_subject()
                 except OSError:
                     logging.getLogger(__name__).exception('Could not remove private tracking preview')
             self.done.set()

@@ -101,9 +101,19 @@
         "tests/test_subject_guidance.py",
         "corridorkey/guidance_provenance.py",
         "benchmark-results/ext03-connected-final/source-verification.json",
-        "docs/clean-plate-review.md"
+        "docs/clean-plate-review.md",
+        "corridorkey/subject_guidance_process.py",
+        "corridorkey/subject_guidance_editor.py",
+        "tests/test_subject_guidance_editor.py",
+        "benchmark-results/ext04-editor-first.txt",
+        "corridorkey/desktop_corrections.py",
+        "corridorkey/correction_canvas.py",
+        "tests/test_desktop_subject_guidance.py",
+        "docs/subject-clicks.md",
+        "docs/subject-clicks-review.md",
+        "benchmark-results/ext04-connected-final/source-verification.json"
       ],
-      "next_action": "Connect explicit local CPU provider configuration, native source clicks, preview/accept and lifecycle to existing correction owner; actual SAM2 dependencies/checkpoint/model/hardware unavailable, no download/install."
+      "next_action": "Connected CPU sequence click/Keep/tracking workflow locally verified; actualSAM2model/checkpoint/dependencies/quality/cost and frozen/nativeWindows/GPUhandoff acceptance NOT VERIFIED. Continue independent EXT09 portability implementation."
     },
     {
       "id": "EXT-06",
