@@ -76,6 +76,15 @@ drop opportunities even for24fps sources. Counters describe scheduling/buffering
 not calibrated decoder performance. Readers reopen for each frame. Video/VFR,
 persistent readers/cache and photographic backgrounds remain
 pending; existing checker and solid colour backgrounds work. No real-time claim.
+
+Source-only sequence playback now works without a completed render. Source → Play
+prepares a bounded frozen natural-order path/stat index off-thread on the sole
+existing decoder; each frame reads its indexed file without directory rescans.
+Explicit Refresh source index reinspects membership on next Play. Entries/frames
+are bounded at100,000 and path bytes at32MiB; stat checks refuse changed indexed
+files, without claiming source-content authentication. Declared FPS/absolute
+offsets, pause/resume, loops, cancel and stale-preparation fences are tested.
+Native decode memory is unchanged; photo backgrounds/video/VFR remain pending.
 A/B surfaces share decoded-pixel zoom and normalized source centre. Wheel zoom,
 left-drag pan and visible Zoom in/out/Fit controls alter display only. The label
 explicitly states decoded-preview scale (normal cap1280pixels), not native-pixel
@@ -97,7 +106,8 @@ only current render protection. A100-render regression verifies bounded retentio
 this is fixture evidence, never actual neural inference.
 
 
-Tracked-correction design audit (EXT-02, implementation still pending): appending
+Tracked-correction initial design audit (EXT-02, now implemented as described in
+[tracked corrections](tracked-corrections.md)): appending
 ordinary per-frame keep/remove entries beside the original stationary range
 would double-apply strength and retain the stationary mask. Use explicit schema3
 track metadata to replace participating anchors' final constraints within the
@@ -116,7 +126,7 @@ needs its own bounded reader because DraftSourceReader is increasing-only. Reuse
 motion.propagate_alpha/interpolate_alpha; refuse trimap-class interpolation until
 its semantics exist. Minimum connected acceptance includes translating flow,
 keep/remove once-only ordering, save/reopen/undo, cancellation/publication failure,
-identity invalidation and bounded memory/disk. No tracking controls are exposed yet.
+identity invalidation and bounded memory/disk. Connected preview/inspect/accept controls now use this contract; video/production-footage acceptance remains pending.
 
 
 Independent playback review found HEALTH-PLAYBACK-257 (resume returned to the

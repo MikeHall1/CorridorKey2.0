@@ -183,3 +183,14 @@ surfaces share decoded-pixel zoom and normalized pan with wheel/drag and explici
 Zoom/Fit controls. Display transformations preserve render settings and pixels;
 scale refers to bounded decoded previews, not native source resolution. No
 inference default, precision, dependency or saved-format change is introduced.
+
+
+The headless correction_tracking kernel streams immutable float32 candidates from
+explicit source/anchor requests. The existing editor owner publishes bounded
+sequence previews, then one explicit schema3 history revision. CorrectionRasters
+replaces participating constraints once at their original slot for final alpha;
+original hints/carry remain separate. Shared asset inventories protect authored
+and derived dependencies, and runtime admission checks decode/cut bindings.
+[Tracking contracts](tracked-corrections.md). SequenceIndex is a bounded frozen
+path/stat manifest consumed by the existing preview decoder; source preparation
+shares its single queue and lifecycle, without a second decoding owner.

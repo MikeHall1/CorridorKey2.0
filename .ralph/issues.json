@@ -5637,6 +5637,334 @@
       "owner": "root; readiness_ui",
       "requirement": "EXT-01 reports bind to actual submitted immutable job",
       "resolution": "Existing transport canonicalization preserves actual submitted snapshot; independent final review accepts."
+    },
+    {
+      "id": "HEALTH-TRACKING-267",
+      "component": "Tracking editor integration new fixtures/static",
+      "classification": "pre-acceptance static diagnostics",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New adapter multiline import formatting and two nested fixture contexts violate existing Ruff rules; Pyright result pending. Pyright1 possibly-unbound service model in cleanup.",
+      "root_cause": "New source/test spelling, no checker policy defect.",
+      "evidence": [
+        "Initial focused Ruff:1I001/2SIM117; tool output retained in session.",
+        "Focused Pyright1 reportPossiblyUnboundVariable on model cleanup; locals guard not statically narrowing.",
+        "Followup Pyright1 OptionalSubscript on new cleanup fixture current preview; explicit narrowing required.",
+        "Additional full-runtime fixture Ruff1I001 import order, Pyright pending.",
+        "Full runtime fixture Pyright3 OptionalSubscript on diagnostics.corrections, resolved by explicit non-None assertion after render."
+      ],
+      "proposed_action": "Format explicit import and combine independent fixture contexts; preserve assertions/checker.",
+      "acceptance": "Focused tracking editor static checks pass with runtime behavior unchanged.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext02-editor-integration-first.txt:17PASS0.999s",
+        "benchmark-results/ext02-runtime-integration.txt:11PASS1.224s",
+        "Independent40trackingcasesPASS1.124s; mainstatic0; test-only addendum11PASS0.936s/static0.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-268",
+      "component": "Schema3 persistence new fixtures",
+      "classification": "pre-acceptance fixture static diagnostics",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New persistence fixture optional mask requires explicit non-None narrowing; local import spacing triggers Ruff.",
+      "root_cause": "Fixture type/format spelling, not runtime or checker policy.",
+      "evidence": [
+        "Schema agent first13tests PASS0.279s;2newPyright optional mask diagnostics and Ruff import spacing.",
+        "Keep-only condition fixture requires supplied basehint; 19/20 prior pass, corrected test retains established partial-guidance behavior."
+      ],
+      "proposed_action": "Add explicit fixture narrowing and format imports; retain existing checker rules and baselines.",
+      "acceptance": "New fixture static0 and unchanged source contracts.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "benchmark-results/ext02-editor-integration-first.txt:17PASS0.999s",
+        "benchmark-results/ext02-runtime-integration.txt:11PASS1.224s",
+        "Independent40trackingcasesPASS1.124s; mainstatic0; test-only addendum11PASS0.936s/static0.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-269",
+      "component": "Accepted tracking per-frame provenance",
+      "classification": "confirmed pre-acceptance persistence design gap",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Accepting a track preserves masks/settings but discards preview per-frame status/reliability and decoded-mask/proxy identity observations.",
+      "root_cause": "Initial schema frame rows retained only encoded asset hashes; preview summaries were transient.",
+      "evidence": [
+        "Main inspection of track frames exact fields frame/asset and accept_tracking clearing tracking_preview."
+      ],
+      "proposed_action": "Persist bounded primitive observations for every accepted frame, distinguishing approximation and heuristic diagnostics; validate source/frame/hash semantics.",
+      "acceptance": "Save/reopen retains status/provenance and diagnostics; forged approximation policy/index/hash metadata refused.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "benchmark-results/ext02-editor-integration-first.txt:17PASS0.999s",
+        "benchmark-results/ext02-runtime-integration.txt:11PASS1.224s",
+        "Independent40trackingcasesPASS1.124s; mainstatic0; test-only addendum11PASS0.936s/static0.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-270",
+      "component": "Tracking adapter anchor admission",
+      "classification": "confirmed pre-acceptance resource defect",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Adapter constructs all native anchor byte payloads before kernel enforces aggregate64MiB budget, potentially retaining32x4Mi native masks first.",
+      "root_cause": "Only pixel admission was duplicated in adapter; aggregate anchor bound deferred until generator validation.",
+      "evidence": [
+        "Main code inspection: anchors.append before track_corrections preflight;32*4Mi*4=512MiB before64MiB refusal."
+      ],
+      "proposed_action": "Admit count*height*width*4 before anchor decoding or source hashing; regression proves no reader/decoder entry.",
+      "acceptance": "Oversize anchors refuse before any raster/source work, no publication/history changes.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext02-editor-integration-first.txt:17PASS0.999s",
+        "benchmark-results/ext02-runtime-integration.txt:11PASS1.224s",
+        "Independent40trackingcasesPASS1.124s; mainstatic0; test-only addendum11PASS0.936s/static0.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-271",
+      "component": "Tracking preview cleanup ownership",
+      "classification": "confirmed independent pre-acceptance transaction defect",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Replacing preview assigns new pointer before old-directory cleanup; old cleanup exception deletes new directory while retaining dangling pointer.",
+      "root_cause": "Preview publication and postpublication cleanup share one broad exception path.",
+      "evidence": [
+        "Independent feature_audit read-only source review before acceptance."
+      ],
+      "proposed_action": "Retain bounded cleanup ownership/warnings separately; cleanup errors cannot roll back published preview or misreport committed authored edit. Retry before new work and refuse unbounded accumulation.",
+      "acceptance": "Injected old/discard cleanup errors preserve valid pointers/history and surface warnings with bounded pending ownership.",
+      "owner": "root; feature_audit",
+      "verification": [
+        "benchmark-results/ext02-editor-integration-first.txt:17PASS0.999s",
+        "benchmark-results/ext02-runtime-integration.txt:11PASS1.224s",
+        "Independent40trackingcasesPASS1.124s; mainstatic0; test-only addendum11PASS0.936s/static0.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-272",
+      "component": "Tracking preview cleanup ownership",
+      "classification": "confirmed independent pre-acceptance transaction defect",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Discard clears ownership before cleanup and _apply can report failure after committed history when cleanup raises.",
+      "root_cause": "Postcommit private cleanup is treated as transactional mutation failure.",
+      "evidence": [
+        "Independent feature_audit read-only source review before acceptance."
+      ],
+      "proposed_action": "Retain bounded cleanup ownership/warnings separately; cleanup errors cannot roll back published preview or misreport committed authored edit. Retry before new work and refuse unbounded accumulation.",
+      "acceptance": "Injected old/discard cleanup errors preserve valid pointers/history and surface warnings with bounded pending ownership.",
+      "owner": "root; feature_audit",
+      "verification": [
+        "benchmark-results/ext02-editor-integration-first.txt:17PASS0.999s",
+        "benchmark-results/ext02-runtime-integration.txt:11PASS1.224s",
+        "Independent40trackingcasesPASS1.124s; mainstatic0; test-only addendum11PASS0.936s/static0.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-273",
+      "component": "Derived preview read-only canvas state",
+      "classification": "confirmed independent pre-acceptance UI defect",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Generic poll/select paths can reenable painting while derived tracked overlay remains displayed after failed accept/discard/row selection.",
+      "root_cause": "Canvas read-only state inferred only from current action instead of retained displayed role.",
+      "evidence": [
+        "Independent feature_audit branch review; track_view False overwritten by generic poll/select."
+      ],
+      "proposed_action": "Retain displayed role; forbid painting/commit until authored view or explicit New mask replaces derived overlay.",
+      "acceptance": "Derived inspection remains readonly after select/error/discard; normal source load/New mask restores authored painting.",
+      "owner": "root; feature_audit",
+      "verification": [
+        "benchmark-results/ext02-editor-integration-first.txt:17PASS0.999s",
+        "benchmark-results/ext02-runtime-integration.txt:11PASS1.224s",
+        "Independent40trackingcasesPASS1.124s; mainstatic0; test-only addendum11PASS0.936s/static0.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-PLAYBACK-274",
+      "component": "Source-only asynchronous preparation test migration",
+      "classification": "intentional async API timing change, fixture assumptions",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Two older Source Play fixtures assume synchronous completed-job binding, whereas source-only Play now prepares bounded source metadata off-thread.",
+      "root_cause": "Old fixtures assert before asynchronous source preparation/owned pixel request.",
+      "evidence": [
+        "Source agent initial26cases2old synchronous assertion failures; existing A/B tests otherwise pass."
+      ],
+      "proposed_action": "Wait for actual matching source preparation and pixels while preserving stale-error/generation/absolute-index assertions.",
+      "acceptance": "Old invariants retained and source-only prepare/cancel/late cases pass.",
+      "verification": [
+        "Source35casesPASS3.838s; independent59Qt/index/readiness/viewportcasesPASS6.240s.",
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "owner": "root; readiness_ui",
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-EXT-275",
+      "component": "Source preparation result type narrowing",
+      "classification": "pre-acceptance integration finding",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Fullgate5newPyright window diagnostics access pixels,width,height,count,note on PreparedSequence.",
+      "root_cause": "Boolean helper retirement does not statically narrow loader result union before image handling.",
+      "evidence": [
+        "benchmark-results/ext02-tracking-ext05-source-accepted/code-health:5newPyright/0newRuff"
+      ],
+      "proposed_action": "Explicitly refuse metadata-only results from image branch; preserve existing generation behavior.",
+      "acceptance": "Focused defect verification and complete applicable gate pass without checker weakening or fabricated evidence.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-EXT-276",
+      "component": "Benchmark process observation exit race",
+      "classification": "pre-acceptance integration finding",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "DecodeReuseRunnerTests.setUpClass task reports cleanupNOTVERIFIED MeasurementError root exited/PIDreused despite actual child exit0 and reportsummarysuccess.",
+      "root_cause": "Potential birth-pinned process monitor sampling race with normal child exit; classify with focused reproduction before remediation.",
+      "evidence": [
+        "benchmark-results/ext02-tracking-ext05-source-accepted/check-0.txt:1119tests78.374s/error1setup"
+      ],
+      "proposed_action": "Inspect process identity lifecycle with independent reviewer; deterministic reproduction; preserve fail-closed reused/untracked owners.",
+      "acceptance": "Focused defect verification and complete applicable gate pass without checker weakening or fabricated evidence.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-EXT-277",
+      "component": "Headless CPU benchmark sandbox fixture failure",
+      "classification": "pre-acceptance integration finding",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "DefaultCPU benchmark three repetitions fail localhostHTTP fixture bind Operationnotpermitted.",
+      "root_cause": "Benchmark command used default sandbox while existing localhostHTTP tests require elevated local bind permission.",
+      "evidence": [
+        "benchmark-results/ext02-cpu-benchmark.json:threefailedrepetitions; permissionerrors15pertest-run, no inferenceclaim",
+        "Failed benchmark spans test-only additions (1119/1121/1122 tests); not a frozen accepted baseline or comparable measurement. Each repetition has15localhost permissionerrors. Final run must freeze all source/tests."
+      ],
+      "proposed_action": "Rerun once with authorized require_escalated; do not alter tests or environment.",
+      "acceptance": "Focused defect verification and complete applicable gate pass without checker weakening or fabricated evidence.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-278",
+      "component": "Correction diagnostics worker-frame bound",
+      "classification": "confirmed independent pre-acceptance integration defect",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Valid schema3 manifest4,194,240B passes load/source verification but injected model-load failure creates4,197,840B record; encode_frame refuses4MiB worker bound.",
+      "root_cause": "Full observation payload duplicated into session/runtime diagnostic records.",
+      "evidence": [
+        "Independent actual80EXR/85PNG nearbound fixture, realSession.run/loadfailure, encode_frame reproduced; source unchanged."
+      ],
+      "proposed_action": "Bound diagnostic correction summaries with immutable document references; full perframe provenance remains in manifest; preserve small existing metadata when bounded.",
+      "acceptance": "Deterministic boundary regression and focused integration pass; original sources/history/error preserved.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-279",
+      "component": "Failed-operation private cleanup warning visibility",
+      "classification": "confirmed independent pre-acceptance integration defect",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Tracking solver failure plus private directory cleanup failure retains owned pending path/warning in model but error event omits snapshot and UI never shows it.",
+      "root_cause": "EditorService error publication carries only original error; dialog doesnotrefresh failure snapshot.",
+      "evidence": [
+        "Independent actualEditorService tinyPNG injected solver/cleanup faults; modelpending1, error keys omit snapshot."
+      ],
+      "proposed_action": "Capture safe error snapshot without masking original exception; show pending private cleanup paths/warnings while preserving read-only canvas and failedaction.",
+      "acceptance": "Deterministic boundary regression and focused integration pass; original sources/history/error preserved.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TRACKING-280",
+      "component": "Threaded preview snapshot ownership",
+      "classification": "confirmed main pre-acceptance alias defect",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "tracking_summary returns internal preview frames/diagnostics list by reference; GUI event snapshot can mutate editor-owned preview observations.",
+      "root_cause": "Shallow field comprehension exports nested mutable objects from the single-owner model.",
+      "evidence": [
+        "Main source inspection tracking_summary returns preview[key] for frames and diagnostic dictionaries."
+      ],
+      "proposed_action": "Detach bounded primitive summary before publication; expose captured range/direction/policy explicitly in viewer note.",
+      "acceptance": "Mutating snapshot observations cannot change model preview; captured request remains visible before acceptance.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-TEST-281",
+      "component": "Bounded correction report fixtures",
+      "classification": "pre-acceptance fixture path/static findings",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New report fixtures compare /var input spelling to canonical /private/var and trigger import/unused-json/concatenation Ruff rules.",
+      "root_cause": "Fixture expectations omit existing JobRequest path canonicalization; new test style violations.",
+      "evidence": [
+        "First6newreportcases2pathassertionfailures; nearbound encode succeeds; newfixtureRuff findings, Pyright2files0."
+      ],
+      "proposed_action": "Resolve expected fixture path and format new test source, preserving existing wire semantics/checker rules.",
+      "acceptance": "Focused report/runtime fixtures and static pass without changed runtime paths or checker suppressions.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
+      ],
+      "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
     }
   ]
 }

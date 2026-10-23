@@ -1,22 +1,25 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T12:19:47.267373+00:00",
+  "created_utc": "2026-10-23T12:59:32.881374+00:00",
   "objective_source": "docs/product-improvements-brief.md",
-  "base_commit": "058da5e1478be15eb88ad5199a53dd1106dac00d",
+  "base_commit": "ae381bb9668e266fa2bf8078ad9ddca8f48af0ed",
   "product_complete": false,
   "local_implementation_complete": false,
-  "run_state": "Third connected readiness/playback increment locally accepted; all ten workflows incomplete",
+  "run_state": "Fourth connected sequence-tracking/source-playback increment locally accepted; all ten workflows incomplete",
   "checkpoint_interval": 5,
-  "cycles_completed": 15,
+  "cycles_completed": 20,
   "completed_work": [
-    "Immutable last attempted checkpoint retained before failed checks/progress and copied before cleanup.",
-    "Matching bounded failed/cancelled engine records preserve errors/settings/work separately from successful inference.",
-    "Shared decoded-pixel A/B zoom/pan/Fit with bounded pixmaps and native-child lifetime handling.",
-    "Independent stable source review and1064CPU/341file gate;0newstatic."
+    "Streaming native motion tracking with artistanchors, direction/range, cut/reset gates and explicit uncertainty policy.",
+    "Schema3 immutable derivedfloat32 final constraints, onceordered composition, retained provenance, undo/save/reopen/context invalidation.",
+    "Connected background editor preview/inspect/accept/cancel and readonly canvas; source/derived dependency protection and truthful bounded cleanup.",
+    "Source-only sequence playback with bounded offthread frozenindex, explicitrefresh/offsets/cancellation; no perframe directoryscan.",
+    "Confirmedrootexit containmentrace fix preserving failedRSS and failclosed unknown/reused owners; bounded correction diagnostic envelopes.",
+    "Independent review and headless3x1137CPU/no skips;355file complete static0new."
   ],
   "verification": [
-    "benchmark-results/ext01-failures-ext05-viewport-accepted/verification.json",
-    "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
+    "benchmark-results/ext02-tracking-ext05-final/verification.json",
+    "benchmark-results/ext02-tracking-ext05-final/source-verification.json",
+    "benchmark-results/ext02-tracking-ext05-final/cpu-benchmark.json"
   ],
   "previous_review_evidence": {
     "evidence": "benchmark-results/fresh-review-final-source-verification.json",
@@ -40,7 +43,7 @@
     }
   },
   "remaining": [
-    "All ten workflows remain incomplete overall; detailed pending scenarios in docs/acceptance.md and docs/product-improvements.md."
+    "All ten workflows remain incomplete overall; tracking video/representativequality, playbackphoto/background/exportreader improvements and remaining feature implementations are actionable."
   ],
   "external_product_acceptance": [
     "CUDA/real pretrained weights and representative permitted held-out footage",
@@ -52,17 +55,21 @@
     "status": "See publication receipt after normal push acknowledgment",
     "destination": "MikeHall1/CorridorKey2.0",
     "branch": "review/corridorkey-audit-20261023",
-    "previous_published_commit": "058da5e1478be15eb88ad5199a53dd1106dac00d",
-    "confirmation_file": "benchmark-results/ext01-failures-ext05-viewport-publication.json"
+    "previous_published_commit": "ae381bb9668e266fa2bf8078ad9ddca8f48af0ed",
+    "confirmation_file": "benchmark-results/ext02-tracking-ext05-publication.json"
   },
-  "next_action": "Continue tracked corrections kernel/persistence; source-only playback/photo backgrounds. External product acceptance stays unverified.",
-  "checkpoint_commit": "Commit containing this record; exact identity in benchmark-results/ext01-failures-ext05-viewport-publication.json",
+  "next_action": "Implement and integrate optional clean-plate assistance with strict reference provenance/invalidation, then click guidance/progressive refinement/overlays/calibration/portability/Resolve; continue playback remaining work.",
+  "checkpoint_commit": "Commit containing this record; exact identity in benchmark-results/ext02-tracking-ext05-publication.json",
   "verification_summary": {
-    "cpu_tests": 1064,
-    "cpu_seconds": 74.442,
+    "cpu_tests": 1137,
+    "cpu_seconds": [
+      77.876,
+      75.657,
+      75.751
+    ],
     "skips": 0,
-    "source_files": 341,
-    "reviewed_source_identity": "0d6af0ddce79f57b69a859f089c02fb822653ae2c6221287548479fbff8482c0",
+    "source_files": 355,
+    "reviewed_source_identity": "bfab1efbd403904f270f05adcfcaa46cd1a0885b031cd9827ae1380994d9d4a4",
     "new_vs_actual_previous_checkpoint": {
       "ruff": {},
       "pyright": {}
@@ -70,10 +77,25 @@
     "ruff_findings": 519,
     "pyright_errors": 684,
     "pyright_warnings": 17,
-    "static_clean": false
+    "static_clean": false,
+    "benchmark_repetitions": 3,
+    "benchmark_process_median_seconds": 76.49637700000312
   },
   "resolved_review_issues": [
-    "HEALTH-TEST-265",
-    "HEALTH-READINESS-266"
+    "HEALTH-TRACKING-267",
+    "HEALTH-TRACKING-268",
+    "HEALTH-TRACKING-269",
+    "HEALTH-TRACKING-270",
+    "HEALTH-TRACKING-271",
+    "HEALTH-TRACKING-272",
+    "HEALTH-TRACKING-273",
+    "HEALTH-PLAYBACK-274",
+    "HEALTH-EXT-275",
+    "HEALTH-EXT-276",
+    "HEALTH-EXT-277",
+    "HEALTH-TRACKING-278",
+    "HEALTH-TRACKING-279",
+    "HEALTH-TRACKING-280",
+    "HEALTH-TEST-281"
   ]
 }

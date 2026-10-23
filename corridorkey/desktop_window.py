@@ -52,6 +52,7 @@ from .desktop_resources import ResourcesPanel
 from .desktop_settings import SettingsPanel
 from .desktop_state import load_project, pretty_settings, save_project, settings_job
 from .desktop_viewport import PreviewViewport, ViewportState
+from .preview_sequence import PreparedSequence
 from .session import JobRequest
 from .worker_client import WorkerClient
 from .worker_protocol import decode_frame, job_to_wire, request_frame
@@ -601,7 +602,8 @@ class DesktopWindow(QMainWindow):
         request_id = self.selected()
         if request_id is not None:
             self.details.setPlainText(json.dumps(self.jobs[request_id].get('event'), indent=2))
-        if not (self.playback.engine is not None and request_id == self.playback.selected_id):
+        if not ((self.playback.engine is not None or self.playback.preparing)
+                and request_id == self.playback.selected_id):
             self.refresh_comparison()
         self.refresh_diagnostic_context()
 
@@ -1207,6 +1209,9 @@ class DesktopWindow(QMainWindow):
         except queue.Empty:
             return
         playback_valid = self.playback.complete_loader(serial, error)
+        # Preparation metadata, including retired generations, never contains pixels.
+        if self.playback.accept_preparation(serial, frame, error) or isinstance(frame, PreparedSequence):
+            return
         if serial != self.preview_serial or playback_valid is False:
             return
         if error is not None:

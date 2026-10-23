@@ -190,8 +190,8 @@ def correction_identity(path, source):
     data = document.to_dict()
     return {"path": str(path), "manifest_sha256": sha256(path), "identity": document.identity,
             "revision": data["revision"], "source": data["source"],
-            "assets": [{"path": str(document.asset_path(entry)), "sha256": entry["asset"]["sha256"]}
-                       for entry in data["entries"] if "asset" in entry]}
+            "assets": [{"path": str(document.base_dir / asset["path"]), "sha256": asset["sha256"]}
+                       for asset in document.asset_bindings()]}
 
 
 def run_inference_benchmark(manifest_path, manifest, *, progress: Callable[[str, int, int], None] | None = None):

@@ -198,7 +198,8 @@ class DesktopPlaybackTests(unittest.TestCase):
                 self.controls.play()
                 self.clock()
                 assert self.controls.engine is not None
-                self.assertTrue(self.controls.engine.playing)
+                self.assertTrue(self.controls.preparing)
+                self.assertFalse(self.controls.engine.playing)
             finally:
                 release.set()
             self.until(lambda: self.controls.displayed_frame == 2)
@@ -323,6 +324,7 @@ class DesktopPlaybackTests(unittest.TestCase):
         self.controls.out_frame.clear()
         self.window.view.setCurrentText('Source')
         self.controls.play()
+        self.until(lambda: self.controls.pending_request is not None)
         request = self.controls.pending_request
         assert request is not None
         self.assertEqual(request.source_frame, 2)  # Source0 clamps to selected range In2

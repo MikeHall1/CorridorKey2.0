@@ -174,3 +174,14 @@ recorded final source identity in benchmark-results/ext01-guided-accepted/source
 No checker/baseline/dependency/environment changes or GPU/encoding/Windows/host
 claims. ScopedQSettings fixtures preserve user preferences; subprocess lifecycle
 fixtures include real cancel/overflow/deadline/kill/reap.
+
+
+Extension integration findings275–280 were classified before acceptance: source
+metadata union narrowing, confirmed-root-exit process sampling race, sandbox-only
+localhost benchmark failures, correction-report envelope overflow, failure cleanup
+warning visibility and nested preview snapshot aliasing. Root-exit handling keeps
+RSS unavailable and final birth-pinned descendant/process-group verification;
+PID reuse/denial/unknown discovery remain failures. Passing narrow tests do not
+establish native Windows or the unresolved native Qt mechanism126. No checker,
+baseline or dependency changes. Final evidence is recorded in the current
+checkpoint after complete applicable verification.

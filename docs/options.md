@@ -255,3 +255,13 @@ surfaces share decoded-pixel zoom and normalized pan with wheel/drag and explici
 Zoom/Fit controls. Display transformations preserve render settings and pixels;
 scale refers to bounded decoded previews, not native source resolution. No
 inference default, precision, dependency or saved-format change is introduced.
+
+
+Tracked corrections use explicit Preview/Inspect/Accept in the existing editor,
+with forward/backward/both range, artist anchors and request_anchor/stop/explicit
+retain_approximation policies. Persisted schema3 final constraints preserve old
+schema1/2 semantics; no new inference default. Video/trimap tracking and crossing
+cuts/resets are unavailable. Limits, compatibility and validation:
+[tracked corrections](tracked-corrections.md). Source-only sequence Play prepares
+a bounded index off-thread; Refresh source index reinspects membership explicitly.
+Declared sequence FPS remains separate from observed video timestamps.

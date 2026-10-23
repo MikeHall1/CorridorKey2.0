@@ -1,42 +1,57 @@
-# Current checkpoint — readiness failure context and A/B viewing, 2026-10-23
+# Current checkpoint — sequence tracking and source playback, 2026-10-23
 
-Third connected increment locally accepted; all ten workflows and full product
-acceptance remain incomplete. Current authority: [extension brief](product-improvements-brief.md).
+Fourth connected increment locally accepted; all ten workflows and full product
+acceptance remain incomplete. Authority: [extension brief](product-improvements-brief.md).
 
-Failed/cancelled guided renders retain matching bounded worker records even
-without progress delivery. Last attempted checkpoints provide context, copied
-before cleanup; partial CUDA metadata never implies success, FPS or completed
-inspection. Missing/contradictory metadata remains NOT VERIFIED. Submitted
-snapshots follow existing wire path normalization. [Readiness](readiness.md).
+[Tracked corrections](tracked-corrections.md) now connect artist anchors and
+forward/backward/both native motion to background Preview, read-only Inspect,
+explicit Accept and history. Schema3 keeps authored assets and stores separate
+float32 EXR final constraints, ordered once with source/anchor/decode/boundary
+provenance and heuristic diagnostics. Undo/save/reopen/invalidation, cancellation,
+failed publication, derived dependency guards and bounded cleanup are tested.
 
-A/B wheel zoom, drag pan and Zoom/Fit controls share decoded-pixel scale and
-normalized source centre. The scale label states decoded preview, normally capped
-at1280pixels; display changes preserve render/source pixels. Single bounded
-pixmaps and Qt child lifetime behavior are tested. Persistent readers/cache,
-photo backgrounds, source-only/video/VFR playback remain pending.
+Source-only sequence Play prepares a bounded frozen natural-order path/stat
+index on the existing decoder, independent of renders/models/queue. Reads use
+exact paths without per-frame directory scans. Explicit refresh, source offsets,
+loops, pause/resume, stale preparation and nonneutral EXR colour are tested.
+Video/VFR, photo backgrounds and persistent export readers/cache remain pending.
 
-Independent20core/viewport/serialization cases PASS0.201s and44Qt integration
-cases PASS5.844s; no blocking findings. Main distinct self-review covers the full
-diff against AGENTS and both briefs, ownership/cancellation/provenance/bounds,
-serialization and source/quality preservation. Issues265–266 resolved without
-checker or environment changes. Exact reviewed source identity and evidence:
-`benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json`.
+Independent reviews accepted kernel, schema, editor/UI/runtime and playback.
+Findings267–281 include typed fixtures, anchor/cleanup ownership, read-only canvas,
+persisted observation and snapshot aliasing, source metadata union narrowing,
+confirmed-root-exit sampling, report-envelope overflow and failed-operation cleanup
+visibility. Root-exit RSS remains unavailable; PIDreuse/denial/unknown discovery
+and final descendant/group verification remain failclosed. Near-limit schema1/3
+manifests now fit terminal records through bounded summaries referencing full local
+provenance. No baseline/checker/environment/venv changes or model/media downloads.
 
-Final1064CPU tests PASS74.442s/no skips;341Python files. Complete compile/import/
-dependency/static/whitespace gate PASS,0new against baseline and actual previous
-checkpoint. Existing519Ruff/684Pyright errors17warnings remain; static005 and
-nativeQt126 stay open. No new model/encoder/GPU/performance/quality result is
-claimed. Existing benchmark driver unchanged; no activity repetitions.
+Final headless benchmark **3×1137CPU tests PASS/no skips**:
+77.876/75.657/75.751s unittest durations; median full CLI process76.496377s.
+These are CPU test orchestration timings, not inference performance. The initial
+sandbox run failed15localhost permission cases per repetition and spanned test
+additions; it is not an accepted frozen baseline. The first fullgate exposed the
+root-exit race and5new type findings; raw failures remain recorded. Final rerun
+uses unchanged benchmark defaults and the required local-fixture execution context.
 
-Actual pretrained CUDA/representative local footage, optional segmentation model,
-Windows package/native operation and Resolve SDK/viewer/export acceptance remain
-NOT VERIFIED. No dependency/user-venv changes, media/model download or supervisor.
+355Python-file compile/import/dependency/static/whitespace checks PASS,0new vs
+baseline and actual prior checkpoint. Existing519Ruff/684Pyright errors17warnings
+remain; static005/nativeQt126 remain open. Exact reviewed frozen source identity:
+`bfab1efbd403904f270f05adcfcaa46cd1a0885b031cd9827ae1380994d9d4a4`.
+Raw source/full verification: `benchmark-results/ext02-tracking-ext05-final/`.
+The three benchmark full suites cover the unchanged final source, so no redundant
+fourth complete suite was run. Main distinct self-review covers both briefs,
+ownership, serialization, compatibility, source/time/colour and quality contracts.
 
-Prior058da5e1478be15eb88ad5199a53dd1106dac00d normally pushed and confirmed to
-MikeHall1/CorridorKey2.0 branch review/corridorkey-audit-20261023. Current exact
-commit/push acknowledgment follows in ignored local receipt
-`benchmark-results/ext01-failures-ext05-viewport-publication.json`.
+Actual pretrained CUDA, representative motion/occlusion/quality footage, optional
+segmentation model, native Windows and Resolve SDK/viewer/export remain
+NOT VERIFIED. No full acceptance or speed/quality improvement is claimed.
 
-Next: tracked correction kernel/schema3 publication and connected preview/accept;
-remaining playback source-only/photo-background work. Five cycles is a checkpoint
-interval; continue independently of external acceptance prerequisites.
+Prior ae381bb9668e266fa2bf8078ad9ddca8f48af0ed normally pushed and confirmed to
+MikeHall1/CorridorKey2.0 branch review/corridorkey-audit-20261023. This checkpoint's
+exact publication identity follows in local ignored receipt
+`benchmark-results/ext02-tracking-ext05-publication.json`.
+
+Next: optional clean-plate assistance and strict generated-guidance reference
+provenance/invalidation; continue other incomplete features. Next-batch work stayed
+outside the repository during verification. Five cycles remains a checkpoint
+interval; no competing supervisor was launched.

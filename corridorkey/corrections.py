@@ -3,12 +3,302 @@ from dataclasses import dataclass
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
+import stat
+import struct
 
 from .diagnostics import finite_json_float, write_json_atomic
 from .identities import file_sha256, source_identity
 
 MAX_CORRECTION_BYTES = 4 * 1024 * 1024
+MAX_TRACK_FRAMES = 300
+MAX_TRACK_ANCHORS = 32
+MAX_TRACK_PIXELS = 4 * 1024 * 1024
+MAX_TRACK_BYTES = 512 * 1024 * 1024
+
+
+def _assets(data):
+    for entry in data['entries']:
+        if 'asset' in entry:
+            yield entry['asset']
+    for track in data.get('tracks', []):
+        for row in track['frames']:
+            yield row['asset']
+
+
+def _decode_contract(decode):
+    keys = {'contract', 'source_kind', 'frame_dir_linear', 'frame_dir_alpha', 'source_colour_profile',
+            'linear_brightness', 'linear_contrast', 'linear_contrast_pivot'}
+    if not isinstance(decode, dict) or set(decode) != keys:
+        raise ValueError('tracking decode contract has unknown/missing fields')
+    if (decode['contract'] != 'corridorkey-native-rgb-v1' or decode['source_kind'] not in ('frames', 'video')
+            or type(decode['frame_dir_linear']) is not bool or decode['frame_dir_alpha'] not in ('ignore', 'premultiplied')
+            or decode['source_colour_profile'] not in ('legacy', 'linear_bt709_d65', 'linear_bt2020_d65')):
+        raise ValueError('unsupported tracking decode contract')
+    if (decode['frame_dir_alpha'] == 'premultiplied' or decode['source_colour_profile'] != 'legacy') and not decode['frame_dir_linear']:
+        raise ValueError('tracking alpha/colour declaration requires linear frames')
+    if decode['source_kind'] == 'video' and (decode['frame_dir_alpha'] != 'ignore' or decode['source_colour_profile'] != 'legacy'):
+        raise ValueError('tracking video colour/alpha conversion is unsupported')
+    for name in ('linear_brightness', 'linear_contrast', 'linear_contrast_pivot'):
+        value = decode[name]
+        if type(value) not in (int, float) or not math.isfinite(value) or (name != 'linear_contrast_pivot' and value == 0):
+            raise ValueError('tracking linear adjustments must be finite and brightness/contrast nonzero')
+
+
+def _tracking_contract(tracking):
+    keys = {'kernel_version', 'direction', 'unreliable_policy', 'max_uncertain_fraction', 'motion',
+            'max_frames', 'max_pixels', 'max_anchor_bytes', 'max_anchors', 'estimator_identity'}
+    if not isinstance(tracking, dict) or set(tracking) != keys:
+        raise ValueError('tracking settings have unknown/missing fields')
+    if (tracking['kernel_version'] != 'correction-tracking-v1' or tracking['direction'] not in ('forward', 'backward', 'both')
+            or tracking['unreliable_policy'] not in ('stop', 'request_anchor', 'retain_approximation')
+            or not isinstance(tracking['estimator_identity'], str) or not 1 <= len(tracking['estimator_identity']) <= 256):
+        raise ValueError('unsupported tracking settings')
+    for name, limit in (('max_frames', MAX_TRACK_FRAMES), ('max_pixels', MAX_TRACK_PIXELS),
+                        ('max_anchor_bytes', 64 * 1024 * 1024), ('max_anchors', MAX_TRACK_ANCHORS)):
+        _integer(tracking[name], name, 1)
+        if tracking[name] > limit:
+            raise ValueError('tracking budget exceeds supported persistence limit')
+    fraction = tracking['max_uncertain_fraction']
+    if type(fraction) not in (int, float) or not math.isfinite(fraction) or not 0 <= fraction <= 1:
+        raise ValueError('tracking uncertain fraction must be finite in [0,1]')
+    motion = tracking['motion']
+    if not isinstance(motion, dict) or set(motion) != {'max_side', 'consistency_pixels', 'photometric_scale', 'min_reliability', 'max_disagreement'}:
+        raise ValueError('tracking motion settings have unknown/missing fields')
+    _integer(motion['max_side'], 'motion max_side', 16)
+    if motion['max_side'] > 4096:
+        raise ValueError('tracking motion proxy exceeds supported limit')
+    for name in ('consistency_pixels', 'photometric_scale', 'min_reliability', 'max_disagreement'):
+        value = motion[name]
+        if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+            raise ValueError('tracking motion settings must be finite positive numbers')
+    if motion['min_reliability'] > 1 or motion['max_disagreement'] > 1:
+        raise ValueError('tracking reliability/disagreement thresholds must be <=1')
+
+
+def track_binding(document_data, anchor_ids, *, cuts, decode, tracking):
+    """Content binding without paths, tracks, schema migration or accepting revision."""
+    data = document_data
+    if (not isinstance(anchor_ids, list) or not 1 <= len(anchor_ids) <= MAX_TRACK_ANCHORS
+            or any(not isinstance(value, str) for value in anchor_ids) or len(set(anchor_ids)) != len(anchor_ids)):
+        raise ValueError('tracking anchor IDs must be a bounded unique ordered list')
+    entries = data['entries']
+    selected = [entry for entry in entries if entry['id'] in anchor_ids]
+    if [entry['id'] for entry in selected] != anchor_ids:
+        raise ValueError('tracking anchors must exist in document composition order')
+    positions = [index for index, entry in enumerate(entries) if entry['id'] in anchor_ids]
+    if positions != list(range(positions[0], positions[0] + len(positions))):
+        raise ValueError('tracking anchors must occupy contiguous composition positions')
+    first = selected[0]
+    if first['kind'] not in ('matte', 'keep', 'remove') or any(entry['kind'] != first['kind'] or entry['strength'] != first['strength'] for entry in selected):
+        raise ValueError('tracking anchors require the same coverage operation and strength')
+    if len({entry['frame'] for entry in selected}) != len(selected):
+        raise ValueError('tracking anchors must have distinct frames')
+    count = data['source']['frame_count']
+    if (not isinstance(cuts, list) or any(type(value) is not int or not 0 <= value <= count for value in cuts)
+            or sorted(set(cuts)) != cuts):
+        raise ValueError('tracking cuts must be sorted unique local integer boundaries')
+    _decode_contract(decode)
+    _tracking_contract(tracking)
+    anchors = []
+    for entry in selected:
+        item = json.loads(canonical(entry))
+        item['asset'].pop('path')
+        anchors.append(item)
+    return json.loads(canonical({'source': data['source'], 'shots': data['shots'],
+                                'resets': sorted(entry['frame'] for entry in entries if entry['kind'] == 'reset'),
+                                'cuts': cuts, 'decode': decode, 'tracking': tracking, 'anchors': anchors,
+                                'entry_order': [entry['id'] for entry in entries]}))
+
+
+def _parse_tracks(data):
+    tracks = data['tracks']
+    if not isinstance(tracks, list) or len(tracks) > MAX_TRACK_ANCHORS:
+        raise ValueError('tracked corrections must be a bounded list')
+    seen, spans, total = set(), {}, 0
+    for track in tracks:
+        if not isinstance(track, dict) or set(track) != {'id', 'owner_id', 'anchor_ids', 'range', 'direction', 'binding', 'binding_sha256', 'frames', 'observations'}:
+            raise ValueError('tracked correction has unknown/missing fields')
+        if not isinstance(track['id'], str) or not 1 <= len(track['id']) <= 256 or track['id'] in seen:
+            raise ValueError('track IDs must be bounded unique strings')
+        seen.add(track['id'])
+        binding = track['binding']
+        if not isinstance(binding, dict) or set(binding) != {'source', 'shots', 'resets', 'cuts', 'decode', 'tracking', 'anchors', 'entry_order'}:
+            raise ValueError('tracking binding has unknown/missing fields')
+        expected = track_binding(data, track['anchor_ids'], cuts=binding['cuts'], decode=binding['decode'], tracking=binding['tracking'])
+        _hash(track['binding_sha256'])
+        if binding != expected or hashlib.sha256(canonical(binding).encode()).hexdigest() != track['binding_sha256']:
+            raise ValueError('stale or corrupt tracking binding; re-track authored corrections')
+        span = track['range']
+        if (not isinstance(span, list) or len(span) != 2 or any(type(value) is not int for value in span)
+                or not 0 <= span[0] < span[1] <= data['source']['frame_count']):
+            raise ValueError('tracked range must be a local nonempty half-open range')
+        lo, hi = span
+        settings = binding['tracking']
+        if (track['owner_id'] != track['anchor_ids'][0] or track['direction'] != settings['direction']
+                or not all(lo <= entry['frame'] < hi for entry in binding['anchors'])
+                or hi - lo > settings['max_frames'] or len(binding['anchors']) > settings['max_anchors']
+                or min(data['source']['height'], data['source']['width']) < 2
+                or data['source']['height'] * data['source']['width'] > settings['max_pixels']
+                or len(binding['anchors']) * data['source']['height'] * data['source']['width'] * 4 > settings['max_anchor_bytes']):
+            raise ValueError('track owner, direction, anchors or resource limits disagree')
+        anchor_frames = [entry['frame'] for entry in binding['anchors']]
+        if (track['direction'] == 'forward' and lo != min(anchor_frames)) or (track['direction'] == 'backward' and hi != max(anchor_frames) + 1):
+            raise ValueError('tracked direction and anchor range disagree')
+        boundaries = set(binding['cuts']) | set(binding['resets']) | {shot[0] for shot in data['shots']}
+        if any(lo < point < hi for point in boundaries):
+            raise ValueError('tracking cannot cross declared cuts, resets or shots')
+        for identifier in track['anchor_ids']:
+            if any(lo < other_hi and other_lo < hi for other_lo, other_hi in spans.get(identifier, [])):
+                raise ValueError('overlapping tracks cannot replace the same authored anchor')
+            spans.setdefault(identifier, []).append((lo, hi))
+        frames = track['frames']
+        if not isinstance(frames, list) or len(frames) != hi - lo:
+            raise ValueError('tracked masks must cover every accepted frame exactly once')
+        total += len(frames)
+        if total > MAX_TRACK_FRAMES:
+            raise ValueError('document tracked frame asset count exceeds 300')
+        for index, row in enumerate(frames, lo):
+            if not isinstance(row, dict) or set(row) != {'frame', 'asset'} or type(row['frame']) is not int or row['frame'] != index:
+                raise ValueError('tracked mask rows must be contiguous and ordered')
+            _asset(row['asset'])
+        observations = track['observations']
+        if not isinstance(observations, list) or len(observations) != len(frames):
+            raise ValueError('tracking observations must cover every accepted frame')
+        for frame, observation in zip(frames, observations, strict=True):
+            _observation(observation, frame['frame'], data['source'], anchor_frames, settings)
+
+
+def _primitive(value, depth=0):
+    if depth > 16:
+        raise ValueError('tracking diagnostic nesting exceeds 16')
+    if value is None or type(value) in (bool, int):
+        return
+    if type(value) is float and math.isfinite(value):
+        return
+    if isinstance(value, str) and len(value) <= 4096:
+        return
+    if isinstance(value, list) and len(value) <= 512:
+        for item in value:
+            _primitive(item, depth + 1)
+        return
+    if isinstance(value, dict) and len(value) <= 512:
+        for key, item in value.items():
+            if not isinstance(key, str) or len(key) > 256:
+                raise ValueError('tracking diagnostic keys must be bounded strings')
+            _primitive(item, depth + 1)
+        return
+    raise ValueError('tracking diagnostics require bounded finite primitive JSON')
+
+
+def _observation(observation, frame, source, anchor_frames, settings):
+    keys = {'frame', 'source_frame', 'status', 'candidate_identity', 'source_proxy_sha256', 'derived_mask_sha256', 'diagnostics'}
+    if (not isinstance(observation, dict) or set(observation) != keys
+            or type(observation['frame']) is not int or observation['frame'] != frame
+            or type(observation['source_frame']) is not int or observation['source_frame'] != source['start_frame'] + frame):
+        raise ValueError('tracking observation frame binding disagrees with accepted masks')
+    status = observation['status']
+    if (status not in ('authored_anchor', 'preview', 'approximation')
+            or (frame in anchor_frames) != (status == 'authored_anchor')
+            or (status == 'approximation' and settings['unreliable_policy'] != 'retain_approximation')):
+        raise ValueError('tracking observation status requires an authored anchor or explicit approximation policy')
+    _hash(observation['candidate_identity'])
+    _hash(observation['derived_mask_sha256'])
+    hashes = observation['source_proxy_sha256']
+    if not isinstance(hashes, dict) or not 1 <= len(hashes) <= 3 or str(frame) not in hashes:
+        raise ValueError('tracking source proxy hashes require the target and at most two anchors')
+    for key, value in hashes.items():
+        if not isinstance(key, str) or not key.isascii() or not key.isdigit() or len(key) > 20:
+            raise ValueError('tracking proxy hash keys must be canonical local frame strings')
+        index = int(key)
+        if key != str(index) or not 0 <= index < source['frame_count'] or (index != frame and index not in anchor_frames):
+            raise ValueError('tracking proxy hash references an unrelated source frame')
+        _hash(value)
+    if not isinstance(observation['diagnostics'], dict):
+        raise TypeError('tracking diagnostics require a primitive object')
+    _primitive(observation['diagnostics'])
+    if len(canonical(observation).encode()) > 64 * 1024:
+        raise ValueError('tracking observation exceeds 64 KiB')
+
+
+def _asset(asset):
+    if not isinstance(asset, dict) or set(asset) != {'path', 'sha256'}:
+        raise ValueError('correction asset requires local path and sha256')
+    if not isinstance(asset['path'], str) or not asset['path'].strip() or '://' in asset['path']:
+        raise ValueError('correction assets must be local filesystem paths')
+    _hash(asset['sha256'])
+
+
+def _derived_identity(info):
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
+
+
+def _derived_size(path, shape):
+    info = path.lstat()
+    if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or getattr(info, 'st_file_attributes', 0) & 0x400
+            or not 0 < info.st_size <= shape[0] * shape[1] * 8 + 1024**2):
+        raise ValueError('tracked mask must be a bounded regular single-link file')
+    return info
+
+
+def load_tracked_asset(path, *, expected_hw, expected_sha256, expected_mask_sha256=None, check=None):
+    """Admit encoded extent and EXR native float32 geometry before decoding."""
+    check = check or (lambda: None)
+    shape = tuple(expected_hw)
+    if len(shape) != 2 or any(type(value) is not int or value < 1 for value in shape) or shape[0] * shape[1] > MAX_TRACK_PIXELS:
+        raise ValueError('tracked mask native geometry exceeds bounds')
+    path = Path(path)
+    check()
+    before = _derived_size(path, shape)
+    fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+    try:
+        if _derived_identity(os.fstat(fd)) != _derived_identity(before):
+            raise ValueError('tracked mask changed before read')
+        chunks, remaining, digest = [], before.st_size, hashlib.sha256()
+        while remaining:
+            check()
+            chunk = os.read(fd, min(1024**2, remaining))
+            if not chunk:
+                raise ValueError('tracked mask truncated during read')
+            chunks.append(chunk)
+            digest.update(chunk)
+            remaining -= len(chunk)
+        if os.read(fd, 1) or _derived_identity(os.fstat(fd)) != _derived_identity(before) or _derived_identity(path.lstat()) != _derived_identity(before):
+            raise ValueError('tracked mask changed during read')
+        raw = b''.join(chunks)
+    finally:
+        os.close(fd)
+    if digest.hexdigest() != expected_sha256:
+        raise ValueError('tracked mask hash mismatch')
+    from .trimap_refinement import _admit_header
+    if _admit_header(raw, shape) != 'exr':
+        raise ValueError('tracked masks require lossless native float32 EXR')
+    # The shared bounded header admission permits HALF categorical assets too;
+    # tracked soft coverage specifically requires a FLOAT Y channel.
+    position = 8
+    while raw[position] != 0:
+        end = raw.index(b'\0', position)
+        name, position = raw[position:end], end + 1
+        position = raw.index(b'\0', position) + 1
+        size = struct.unpack('<i', raw[position:position + 4])[0]
+        position += 4
+        if name == b'channels' and struct.unpack('<i', raw[position + 2:position + 6])[0] != 2:
+            raise ValueError('tracked masks require float32 EXR, not half precision')
+        position += size
+    check()
+    import cv2
+    import numpy as np
+    image = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_UNCHANGED)
+    if image is None or image.shape != shape or image.dtype != np.float32:
+        raise ValueError('tracked mask must decode as exactly native float32 coverage')
+    if not np.isfinite(image).all() or np.any((image < 0) | (image > 1)):
+        raise ValueError('tracked mask must contain finite coverage in [0,1]')
+    if expected_mask_sha256 is not None and hashlib.sha256(image.astype('<f4', copy=False).tobytes()).hexdigest() != expected_mask_sha256:
+        raise ValueError('tracked decoded mask differs from accepted candidate provenance')
+    image.setflags(write=False)
+    check()
+    return image
 
 
 def _unique_pairs(items):
@@ -41,9 +331,12 @@ class CorrectionDocument:
 
     @classmethod
     def parse(cls, data, base_dir: str | Path = "."):
-        if not isinstance(data, dict) or set(data) != {"schema_version", "revision", "source", "shots", "entries"}:
+        keys = {"schema_version", "revision", "source", "shots", "entries"}
+        if isinstance(data, dict) and data.get('schema_version') == 3:
+            keys.add('tracks')
+        if not isinstance(data, dict) or set(data) != keys:
             raise ValueError("corrections require schema_version, revision, source, shots and entries only")
-        if type(data["schema_version"]) is not int or data["schema_version"] not in (1, 2):
+        if type(data["schema_version"]) is not int or data["schema_version"] not in (1, 2, 3):
             raise ValueError("unsupported correction schema version")
         _integer(data["revision"], "revision")
         source = data["source"]
@@ -79,18 +372,13 @@ class CorrectionDocument:
             _integer(entry["revision"], "entry revision")
             _integer(entry["frame"], "entry frame")
             kinds = {"matte", "keep", "remove", "reset"}
-            if data["schema_version"] == 2:
+            if data["schema_version"] >= 2:
                 kinds.add("trimap")
             if entry["frame"] >= source["frame_count"] or entry["kind"] not in kinds:
                 raise ValueError("unsupported correction kind or frame outside selected timeline")
             if reset:
                 continue
-            asset = entry["asset"]
-            if not isinstance(asset, dict) or set(asset) != {"path", "sha256"}:
-                raise ValueError("correction asset requires local path and sha256")
-            if not isinstance(asset["path"], str) or not asset["path"].strip() or "://" in asset["path"]:
-                raise ValueError("correction assets must be local filesystem paths")
-            _hash(asset["sha256"])
+            _asset(entry['asset'])
             strength = entry["strength"]
             if type(strength) not in (int, float) or not math.isfinite(strength) or not 0 <= strength <= 1:
                 raise ValueError("correction strength must be finite in [0,1]")
@@ -105,7 +393,12 @@ class CorrectionDocument:
                     or (entry["direction"] == "forward" and span[0] != entry["frame"])
                     or (entry["direction"] == "backward" and span[1] != entry["frame"] + 1)):
                 raise ValueError("correction direction and range disagree")
-        return cls(canonical(data), Path(base_dir).resolve())
+        if data['schema_version'] == 3:
+            _parse_tracks(data)
+        payload = canonical(data)
+        if len(payload.encode()) > MAX_CORRECTION_BYTES:
+            raise ValueError('correction document exceeds the 4MiB limit')
+        return cls(payload, Path(base_dir).resolve())
 
     def to_dict(self):
         return json.loads(self.payload)
@@ -113,10 +406,22 @@ class CorrectionDocument:
     @property
     def identity(self):
         data = self.to_dict()
-        for entry in data["entries"]:
-            if "asset" in entry:
-                entry["asset"].pop("path")
+        for asset in _assets(data):
+            asset.pop('path')
         return hashlib.sha256(canonical(data).encode()).hexdigest()
+
+    def asset_bindings(self):
+        """Detached authored/derived dependencies; no mutable document aliases."""
+        return tuple(_assets(self.to_dict()))
+
+    def asset_paths(self):
+        return tuple((self.base_dir / asset['path']).resolve() for asset in self.asset_bindings())
+
+    def validate_track_context(self, *, cuts, decode):
+        """Refuse reuse under different live decode or reset/cut settings."""
+        for track in self.to_dict().get('tracks', []):
+            if track['binding']['cuts'] != cuts or track['binding']['decode'] != decode:
+                raise ValueError('tracked correction context changed; re-track or explicitly remove tracks')
 
     @property
     def frames(self):
@@ -130,8 +435,24 @@ class CorrectionDocument:
     def asset_path(self, entry):
         return (self.base_dir / entry["asset"]["path"]).resolve()
 
+    def admit_track_assets(self, *, check=None):
+        """Preflight aggregate derived extents without reading/decoding masks."""
+        data = self.to_dict()
+        shape = (data['source']['height'], data['source']['width'])
+        # Admit all derived extents before any derived hash/decode allocation.
+        total = 0
+        for track in data.get('tracks', []):
+            for row in track['frames']:
+                if check is not None:
+                    check()
+                total += _derived_size(self.base_dir / row['asset']['path'], shape).st_size
+                if total > MAX_TRACK_BYTES:
+                    raise ValueError('document tracked encoded bytes exceed 512 MiB')
+
     def verify_assets(self, *, check=None):
         data = self.to_dict()
+        shape = (data['source']['height'], data['source']['width'])
+        self.admit_track_assets(check=check)
         for entry in data["entries"]:
             if entry["kind"] == "trimap":
                 from .trimap_refinement import load_trimap_asset
@@ -145,6 +466,10 @@ class CorrectionDocument:
                 continue
             if "asset" in entry and file_sha256(self.asset_path(entry), check=check) != entry["asset"]["sha256"]:
                 raise ValueError(f"correction asset hash mismatch: {entry['id']}")
+        for track in data.get('tracks', []):
+            for row, observation in zip(track['frames'], track['observations'], strict=True):
+                load_tracked_asset(self.base_dir / row['asset']['path'], expected_hw=shape,
+                                   expected_sha256=row['asset']['sha256'], expected_mask_sha256=observation['derived_mask_sha256'], check=check)
 
 
 def load_corrections(path, *, source=None, check=None):
@@ -168,10 +493,8 @@ def save_corrections(path, document):
     # Relocation rewrites asset paths; hashes/identity remain content-based.
     path = Path(path).resolve()
     data = document.to_dict()
-    import os
-    for entry in data["entries"]:
-        if "asset" in entry:
-            entry["asset"]["path"] = os.path.relpath(document.asset_path(entry), path.parent)
+    for asset in _assets(data):
+        asset['path'] = os.path.relpath((document.base_dir / asset['path']).resolve(), path.parent)
     if len((json.dumps(data, indent=2, allow_nan=False) + '\n').encode()) > MAX_CORRECTION_BYTES:
         raise ValueError('correction document exceeds the 4MiB limit')
     write_json_atomic(path, data)
@@ -185,12 +508,18 @@ def invalidated_ranges(before, after):
     first = {e["id"]: e for e in old["entries"]}
     second = {e["id"]: e for e in new["entries"]}
     changed = {key for key in first.keys() | second.keys() if first.get(key) != second.get(key)}
+    old_tracks = {track['id']: track for track in old.get('tracks', [])}
+    new_tracks = {track['id']: track for track in new.get('tracks', [])}
+    changed_tracks = {key for key in old_tracks.keys() | new_tracks.keys() if old_tracks.get(key) != new_tracks.get(key)}
     # Reordering changes composition even if entry bodies are unchanged.
     common = first.keys() & second.keys()
     if [e["id"] for e in old["entries"] if e["id"] in common] != [e["id"] for e in new["entries"] if e["id"] in common]:
         changed |= first.keys() | second.keys()
-    return sorted({tuple(shot) for table in (first, second) for key in changed if key in table
-                   for shot in new["shots"] if shot[0] <= table[key]["frame"] < shot[1]})
+    ranges = {tuple(shot) for table in (first, second) for key in changed if key in table
+              for shot in new['shots'] if shot[0] <= table[key]['frame'] < shot[1]}
+    ranges.update(tuple(shot) for table in (old_tracks, new_tracks) for key in changed_tracks if key in table
+                  for shot in new['shots'] if table[key]['range'][0] < shot[1] and shot[0] < table[key]['range'][1])
+    return sorted(ranges)
 
 
 class CorrectionHistory:

@@ -1,5 +1,8 @@
 # Implementation status and staged plan
 
+Current checkpoint: connected sequence tracking preview/inspect/accept, nativefloat32 schema3 final constraints, artist anchors, cut/reset/reliability gates, undo/save/reopen/provenance and protected derived assets locally verified. Source-only sequence Play now uses a bounded frozen off-thread index with explicit refresh. Independent review accepted fixes267–281. Headless benchmark3×1137CPU tests/no skips (77.876/75.657/75.751s);355file compile/import/dependency/static gate PASS,0new vs baseline AND actual prior checkpoint. Existing519Ruff/684Pyright errors17warnings remain. [Tracking](tracked-corrections.md), [checkpoint](checkpoint.md). All ten workflows incomplete overall; actual pretrainedGPU/quality/Windows/Resolve acceptance NOT VERIFIED. Next: optional clean-plate assistance.
+
+
 Current checkpoint: failed/cancelled readiness reports preserve matching engine metadata and last attempted checkpoints, separated from successful inference; A/B previews share decoded-pixel zoom/pan/Fit. Independent20core/serializer/viewport +44Qtintegration cases pass. Full1064CPU tests74.442s/no skips;341file compile/import/dependency/static gate PASS,0new vs accepted prior checkpoint; existing519Ruff/684Pyright errors17warnings remain. Issues265–266 resolved. [Checkpoint](checkpoint.md), [readiness](readiness.md). Actual pretrainedGPU/quality/Windows/Resolve acceptance stays NOT VERIFIED; all ten workflows remain incomplete. Next: tracked corrections, source-only playback/photo backgrounds.
 
 

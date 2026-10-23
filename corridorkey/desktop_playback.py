@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
 
 from .desktop_comparison import common_range
 from .playback import FrameRequest, Playback
+from .preview_sequence import PreparedSequence
+from .session import JobRequest
 
 if TYPE_CHECKING:
     from .desktop_window import DesktopWindow
@@ -41,6 +43,10 @@ class PlaybackControls(QWidget):
         self.displayed_frame: int | None = None
         self.displayed_seconds: float | None = None
         self.binding: tuple[object, ...] | None = None
+        self.source_sequence: PreparedSequence | None = None
+        self.preparation_serial: int | None = None
+        self.preparation_context: tuple[int, JobRequest] | None = None
+        self.navigation_generation = 0
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         row = QHBoxLayout()
@@ -50,6 +56,9 @@ class PlaybackControls(QWidget):
         pause = QPushButton('Pause')
         pause.clicked.connect(self.pause)
         row.addWidget(pause)
+        refresh = QPushButton('Refresh source index')
+        refresh.clicked.connect(self.refresh_source)
+        row.addWidget(refresh)
         self.loop = QCheckBox('Loop source range')
         self.loop.toggled.connect(self.change_loop)
         row.addWidget(self.loop)
@@ -67,7 +76,7 @@ class PlaybackControls(QWidget):
         self.speed.currentIndexChanged.connect(self.change_speed)
         row.addWidget(self.speed)
         layout.addLayout(row)
-        self.status = QLabel('Playback: select a completed image-sequence render. Declared sequence timing only; video/VFR unsupported.')
+        self.status = QLabel('Playback: Source can play a local image sequence directly; export/A-B views require completed renders. Declared sequence timing only; video/VFR unsupported.')
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
 
@@ -76,6 +85,9 @@ class PlaybackControls(QWidget):
         try:
             if owner.closing:
                 raise ValueError('Workspace is closing.')
+            if owner.view.currentText() == 'Source' and owner.moving_reference is None:
+                self._play_source()
+                return
             view = owner.selected_render_view()
             request_id = owner.selected()
             if request_id is None:
@@ -136,7 +148,87 @@ class PlaybackControls(QWidget):
             self.pause()
             self.status.setText(str(exc))
 
+    @property
+    def preparing(self):
+        return self.preparation_serial is not None and self.preparation_context is not None
+
+    def _play_source(self):
+        owner = self.workspace
+        job = owner.job(preview_only=True)
+        if not Path(job.input_path).is_dir():
+            raise ValueError('Source playback requires an image-sequence directory; video/VFR or unknown timing is unsupported.')
+        if self.source_sequence is not None and self.source_sequence.job == job:
+            self._start_source(self.source_sequence)
+            return
+        context = (self.navigation_generation, job)
+        if self.preparing and self.preparation_context == context:
+            return
+        self.pause()
+        self.selected_id = owner.selected()
+        self.preparation_context = context
+        self.preparation_serial = owner.loader.submit(prepare_sequence=job)
+        owner.preview_serial = self.preparation_serial
+        owner.pixmap = None
+        owner.image.setText('Preparing bounded local source sequence…')
+        owner.preview_note.setText('Indexing local image paths and decoding the selected first frame off-thread; no model loading or inference.')
+        self.status.setText('Preparing local source playback: at most 100,000 directory entries/frames and 32 MiB of indexed path bytes. Native image decode memory is unchanged; no pixel cache.')
+
+    def accept_preparation(self, serial, frame, error):
+        if serial != self.preparation_serial:
+            return isinstance(frame, PreparedSequence)  # retire an obsolete metadata result
+        context = self.preparation_context
+        self.preparation_serial, self.preparation_context = None, None
+        if context is None or context[0] != self.navigation_generation or self.workspace.closing:
+            return True
+        if error is not None:
+            self.status.setText('Source preparation failed: ' + error)
+            return True
+        if not isinstance(frame, PreparedSequence) or frame.job != context[1]:
+            self.status.setText('Source preparation returned a mismatched snapshot; no playback started.')
+            return True
+        self.source_sequence = frame
+        try:
+            self._start_source(frame)
+        except (ValueError, TypeError, OSError, RuntimeError) as exc:
+            self.pause()
+            self.status.setText(str(exc))
+        return True
+
+    def _start_source(self, prepared: PreparedSequence):
+        owner, view = self.workspace, prepared.view
+        lower = int(self.in_frame.text()) if self.in_frame.text().strip() else view.start
+        upper = int(self.out_frame.text()) if self.out_frame.text().strip() else view.end
+        binding = ('source', prepared.job, prepared.index.identity, view, lower, upper,
+                   owner.frame.value(), owner.selected())
+        if self.engine is not None and self.binding == binding:
+            if self.engine.playing:
+                return
+        else:
+            self.displayed_frame = self.displayed_seconds = None
+            timing_evidence = f'Local source membership prepared off-thread; explicit frame_dir_fps={view.fps:g}, constant sequence spacing; not video PTS.'
+            if self.engine is None:
+                self.engine = Playback(view, source_identity=view.source, timebase='sequence_declared',
+                                       timing_evidence=timing_evidence, mode='Source')
+            else:
+                self.engine.bind(view, source_identity=view.source, timebase='sequence_declared',
+                                 timing_evidence=timing_evidence, mode='Source')
+            self.engine.set_range(lower, upper)
+            self.engine.set_speed(self.speed.currentData())
+            self.engine.set_loop(self.loop.isChecked())
+            self.engine.seek(min(max(owner.frame.value(), lower), upper - 1))
+            self.binding = binding
+        self.selected_id = owner.selected()
+        owner.preview_serial = -1
+        self.engine.play()
+        self.tick()
+
     def pause(self, *_):
+        if self.preparing:
+            assert self.preparation_serial is not None
+            self.workspace.loader.cancel(self.preparation_serial)
+            self.preparation_context = None
+            self.workspace.preview_serial = -1
+            self.status.setText('Source preparation cancelled; any native read must finish before the owned decoder exits.')
         if self.engine is None:
             return
         self.engine.pause()
@@ -150,9 +242,15 @@ class PlaybackControls(QWidget):
 
     def navigate(self, *_):
         """An explicit still preview/seek/context change supersedes resume."""
+        self.navigation_generation += 1
         self.binding = None
+        self.source_sequence = None
         self.displayed_frame = self.displayed_seconds = None
         self.pause()
+
+    def refresh_source(self):
+        self.navigate()
+        self.status.setText('Frozen source index cleared. Select Source and Play to inspect current local sequence membership again; no render settings changed.')
 
     def selection_changed(self):
         if not self.workspace._updating_diagnostic_rows and self.workspace.selected() != self.selected_id:
@@ -190,7 +288,10 @@ class PlaybackControls(QWidget):
             self._status('Buffering' if self.pending_serial is not None else 'Playing')
             return
         try:
-            serial = self.workspace.loader.submit(**request.options)
+            options = dict(request.options)
+            if self.source_sequence is not None and self.engine.reference is None and self.engine.mode == 'Source':
+                options['sequence'] = self.source_sequence.index
+            serial = self.workspace.loader.submit(**options)
         except (ValueError, RuntimeError) as exc:
             self.engine.complete(request, succeeded=False)
             self.pause()
@@ -219,7 +320,10 @@ class PlaybackControls(QWidget):
             self.displayed_frame, self.displayed_seconds = request.source_frame, request.source_seconds
         if error is not None and current:
             self.pause()
-            self.status.setText('Playback decode failed: ' + error)
+            if self.source_sequence is not None:
+                self.source_sequence = None
+                self.binding = None
+            self.status.setText('Playback decode failed: ' + error + ' Select Play to prepare the source again if needed.')
         else:
             self._status('Playing' if self.engine.playing else 'Paused / range end')
         return valid

@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 
+from .preview_sequence import SequenceIndex
 from .scheduling import frame_paths
 
 
@@ -24,12 +25,18 @@ class PreviewFrame:
     note: str
 
 
-def read_frame(path: str, index: int, *, alpha_mode: str = 'ignore') -> tuple[NDArray[np.float32], int, float | None]:
+def read_frame(path: str, index: int, *, alpha_mode: str = 'ignore', sequence: SequenceIndex | None = None) -> tuple[NDArray[np.float32], int, float | None]:
     from .video_io import read_image_rgb
 
     if type(index) is not int or index < 0:
         raise ValueError('Preview frame must be nonnegative.')
     source = Path(path)
+    if sequence is not None:
+        if not isinstance(sequence, SequenceIndex):
+            raise TypeError('Prepared sequence must be a SequenceIndex instance.')
+        if str(source.resolve()) != sequence.source:
+            raise ValueError('Prepared sequence belongs to a different source path.')
+        return sequence.read_rgb(index, alpha_mode=alpha_mode), len(sequence.paths), None
     if source.is_dir() or source.suffix.lower() in {'.png', '.jpg', '.jpeg', '.exr'}:
         paths = frame_paths(source) if source.is_dir() else [str(source)]
         if not paths:
@@ -62,7 +69,7 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
             alpha_mode: str = 'ignore', alpha_path: str | None = None,
             background: tuple[float, float, float] | None = None, max_side: int = 1280,
             expected_count: int | None = None, expected_hw: tuple[int, int] | None = None,
-            source_colour_profile: str = 'legacy') -> PreviewFrame:
+            source_colour_profile: str = 'legacy', sequence: SequenceIndex | None = None) -> PreviewFrame:
     from .color_utils import linear_to_srgb, srgb_to_linear
 
     if type(max_side) is not int or max_side < 1:
@@ -73,7 +80,7 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
         source = Path(path)
         if source_colour_profile != 'legacy' and not (source.is_dir() or source.suffix.lower() in {'.png', '.jpg', '.jpeg', '.exr'}):
             raise ValueError('Explicit source colour profiles require scene-linear image sequences, not video.')
-    rgb, count, fps = read_frame(path, index, alpha_mode=alpha_mode)
+    rgb, count, fps = read_frame(path, index, alpha_mode=alpha_mode, sequence=sequence)
     if not coverage and source_colour_profile != 'legacy':
         from .colour_contract import to_working_rgb
         rgb = to_working_rgb(rgb, source_colour_profile)
@@ -118,6 +125,8 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
     note = ('Coverage display' if coverage else 'sRGB display; HDR/negative values clip only in this viewer')
     if not coverage and source_colour_profile != 'legacy':
         note += f'; source {source_colour_profile} → working BT.709 D65'
+    if sequence is not None:
+        note += '; frozen path/stat sequence index; source content is not authenticated'
     if fps is not None:
         note += '; OpenCV video seek, VFR alignment unverified'
     return PreviewFrame(pixels, count, width, height, fps, note)

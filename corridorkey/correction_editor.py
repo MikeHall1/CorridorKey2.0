@@ -63,6 +63,9 @@ class CorrectionEditor:
         else:
             document = CorrectionDocument.parse({'schema_version': 1, 'revision': 0, 'source': self.binding,
                          'shots': [[0, self.binding['frame_count']]], 'entries': []}, parent)
+        self.tracking_preview = None
+        self.tracking_cleanup_pending: list[Path] = []
+        self.tracking_cleanup_warnings: list[str] = []
         self.history = CorrectionHistory(document, max_snapshots=128)
         self.revision = document.to_dict()['revision']
         self.invalidated: list[tuple[int, int]] = []
@@ -81,15 +84,51 @@ class CorrectionEditor:
         return {'document': self.document.to_dict(), 'identity': self.document.identity,
                 'invalidated': self.invalidated.copy(), 'workspace': str(self.workspace),
                 'checkpoint_path': str(self.checkpoint_path),
-                'saved_path': str(self.saved_path) if self.saved_path else None}
+                'saved_path': str(self.saved_path) if self.saved_path else None,
+                'tracking_preview': self.tracking_summary(),
+                'tracking_cleanup_pending': [str(path) for path in self.tracking_cleanup_pending],
+                'tracking_cleanup_warnings': self.tracking_cleanup_warnings.copy()}
 
-    def _apply(self, data: dict[str, Any]) -> None:
+    def _apply(self, data: dict[str, Any], *, preserve_tracks: bool = False) -> None:
+        # Authored edits conservatively discard all derivatives; undo retains
+        # the exact earlier accepted snapshot and immutable mask assets.
+        if data.get('schema_version') == 3 and not preserve_tracks:
+            data['tracks'] = []
         data['revision'] = self.revision + 1
         document = CorrectionDocument.parse(data, self.document.base_dir)
         self._checkpoint(document)
         self.invalidated = self.history.apply(document)
         self.revision += 1
         self.saved_path = None
+        if not preserve_tracks:
+            self.discard_tracking()
+
+    def prepare_tracking(self, **parameters):
+        from .correction_tracking_editor import prepare_tracking
+        prepare_tracking(self, **parameters)
+
+    def accept_tracking(self):
+        from .correction_tracking_editor import accept_tracking
+        accept_tracking(self)
+
+    def discard_tracking(self):
+        from .correction_tracking_editor import discard_tracking
+        discard_tracking(self)
+
+    def tracking_summary(self):
+        from .correction_tracking_editor import tracking_summary
+        return tracking_summary(self)
+
+    def tracking_view(self, frame):
+        from .correction_tracking_editor import tracking_view
+        return tracking_view(self, frame)
+
+    def clear_tracking(self):
+        data = self.document.to_dict()
+        if not data.get('tracks'):
+            raise ValueError('No accepted tracked corrections to clear.')
+        data['tracks'] = []
+        self._apply(data)
 
     def _checkpoint(self, document: CorrectionDocument) -> None:
         self.check()
@@ -123,8 +162,10 @@ class CorrectionEditor:
             entry = self._entry(kind, frame, strength, direction, span, path)
         data = self.document.to_dict()
         data['entries'].append(entry)
+        if data['schema_version'] == 3:
+            data['tracks'] = []
         if kind == 'trimap':
-            data['schema_version'] = 2
+            data['schema_version'] = max(2, data['schema_version'])
         candidate = CorrectionDocument.parse(data, self.document.base_dir)
         rasters = CorrectionRasters(candidate, self.meta, check=self.check)
         rasters.close()
@@ -213,6 +254,7 @@ class CorrectionEditor:
             raise
         self.invalidated = invalidated
         self.saved_path = None
+        self.discard_tracking()
 
     def redo(self) -> None:
         invalidated = self.history.redo()
@@ -223,6 +265,7 @@ class CorrectionEditor:
             raise
         self.invalidated = invalidated
         self.saved_path = None
+        self.discard_tracking()
 
     def save(self) -> Path:
         if source_identity(self.job.input_path, check=self.check)['sha256'] != self.binding['sha256']:
@@ -255,7 +298,7 @@ class CorrectionEditor:
             elif entry['kind'] != 'reset' and entry['range'][0] <= frame < entry['range'][1]:
                 # Obtain the actual stored coverage through the shared matte operator.
                 isolated = {**entry, 'kind': 'matte', 'strength': 1.0, 'direction': 'both'}
-                candidate = CorrectionDocument.parse({**data, 'entries': [isolated]}, self.document.base_dir)
+                candidate = CorrectionDocument.parse({**data, 'entries': [isolated], **({'tracks': []} if data['schema_version'] == 3 else {})}, self.document.base_dir)
                 rasters = CorrectionRasters(candidate, self.meta, check=self.check)
                 try:
                     mask = rasters.apply(np.zeros(self.meta['native_hw'], dtype=np.float32), entry['frame'])

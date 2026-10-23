@@ -111,10 +111,9 @@ def _separate_workspace(root, jobs, assets, *, check=None):
             data, _ = read_object(path, max_bytes=MAX_CORRECTION_BYTES, regular_file=True)
             check()
             document = CorrectionDocument.parse(data, path.parent)
-            for entry in document.to_dict()['entries']:
+            for asset_path in document.asset_paths():
                 check()
-                if 'asset' in entry:
-                    inputs.append(document.base_dir / entry['asset']['path'])
+                inputs.append(asset_path)
     for path in inputs:
         check()
         path = Path(path).resolve()

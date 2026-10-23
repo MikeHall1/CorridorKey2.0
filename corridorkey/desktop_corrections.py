@@ -40,11 +40,13 @@ class CorrectionDialog(QDialog):
         self.snapshot: dict[str, Any] | None = None
         self.pending: int | None = None
         self.displayed_frame: int | None = None
+        self.displayed_role = 'authored'
         self.view_requested_frame = 0
         self.entries: list[dict[str, Any]] = []
         self.closing = False
         self.presented_entry: str | None = None
         self.presented_strength: float | None = None
+        self.tracking_anchors: list[str] = []
         root = QVBoxLayout(self)
         self.help = QLabel('Trimaps are imported native classes: foreground green, background red, unknown transparent. Unknown is not 50% alpha. Fixed native 1-pixel RGB-guided refinement adjusts UNKNOWN; strength blends once, known classes are exact at strength 1. Trimaps affect final alpha only, not neural hints, carried mattes or flow; later entries can override. Global alpha refinement is separate. Quick/spatial draft remains approximate. Paint binary native regions (blue draft; green stored mask). Commit mask before saving. Matte defines full-frame coverage, including zero outside paint; keep/remove protect only painted regions. Directional ranges repeat a static raster, not motion tracking. Undo/redo operates on committed edits. This overlay is authored coverage, not a neural key.')
         self.help.setWordWrap(True)
@@ -97,6 +99,25 @@ class CorrectionDialog(QDialog):
                 self.selection_buttons.append(button)
                 button.setEnabled(False)
         root.addLayout(second)
+        tracking = QHBoxLayout()
+        self.tracking_policy = QComboBox()
+        self.tracking_policy.addItems(['request_anchor', 'stop', 'retain_approximation'])
+        self.tracking_policy.setToolTip('Flow/photometric reliability is heuristic, not calibrated confidence. Retain approximation explicitly accepts uncertain draft propagation.')
+        tracking.addWidget(QLabel('Tracking reliability'))
+        tracking.addWidget(self.tracking_policy)
+        for text, callback in [('Add selected anchor', self.add_tracking_anchor),
+                               ('Clear anchor list', self.clear_tracking_anchors),
+                               ('Preview track', self.preview_tracking),
+                               ('Inspect tracked frame', self.inspect_tracking),
+                               ('Accept inspected track', lambda: self.request('track_accept')),
+                               ('Discard preview', lambda: self.request('track_discard')),
+                               ('Clear accepted tracks', lambda: self.request('track_clear')),
+                               ('Cancel operation', self.cancel_operation)]:
+            self._button(text, callback, tracking)
+        root.addLayout(tracking)
+        self.tracking_note = QLabel('Sequence tracking: choose same-kind/strength contiguous authored anchors; Start/End and Direction set tracking range. Preview changes no history. Inspect a retained frame before explicit acceptance. Cuts/resets stop the range. Video/trimap tracking unavailable.')
+        self.tracking_note.setWordWrap(True)
+        root.addWidget(self.tracking_note)
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(['Kind', 'Frame', 'Range [start,end)', 'Direction', 'Strength'])
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -125,6 +146,35 @@ class CorrectionDialog(QDialog):
         selected = selection.selectedRows() if selection is not None else []
         row = selected[0].row() if len(selected) == 1 else -1
         return self.entries[row] if 0 <= row < len(self.entries) else None
+
+    def add_tracking_anchor(self):
+        entry = self.selected()
+        if self.pending is not None or entry is None or entry['kind'] not in {'keep', 'remove', 'matte'}:
+            self.status.setText('Select a committed coverage entry after the current operation finishes.')
+            return
+        if entry['id'] not in self.tracking_anchors:
+            self.tracking_anchors.append(entry['id'])
+        self.tracking_note.setText('Artist anchor frames: ' + str([e['frame'] for e in self.entries if e['id'] in self.tracking_anchors]) + '. Same kind/strength and contiguous entry order required. Use Start/End/Direction, then Preview track; inspect before accepting.')
+
+    def cancel_operation(self):
+        if self.pending is not None:
+            self.service.cancel_current.set()
+            self.status.setText('Cancellation requested; waiting for the owned operation. Native flow/decoding may finish first.')
+
+    def clear_tracking_anchors(self):
+        if self.pending is None:
+            self.tracking_anchors.clear()
+            self.tracking_note.setText('Anchor list cleared; Preview track uses the selected authored entry. Existing accepted tracks remain until cleared or an authored edit invalidates them.')
+
+    def preview_tracking(self):
+        entry = self.selected()
+        anchors = self.tracking_anchors.copy() or ([entry['id']] if entry is not None else [])
+        self.request('track_preview', anchor_ids=anchors, span=[self.start.value(), self.end.value()],
+                     direction=self.direction.currentText(), unreliable_policy=self.tracking_policy.currentText())
+
+    def inspect_tracking(self):
+        if self.request('track_view', frame=self.frame.value()):
+            self.view_requested_frame = self.frame.value()
 
     def parameters(self):
         return {'kind': self.kind.currentText(), 'frame': self.frame.value(), 'strength': self.strength.value(),
@@ -155,6 +205,9 @@ class CorrectionDialog(QDialog):
             self.view_requested_frame = self.frame.value()
 
     def commit(self):
+        if self.displayed_role == 'tracking':
+            self.status.setText('Tracked preview is read-only. Load an authored frame or choose New mask before painting/committing.')
+            return
         entry = self.selected()
         if entry is not None and entry['kind'] == 'trimap':
             self.status.setText('Imported trimap classes cannot be binary painted. Choose New mask for a separate coverage entry.')
@@ -199,6 +252,7 @@ class CorrectionDialog(QDialog):
             self.kind.setCurrentIndex(0)
         self.canvas.overlay_kind = 'coverage'
         self.canvas.saved_overlay = None
+        self.displayed_role = 'authored'
         self.canvas.painting = not self.closing
         self.canvas.update()
         self.start.setValue(self.frame.value())
@@ -245,7 +299,7 @@ class CorrectionDialog(QDialog):
             widget.setEnabled(not reset)
         self.kind.setEnabled(not reset and not trimap)
         self.kind.setPlaceholderText('Imported trimap')
-        self.canvas.painting = not trimap and self.pending is None and not self.closing
+        self.canvas.painting = self.displayed_role != 'tracking' and not trimap and self.pending is None and not self.closing
         if entry is not None:
             self.frame.setValue(entry['frame'])
             if not reset:
@@ -265,6 +319,7 @@ class CorrectionDialog(QDialog):
         self.snapshot = snapshot
         data = snapshot['document']
         self.entries = data['entries']
+        self.tracking_anchors = [key for key in self.tracking_anchors if any(e['id'] == key for e in self.entries)]
         if action in ('brush', 'import', 'import_trimap', 'reset') and self.entries:
             selected = self.entries[-1]['id']
         count = data['source']['frame_count']
@@ -282,7 +337,14 @@ class CorrectionDialog(QDialog):
                 self.table.selectRow(row)
         self.table.blockSignals(False)
         self.select()
-        self.timeline.setText(f"Shots: {data['shots']} · Last edit invalidated whole shots: {snapshot['invalidated']}\nCommitted recovery snapshot: {snapshot['checkpoint_path']}")
+        self.timeline.setText(f"Shots: {data['shots']} · Last edit invalidated whole shots: {snapshot['invalidated']}\nCommitted recovery snapshot: {snapshot['checkpoint_path']} · Accepted tracks: {len(data.get('tracks', []))}")
+        preview = snapshot.get('tracking_preview')
+        if preview is not None:
+            events = ', '.join(f"{row['frame']}:{row['status']}" for row in preview['frames'])
+            self.tracking_note.setText(f"Captured tracking request: {preview['request']} · Accept uses this inspected snapshot.\nTracking preview · complete={preview['complete']} · inspected={preview['inspected']} · charged bytes={preview['bytes_charged']}\n{events}\nReliability/occlusion are heuristic; inspect selected frame before explicit acceptance. Missing masks require another anchor or a shorter range.")
+        if snapshot.get('tracking_cleanup_pending'):
+            self.timeline.setText(self.timeline.text() + '\nPrivate preview cleanup pending: ' + str(snapshot['tracking_cleanup_pending']))
+            self.timeline.setToolTip('\n'.join(snapshot.get('tracking_cleanup_warnings', [])))
 
     def poll(self):
         while True:
@@ -291,23 +353,31 @@ class CorrectionDialog(QDialog):
             except queue.Empty:
                 break
             self.pending = None
-            self.canvas.painting = not self.closing
+            self.canvas.painting = self.displayed_role != 'tracking' and not self.closing
             if event['kind'] == 'error':
+                if event.get('snapshot') is not None:
+                    self.populate(event['snapshot'], 'error')
                 self.select()
-                self.status.setText(event['error'])
+                extra = (' · Private preview cleanup pending; see timeline warnings.'
+                         if event.get('snapshot', {}).get('tracking_cleanup_pending') else '')
+                if event.get('snapshot_error'):
+                    extra += ' · Failure snapshot unavailable: ' + event['snapshot_error']
+                self.status.setText(event['error'] + extra)
                 continue
             action = event.get('action', 'ready')
-            if action == 'view':
+            if action in ('view', 'track_view'):
                 self.snapshot = event['snapshot']
             else:
                 self.populate(event['snapshot'], action)
-            if action == 'view':
+            if action in ('view', 'track_view'):
                 display, overlay = event['view']
+                self.displayed_role = 'tracking' if action == 'track_view' else 'authored'
                 self.canvas.set_frame(display.pixels, display.width, display.height, overlay,
                                       overlay_kind=event.get('overlay_kind', 'coverage'))
-                self.canvas.painting = event.get('overlay_kind') != 'trimap' and not self.closing
+                self.canvas.painting = action != 'track_view' and event.get('overlay_kind') != 'trimap' and not self.closing
                 self.displayed_frame = self.view_requested_frame
-                self.frame_note.setText(f"Displayed selected-frame {self.displayed_frame} (source start {event['snapshot']['document']['source']['start_frame']}) · {display.width}×{display.height} · authored overlay only")
+                role = 'derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only'
+                self.frame_note.setText(f"Displayed selected-frame {self.displayed_frame} (source start {event['snapshot']['document']['source']['start_frame']}) · {display.width}×{display.height} · {role}")
             elif action in ('brush', 'import', 'import_trimap'):
                 self.canvas.clear_draft()
             if action == 'save':

@@ -1068,16 +1068,14 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
         correction_resets = list(correction_document.resets)
         boundaries = sorted({0, T_all} | set(correction_cuts) | set(correction_resets))
         correction_segments = tuple(zip(boundaries, boundaries[1:]))
-        diagnostics.corrections = {"identity": correction_document.identity, "revision": authored["revision"],
-                                   "source": authored["source"], "shots": authored["shots"],
-                                   "authored_frames": list(correction_document.frames), "reset_frames": correction_resets,
-                                   "entries": authored["entries"], "document_path": str(cfg.corrections_path),
+        from .correction_reporting import correction_report
+        diagnostics.corrections = correction_report(correction_document, cfg.corrections_path, runtime_fields={
                                    "hint_frame_evaluations_conditioned": 0, "aux_frame_evaluations_refined": 0,
                                    "output_frames_refined": 0, "refinement_dtype": "float32",
                                    "propagation_anchor_evaluations_refined": 0,
-                                   "directional_range_mode": "static_raster_direct_constraints",
+                                   "directional_range_mode": "tracked_final_constraints_and_authored_static_ranges" if authored.get("tracks") else "static_raster_direct_constraints",
                                    "model_conditioning": "both_direction_authored_hints_and_auxiliary_carry_only",
-                                   "output_cache_reuse": "none; every job recomputes"}
+                                   "output_cache_reuse": "none; every job recomputes"})
     if cfg.auto_vram:
         diagnostics.memory_policy = apply_auto_vram(cfg, (H, W), T_all)
         if cfg.low_vram and cfg.foundation_cache_mb:
@@ -1113,6 +1111,12 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
             raise
         effective_cuts = sorted(set(effective_cuts) | set(analysis["detected_cuts"]))
     if correction_document is not None:
+        from .correction_tracking_context import tracking_cuts, tracking_decode
+        correction_document.validate_track_context(
+            cuts=tracking_cuts(cfg), decode=tracking_decode(cfg, input_path))
+        for track in correction_document.to_dict().get('tracks', []):
+            if any(track['range'][0] < cut < track['range'][1] for cut in effective_cuts):
+                raise ValueError('Tracked correction crosses an effective cut; regenerate with another anchor/range.')
         for entry in correction_document.to_dict()["entries"]:
             if entry["kind"] != "reset" and any(entry["range"][0] < cut < entry["range"][1] for cut in effective_cuts):
                 raise ValueError("correction raster range crosses an effective cut; revise shot/range metadata or the heuristic cut policy")

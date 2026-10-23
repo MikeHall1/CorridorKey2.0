@@ -107,14 +107,12 @@ def validate_output_paths(input_path, output_dir, cfg, *, initial_hint_path=None
                                   regular_file=True)
             correction_document = CorrectionDocument.parse(data, correction_path.resolve().parent)
     if correction_document is not None:
-        data = correction_document.to_dict()
-        entries = data.get('entries')
-        if not isinstance(entries, list) or len(entries) > MAX_SCAN_ENTRIES:
+        asset_paths = correction_document.asset_paths()
+        if len(asset_paths) > MAX_SCAN_ENTRIES:
             raise ValueError('correction asset inventory exceeds output admission bounds')
-        for entry in entries:
+        for asset_path in asset_paths:
             check()
-            if 'asset' in entry:
-                protected.append(correction_document.base_dir / entry['asset']['path'])
+            protected.append(asset_path)
 
     directories = set()
     directory_ids = set()

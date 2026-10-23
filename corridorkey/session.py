@@ -205,11 +205,11 @@ class InferenceSession:
                                                                       check=diagnostics.control.check)
                 finally:
                     diagnostics.correction_preflight_seconds = time.perf_counter() - preflight_started
-                diagnostics.corrections = {"identity": diagnostics.correction_document.identity,
-                                           "revision": diagnostics.correction_document.to_dict()["revision"],
-                                           "document_path": str(config.corrections_path),
-                                           "source": diagnostics.correction_document.to_dict()["source"],
-                                           "entries": diagnostics.correction_document.to_dict()["entries"]}
+                from .correction_tracking_context import tracking_cuts, tracking_decode
+                diagnostics.correction_document.validate_track_context(
+                    cuts=tracking_cuts(config), decode=tracking_decode(config, job.input_path))
+                from .correction_reporting import correction_report
+                diagnostics.corrections = correction_report(diagnostics.correction_document, config.corrections_path)
                 diagnostics.control.checkpoint("correction_preflight", 1, 1)
             from .output_paths import validate_output_paths
 

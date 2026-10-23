@@ -39,22 +39,30 @@
         "benchmark-results/ext01-ext05-final-fixed/verification.json",
         "corridorkey/desktop_viewport.py",
         "tests/test_desktop_viewport.py",
-        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
+        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json",
+        "corridorkey/preview_sequence.py",
+        "tests/test_desktop_source_playback.py"
       ],
-      "next_action": "Source-only playback, photo backgrounds and persistent bounded reader/cache; video/VFR runtime acceptance pending."
+      "next_action": "Photographic custom backgrounds and persistent bounded export readers/cache; video/VFR actual timing acceptance remains pending."
     },
     {
       "id": "EXT-02",
       "title": "Tracked manual corrections",
-      "status": "ready",
+      "status": "in_progress",
       "dependencies": [
         "EXT-05"
       ],
       "acceptance": "Motion-following masks with cut/reliability policies, immutable authored anchors, preview/commit/history/persistence and dependent invalidation.",
       "evidence": [
-        "docs/product-improvements.md"
+        "docs/tracked-corrections.md",
+        "corridorkey/correction_tracking.py",
+        "corridorkey/corrections.py",
+        "corridorkey/correction_tracking_editor.py",
+        "tests/test_tracking_runtime.py",
+        "tests/test_desktop_tracking.py",
+        "benchmark-results/ext02-runtime-integration.txt"
       ],
-      "next_action": "Implement schema3 tracks replacing original final constraint within trackedspan at original ordering position; do not append masks beside stationary original. Strict1/2 compatibility, derived assets/provenance, preview/accept/history/invalidation required. Design recorded in docs/product-improvements.md."
+      "next_action": "Finish reviewed sequence tracking integration checkpoint; video and representative motion/occlusion/pretrained/native-target acceptance stay unverified."
     },
     {
       "id": "EXT-03",
