@@ -17,7 +17,7 @@ dependencies and audited reuse: [implementation map](product-improvements.md).
 | EXT-07 | Frame-aligned spatial diagnostic overlays, documented meaning/provenance, correction/rerender actions | In progress | [Tracking overlays](tracking-overlays.md): explicit bounded actual-flow map capture, read-only source/frame-bound inspection/opacity, events/range/new correction actions locally verified by1348-test frozen CPU/static gate and independent reviews. Saved-track maps, matte-change/boundary roles and representative false-positive/missed-defect quality remain pending/NOT VERIFIED. |
 | EXT-08 | Explicit cold/warm calibration with identity/expiry/failures, measured recommendations and uncertain estimates | Connected initial local workflow verified | Verified sequence/profile plans, sole-owner trials, retained raw reports, measured-only recommendations and duration/expiry UI. Frozen1385CPU/397file gate0new; actual CUDA/sample measurements and quality remain NOT VERIFIED. See [calibration](calibration.md). |
 | EXT-09 | Moved project inspection/relink/selected collection with exact settings/correction/timing identities and protected originals | In progress | Native and foreign all-collected schema2 read/Verify/Apply locally verified; strict lexical archival paths, exact dependency/pin/package-manifest binding and bounded desktop provenance. Final1408CPU/401file gate0new, independent review. Partial/reference-only foreign relinking/direct foreign publication unsupported; native Windows/GPU/quality/Resolve NOT VERIFIED. [Workflow](portable-projects.md), [review](portable-foreign-review.md). |
-| EXT-10 | Supported host selected range prepares/validates cache with progress/cancel and safe refresh/attachment | In progress | [Supported-interface investigation](resolve-assisted-preparation.md) complete; capture/companion workflow not implemented. Actual target Developer docs/SDK/Resolve viewer/export acceptance required. |
+| EXT-10 | Supported host selected range prepares/validates cache with progress/cancel and safe refresh/attachment | In progress | [Supported-interface investigation](resolve-assisted-preparation.md) complete; bounded capture/shared-engine companion is implemented and under audit;final1533CPU/422-file static regression gate and independentAPPROVE/CLEAR pass; full external host acceptance remains pending. See [workflow](ofx-upstream-capture.md). Actual target Developer docs/SDK/Resolve viewer/export acceptance required. |
 
 
 Authority: [development brief](development-brief.md), with required Resolve delivery reinforced by the active user goal. This matrix tracks acceptance, not milestone progress. Existing code is preserved; a local fixture does not establish pretrained quality, performance, packaged usability or host compatibility.
@@ -197,3 +197,33 @@ Git authentication push blocker documented; local checkpoint history is preserve
 publication remains pending. This accepts the repository-review scope only;
 GPU/pretrained quality, target packaging and Resolve criteria above remain open.
 [Final review report](review-2026-10-23.md).
+
+
+## Audit-remediation follow-up — 2026-10-24
+
+Fourteen audit entries now have local implementation/regression evidence, final1568-case passing CPU/Qt/native gate and independent APPROVE/CLEAR review. This does not accept the full product extension or any GPU/quality/Windows/Resolve criterion. QA-002 static debt stays open and REL-001 external runtime acceptance remains NOT VERIFIED. See [remediation status](audits/remediation-status.md) and `benchmark-results/audit-fixes/verification-summary.json`.
+
+
+## Product performance extension A–J — current objective (2026-10-24)
+
+Authority: [current performance brief](product-performance-brief.md); earlier product rows remain valid historical scope. Local fixture evidence is separate from pretrained/target acceptance. `.ralph/plan.json` PERF-* IDs own task state.
+
+| ID | Intake state / existing mechanism | Local completion requirement / missing evidence |
+|---|---|---|
+| PERF-A | Missing usable shot-profile proposals; shot cut heuristics exist | Inspect/edit/save/disable deterministic recommendations and deliberate immutable execution preserving source/context/corrections/resets; no queued mutation. |
+| PERF-B | Partial: bounded current/nearby/upcoming scheduler locally verified | Explicit selected-range and remaining-work priority integration still needed; preserve stale fencing/backend ownership and export separation. Actual GPU response external. |
+| PERF-C | Implemented locally for image sequences | Existing forward/backward artist anchors, heuristic stop/cut diagnostics, inspect/commit/undo/persistence reused. Representative motion/occlusion quality/video remain NOT VERIFIED. |
+| PERF-D | Missing purpose-typed region workflow; native correction/trimap kernels exist | Initial refinement-only authored regions with exact outside identity/order/persistence; neural ROI computation unimplemented/unvalidated and not claimed. |
+| PERF-E | Partial: exact same-job durable replay, not general cross-edit reuse | Complete stage identities, one safe reusable boundary, conservative temporal misses, fresh attempts and clean-render equivalence. |
+| PERF-F | Partial: clean-plate sample-mask inspection/acceptance exists | Explicit multiple-colour/spatial sample authoring/influence/provenance; no new neural channels; representative reference/lighting quality external. |
+| PERF-G | Partial; first expansion/contraction/feather increment implemented under review | Zero-default shared controls, native final alpha before artist constraints; full/low/spatial/Quick parity, HDR/alpha/cancel bounds. Real hair/blur/transparency visual acceptance external. |
+| PERF-H | Partial: cold/warm calibration with timing-only recommendations | Explicit reference-agreement/quality and observed-memory objectives before recommendation; unavailable metrics excluded, acceptance never applies automatically. |
+| PERF-I | Partial: actual stages/output telemetry exist | Connected measured-report feasibility projection, explicit frame budget and unavailable lanes; no summing inclusive overlaps or offline→real-time claims. |
+| PERF-J | Partial: new report-level policy screen under independent repair | Bind every measured workload/quality/lifecycle contract; raw threshold/noise/intentional-regression proof, unsupported required evidence NOT VERIFIED. |
+| PERF-OPT | Candidate: unused window review stack, public triple retained | >=3 alternating measured pairs after warmup, exact retained-pixel equality, raw variation/storage-byte accounting; no GPU speed claim. |
+| PERF-CLEAN | Inventory complete; no module/dependency deletion yet justified | Preserve public CorridorKeyV2, dynamic MoGe/C-RADIO, persisted settings and package runner; retain/defer with consumer proof. Remove only proven internal waste. |
+| PERF-DEPS | Core/optional/dev/build/transitive inventory complete | All current declared dependencies retained: dynamic/local and installed Requires-Dist consumers; no global changes. Actual missing C-RADIO snapshot closure/Windows bundle imports remain external. |
+| PERF-TARGET | Externally blocked | NVIDIA/CUDA+approved weights+licensed local footage; FFmpeg; actual segmentation; Windows build/clean machine; SDK/Resolve viewer/export and distribution approval. |
+
+
+Batch1 evidence update: PERF-G explicit native expansion/contraction/feather; PERF-J supported matched-report policy screen with unsupported evidence NOT VERIFIED; PERF-I optional report-derived developer feasibility; PERF-OPT public-compatible stack elision. Local1597-test/433-file0new gate and independent APPROVE/CLEAR. G/J/I remain incrementally accepted only: no pretrained quality, direct numerical/visual/resource gate evidence, sustained real-time presentation or full feature-complete claim. [Edge](edge-finishing.md), [regression](regression-gates.md), [feasibility](realtime-feasibility.md), [reader resource experiment](reader-efficiency.md). Five pairs show returned stack payload -33.3%, timing inconclusive. All declared deps retained after dynamic/package/transitive inventory; removal not proven safe. PERF-A/B/D/E/F/H still have locally actionable work; PERF-TARGET external prerequisites unchanged.

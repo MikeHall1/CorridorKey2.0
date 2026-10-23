@@ -144,7 +144,8 @@
         "Milestone12 final:249 tests pass;123 Python files/0 syntax errors;523 Ruff findings and826 Pyright errors/17 warnings remain,0 new fingerprints. Baseline/diagnostic settings unchanged.",
         "Milestone13 final:280 tests pass;131 Python files/0 syntax errors;523 Ruff findings and826 Pyright errors/17 warnings remain,0 new fingerprints. No baseline refresh/ignore rules.",
         "Fresh review2026-10-23:325files,519Ruff/684Pyright errors17warnings retained,0new vsactualM45; distribution/selected high-risk diagnostic triage in benchmark-results/fresh-review-static-triage.json. Still not static-clean; remaining warnings are not blanket-dismissed or suppressed.",
-        "Final review2026-10-23:985CPU tests PASS72.674s;327files/519Ruff/684Pyright errors17warnings,0new vs actualM45 and first review checkpoint. This does not resolve the static backlog or prove the nativeQt fault mechanism; existing dispositions/prerequisites retained."
+        "Final review2026-10-23:985CPU tests PASS72.674s;327files/519Ruff/684Pyright errors17warnings,0new vs actualM45 and first review checkpoint. This does not resolve the static backlog or prove the nativeQt fault mechanism; existing dispositions/prerequisites retained.",
+        "2026-10-23 independent static_triage:519Ruff (183firstparty/87tests/249vendored),701Pyright diagnostics (152firstparty/277tests/272vendored). Selected F821/B023/optional branches have concrete narrowing/closure dispositions;2silent failure defects extracted asAUDIT392/393. Remaining annotation/style/vendored debt NOT globally cleared."
       ],
       "blockers": []
     },
@@ -7630,6 +7631,1293 @@
         "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
       ],
       "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CAPTURE-359",
+      "component": "New capture dialog import organization",
+      "classification": "Actual focused Ruff beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Initial focused Ruff finds2 I001 and1UP035 in new dialog.",
+      "root_cause": "Draft Qt multiline/local import ordering and Callable imported fromtyping.",
+      "proposed_action": "Fix only new module imports; preserve checker policy.",
+      "acceptance": "Focused capture lifecycle/Qt cases and stable complete gate pass with review.",
+      "owner": "root",
+      "evidence": [
+        "New corridorkey/desktop_ofx_capture.py draft; main source review and Ruff output beforefix"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-360",
+      "component": "Capture operation terminal publication truth",
+      "classification": "Main distinct source review before execution/remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Draft generic I/O wrapper checks cancellation after operation returns, which can replace successful committed artifact result with cancellation and hide retained paths.",
+      "root_cause": "Completion-adjacent cancellation checked outside helper publication boundary.",
+      "proposed_action": "Check before entering operation; helpers own final precommit cancellation fence. Keep returned committed result truthful and add terminal-cancellation fixture.",
+      "acceptance": "Focused capture lifecycle/Qt cases and stable complete gate pass with review.",
+      "owner": "root",
+      "evidence": [
+        "New corridorkey/desktop_ofx_capture.py draft; main source review and Ruff output beforefix"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-361",
+      "component": "Capture Qt method and result routing types",
+      "classification": "Initial focused Pyright8 diagnostics;4 unresolvedcoreimports pendingauthor creation,4 newdialogmethod/optional issues",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Draft dialog render method collides with QWidget.render signature; optional terminal paths require explicit narrowing before tuple/summary use.",
+      "root_cause": "New action named after inference instead of Qt base method and untyped success/failure tuple narrowing.",
+      "proposed_action": "Rename dialog action submit_render; narrow successful non-None result, build bounded JSON review text in owned worker before GUI acceptance. Keep coreimports pending untilauthored, no suppression.",
+      "acceptance": "Focused touched-source Ruff/Pyright0 and lifecycle/Qt cases pass.",
+      "owner": "root",
+      "evidence": [
+        "Actual Pyright newdesktop_ofx_capture.py beforefix"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-362",
+      "component": "Capture core pretest public admission",
+      "classification": "Author source review confirmed before first runtime verification/fix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "PreparedCapture rejects native Path subclasses via exacttype; Verify lacksfinitefloatadmission; hugeintegerFPS canraiseOverflowError.",
+      "root_cause": "Draft type/validation boundaries differ from promised public native-path/verifiedpixel/finite numeric contracts.",
+      "proposed_action": "Use isinstance Path withclassrefusal; validatefloatbitsduringexplicitVerify; normalizehugeFPS overflow to explicitValueError, preservingbudget/fences.",
+      "acceptance": "Focused boundary regressions, independent stable review and complete gate pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "Author initial source review sent before remediation; initialnativeactualmodulecompile passes for363."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-363",
+      "component": "Native capture publication and JSON boundaries",
+      "classification": "Author source review confirmed before first runtime verification/fix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Premarker filecloseerrors ignored; JSONfpsinheritsglobalcomma locale; finalabortcanarriveafterprogressEnd beforecommit.",
+      "root_cause": "Draft filesystempublication/locale/cancellation boundaries notyetfullyfenced.",
+      "proposed_action": "Checkpremarker payload/manifest close, retainnonthrowingpostcommitmarkerclose; forceclassicJSONlocale; checkabortafterprogressEndbeforecommit; testfaults/locale/cancel preservingtruth.",
+      "acceptance": "Focused boundary regressions, independent stable review and complete gate pass.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Author initial source review sent before remediation; initialnativeactualmodulecompile passes for363."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-364",
+      "component": "Native capture host fixture reusable main",
+      "classification": "Author actualcompilefinding beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New fixture includes old hostmock with main renamed; strictclang return-type check rejects implicit success return in ordinary renamedfunction.",
+      "root_cause": "C++ main special implicit return no longerapplies when reused under macro name.",
+      "proposed_action": "Add explicit return0 onlyat existing successful nativefixturemain end; no checkerweakening or mockduplication.",
+      "acceptance": "Focused regressions and stable independent review/fullgate pass.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Author notified main before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-365",
+      "component": "Prepared capture original job wire admission",
+      "classification": "Author publiccontract source review beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Public prepared validation normalizes job_to_wire before strict originaljob_from_wire, potentially hiding duplicate embedded JSONkeys.",
+      "root_cause": "Normalization precedes syntax-preserving public wirevalidation.",
+      "proposed_action": "Validate asdict original JobRequest throughstrictjob_from_wire before normalization, add duplicatekey publicforgery fixture preserving semanticbinding.",
+      "acceptance": "Focused regressions and stable independent review/fullgate pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "Author notified main before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-366",
+      "component": "Native capture failed-open cleanup ownership",
+      "classification": "Author source review beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Cleanup can remove fixedmanifest leaf when exclusiveopen failed because a foreign conflict exists.",
+      "root_cause": "Freshroot ownership assumed for child that was not successfullycreated.",
+      "proposed_action": "Trackeachsuccessfullycreatedleaf and removeonlyownedleaves; retainconflictingroot truthfully; deterministic conflict/writefault tests.",
+      "acceptance": "Focused meaningful boundary tests, independentstable review and complete gate pass.",
+      "owner": "feature_audit",
+      "evidence": [
+        "Author/coordinator finding recorded before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-367",
+      "component": "New capture test API/type contracts",
+      "classification": "ActualfocusedRuff/Pyrightbeforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Initial touchedfixture Ruff2 andPyright54 diagnostics: missing probe model_scale, nonexistent bridge.client andoptional panel/record flow typing.",
+      "root_cause": "Newfixture draftedagainst inferred API ratherthan existing signatures; assertattribute narrowing doesnotpersist acrossmethods.",
+      "proposed_action": "Pass actualmodel_scale; narrowpanel local beforeattributeassignment/record beforeindexing; assertrealbridge status API; narrowimportfixes.",
+      "acceptance": "Focused meaningful boundary tests, independentstable review and complete gate pass.",
+      "owner": "root",
+      "evidence": [
+        "Author/coordinator finding recorded before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-368",
+      "component": "Completed capture path admission before witness I/O",
+      "classification": "Author source review beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Initialverify_completed reaches load_witness before exactnative owned output/witness pathadmission.",
+      "root_cause": "Publicuntrustedrecord pathorder notyetbound to preparednativejob.",
+      "proposed_action": "Bindnative outputs/witness lexically before I/O, exactrequested/effectivesettings contract accountingonlyactualautoVRAM scheduling changes; negativefixtures.",
+      "acceptance": "Focused meaningful boundary tests, independentstable review and complete gate pass.",
+      "owner": "readiness_ui",
+      "evidence": [
+        "Author/coordinator finding recorded before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-369",
+      "component": "Capture cache destination admission ordering",
+      "classification": "Independent source review confirmed beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Desktopseal writes freshcache/record under arbitraryparent before receipt rejects overlapwith protectedcapture/materializedinput.",
+      "root_cause": "Newvalidation/formatting boundary notyetaligned with original-wire/source-ownership contract.",
+      "proposed_action": "Validate native realparent and protectedroot overlap BEFORE anymkdir/write; actualunchangedsource regression.",
+      "acceptance": "Focusedregressions and stable independentreview/fullgatepass.",
+      "owner": "root",
+      "evidence": [
+        "Author/reviewer sent direct finding before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-370",
+      "component": "Native capture newfixture comprehension lint",
+      "classification": "Actualfocusedstaticbeforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "InitialfocusedRuff2C401 askssetcomprehensions; Pyright0.",
+      "root_cause": "Newvalidation/formatting boundary notyetaligned with original-wire/source-ownership contract.",
+      "proposed_action": "Narrowfixturecomprehension changes only aftercurrenttestscomplete.",
+      "acceptance": "Focusedregressions and stable independentreview/fullgatepass.",
+      "owner": "feature_audit",
+      "evidence": [
+        "Author/reviewer sent direct finding before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-371",
+      "component": "Capture core initial type/lint boundaries",
+      "classification": "Actualfocusedstaticbeforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "ActualinitialRuff3 andPyright9: metadataexceptiontype, unusedfixtureimports, JsonValueobjectnarrowing and invalidclassnegativefixturetype.",
+      "root_cause": "Newvalidation/formatting boundary notyetaligned with original-wire/source-ownership contract.",
+      "proposed_action": "Narrowtypedadmission andAnynegativeboundaries, preserve strictpubliccontracts and diagnostics.",
+      "acceptance": "Focusedregressions and stable independentreview/fullgatepass.",
+      "owner": "readiness_ui",
+      "evidence": [
+        "Author/reviewer sent direct finding before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-372",
+      "component": "Capture UI original settings syntax admission",
+      "classification": "Independent source review confirmed beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Verify normalizes originaleditable config/writer via job_to_wire before strictjob_from_wire andcanwash duplicateJSONkeys.",
+      "root_cause": "Newvalidation/formatting boundary notyetaligned with original-wire/source-ownership contract.",
+      "proposed_action": "Strict asdict originalJobRequest admission beforeanynormalization/hash; duplicateconfig/writer refusal tests.",
+      "acceptance": "Focusedregressions and stable independentreview/fullgatepass.",
+      "owner": "root",
+      "evidence": [
+        "Author/reviewer sent direct finding before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-373",
+      "component": "Native capture full region request",
+      "classification": "Author supportedSDK contract review beforefix; initial8nativecasesPASS1.565s",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New capture clipGetImage uses null region though fullnative RoD capture is required; compliant host may supply onlydefaultROI and causeunnecessaryrefusal.",
+      "root_cause": "Imagefetch request omitted exactalreadyvalidatedsource RoD.",
+      "proposed_action": "Pass explicit validated RoD in captureonly; actualfixtureassert requestedregion whilekeepingboundschecks.",
+      "acceptance": "Focused nativecapture and existingadaptercompatibility tests pass.",
+      "owner": "feature_audit",
+      "evidence": [
+        "Author reviewedactualSDK clipGetImage contract before remediation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-374",
+      "component": "New capture Qt physical fixture roots",
+      "classification": "Actual6Qt4PASS2FAIL0.941s beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Newshared-windowfixture temporary root uses macOS /var alias; strictnative intake correctlyrefusesalias before sourcework.",
+      "root_cause": "Newtest reuseslegacytemp path without resolvingphysicalroot required bycapturepathcontract.",
+      "proposed_action": "Use fixture.root.resolve() onlyinnewcapturefixture; preserveproductionaliasrefusal.",
+      "acceptance": "ActualQt6 andlaterexpandedcases pass withphysicalfixturepaths; sourceunchangedassertionsretained.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext10-capture-focused/main-qt-first.txt"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-375",
+      "component": "Capture committed input presentation truth",
+      "classification": "Actualexpanded8Qt6PASS2FAIL3.604s beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Actualoversizedsummaryfixture commits convertedEXRworkspace/COMPLETE then review_text raises anddialog discardsPreparedCapture.",
+      "root_cause": "Boundedpresentation constructedaftercommit insidegenericfailure path.",
+      "proposed_action": "Retain preparedobject/workspace onpresentationfailure, truthfulboundedstatus; disableSubmit untilcomplete reviewedpresentation; explicitregression.",
+      "acceptance": "ExpandedQtpasses includingactualcommittedartifact/noimplicitrender andunchangedprotectedsource regressions.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext10-capture-focused/main-qt-expanded-first.txt"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-376",
+      "component": "Capture protected-parent negative assertion wording",
+      "classification": "Actualexpanded8Qt6PASS2FAIL3.604s beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Actualguardcorrectlyrefusesbeforewrites butnewQtassert expects overlap word whilemessage names protected data.",
+      "root_cause": "Testassumesunpromisedwordinsteadactualprotected-parent refusal.",
+      "proposed_action": "Assertactualprotectedrefusal while retainingexactsource snapshots/noattachment checks; no productionerror weakening.",
+      "acceptance": "ExpandedQtpasses includingactualcommittedartifact/noimplicitrender andunchangedprotectedsource regressions.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext10-capture-focused/main-qt-expanded-first.txt"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-377",
+      "component": "Capture public artifact commit point",
+      "classification": "Independent actual reproduced boundary beforefix; frozen9corePASS0.090s",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Independentactualrepros: materialize postmarkerconstructorfault+cleanupfailure leaves reusableCOMPLETE workspace; receipt markerclosefault+cleanupfailure leaves usableattachment despitefailedcall.",
+      "root_cause": "Fallibleobjectconstruction/contextclose runsafter visiblemarker commit.",
+      "proposed_action": "Performallvalidation/resultconstruction beforemarker; markercreationfinalcommit withnonthrowingpostcommitclose. Preservetruthfulsuccessifcommitted; meaningfulfailureinjection tests.",
+      "acceptance": "Precise fault/path/range regressions, independentre-review and stablecomplete gate pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "/private/tmp/ext10-core-independent-repros.txt"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-378",
+      "component": "Capture scratch source protection before mkdir",
+      "classification": "Independent actual reproduced boundary beforefix; frozen9corePASS0.090s",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Independentactualscratch_parent=captureRoot repro createschild beforeoverlaprefusal; injectedcleanupfailure leaveschildinsideoriginalcapture.",
+      "root_cause": "Protectedparentcheck followsfresh_directory creation.",
+      "proposed_action": "Refuseequal/insideprotectedcapture scratchparent BEFOREmkdir; noartifactsregression evenifcleanupunavailable.",
+      "acceptance": "Precise fault/path/range regressions, independentre-review and stablecomplete gate pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "/private/tmp/ext10-core-independent-repros.txt"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-379",
+      "component": "Capture signed host range producer/consumer parity",
+      "classification": "Independent actual reproduced boundary beforefix; frozen9corePASS0.090s",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Independentmanifest host_startINT32MAX/count2 accepted consumer butnativeproducer rejects signed hostend overflow.",
+      "root_cause": "Consumerchecks start/count independently without exactproducer endbound.",
+      "proposed_action": "Align fullrange/OutExclusive signed32nativecontract; boundaryfixtures andnativemanifestcompatibility.",
+      "acceptance": "Precise fault/path/range regressions, independentre-review and stablecomplete gate pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "/private/tmp/ext10-core-independent-repros.txt"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "HEALTH-CAPTURE-380",
+      "component": "Retained publication bookkeeping across stale/closing UI contexts",
+      "classification": "Independent source review confirmed outergeneration/closing fence drops successfulcommittedresult",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "CaptureOperation preserves postcommit success butdialogpoll drops allvalue references/paths whencontextobsolete orclosing, hidingretainedconvertedworkspace orcache receipt.",
+      "root_cause": "Publicationbookkeeping coupled toactivejob acceptance ratherthanphysicalartifact truth.",
+      "proposed_action": "Keepbounded current-sessionpublication pathrecords independentofactivecontext; preserveacrossdialogreopen; neverbindstalejob orenableSubmit. Addactualpostcommitblockedterminal\u2192choicechange/close regressions.",
+      "acceptance": "Actualcommittedfiles retained/reported while stalejob bindingrefused; boundedlist andcloseownershippass.",
+      "owner": "root",
+      "evidence": [
+        "IndependentmainUI read-onlyreview beforefix; CaptureOperation360fixture alone doesnotcoverouterpoll."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair."
+      ]
+    },
+    {
+      "id": "AUDIT-381",
+      "component": "corridorkey/desktop_window.py:open_ofx_capture",
+      "classification": "Confirmed independent read-only audit reproduction before remediation",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P1",
+      "problem": "Reopen refusal leaves a pointer to a Qt dialog scheduled for deletion; subsequent poll raises RuntimeError.",
+      "root_cause": "deleteLater precedes settings validation and pointer replacement.",
+      "proposed_action": "Validate first; safely retire old dialog only when replacement can proceed.",
+      "acceptance": "Actual Qt open-close-reopen with hints/profile/oversized settings; deferred deletion and poll remain safe.",
+      "owner": "ui_audit",
+      "evidence": [
+        "Native independent audit lane report 2026-10-23; focused reproduction reported before implementation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-382",
+      "component": "corridorkey/desktop_ofx_capture.py:cancel; desktop_window.py:cancel_ofx_capture",
+      "classification": "Confirmed independent read-only audit reproduction before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Transient queue.Full permanently latches capture cancellation and hides enqueue failure.",
+      "root_cause": "Cancellation latch is set before enqueue acknowledgement.",
+      "proposed_action": "Allow retry after rejected enqueue and retain accurate failure text.",
+      "acceptance": "First cancellation queue.Full then retry succeeds exactly once.",
+      "owner": "ui_audit",
+      "evidence": [
+        "Native independent audit lane report 2026-10-23; focused reproduction reported before implementation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-383",
+      "component": "corridorkey/benchmark.py:run_inference_benchmark",
+      "classification": "Confirmed independent read-only audit reproduction before remediation",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P1",
+      "problem": "Quality evaluation exception leaves summary.success true while inference reports failure; CLI exits zero.",
+      "root_cause": "Success published before quality evaluation and not reset in exception handler.",
+      "proposed_action": "Reset success on failure/cancellation and regress actual runner reporting and CLI status.",
+      "acceptance": "Late quality exception/cancellation returns unsuccessful report and nonzero/cancel exit.",
+      "owner": "core_audit",
+      "evidence": [
+        "Native independent audit lane report 2026-10-23; focused reproduction reported before implementation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-384",
+      "component": "corridorkey/ofx_capture.py:verify_completed_capture",
+      "classification": "Confirmed independent read-only audit reproduction before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Valid automatic low-VRAM render with requested foundation RAM cache cannot prepare OFX cache.",
+      "root_cause": "Effective-setting admission omits documented automatic foundation_cache_mb reset to zero.",
+      "proposed_action": "Allow only the precise auto-VRAM/low-VRAM cache reset; preserve all other strict checks.",
+      "acceptance": "Actual completed capture fixture accepts exact runtime transition and rejects unrelated effective changes.",
+      "owner": "boundary_audit",
+      "evidence": [
+        "Native independent audit lane report 2026-10-23; focused reproduction reported before implementation."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-385",
+      "component": "corridorkey/video_io.py:video preprocessing",
+      "classification": "Confirmed actual bounded independent reproduction before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Changed decoded video geometry silently resizes instead of rejecting source drift.",
+      "root_cause": "Native geometry is not checked before resizing.",
+      "proposed_action": "Validate original decoded dimensions before full-quality or explicit draft resize.",
+      "acceptance": "Wrong decoded geometry refuses in both modes; valid frames unchanged.",
+      "owner": "core_audit",
+      "evidence": [
+        "Independent native audit lane 2026-10-23"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-386",
+      "component": "corridorkey/desktop_ofx_capture.py:seal",
+      "classification": "Confirmed actual bounded independent reproduction before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Receipt failure hides a committed CKOFX002 cache.",
+      "root_cause": "Cache commits before receipt but only complete tuple is retained.",
+      "proposed_action": "Retain committed cache path independently with truthful incomplete-attachment status.",
+      "acceptance": "Injected receipt failure/cancellation retains and reports actual cache without claiming receipt success.",
+      "owner": "ui_audit",
+      "evidence": [
+        "Independent native audit lane 2026-10-23"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-387",
+      "component": "corridorkey/benchmark.py:292-298",
+      "classification": "Confirmed read-only mutation harness with actual batch parser and intercepted child execution",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P1",
+      "problem": "Cold benchmark rereads mutable batch; changed writer fields and appended jobs bypass frozen settings and fresh output isolation.",
+      "root_cause": "Mutable original batch reread plus zip leaves appended jobs unnormalized.",
+      "proposed_action": "Build child manifests exclusively from immutable preflight JobRequests and isolated fresh destinations.",
+      "acceptance": "Mutation after preflight cannot alter writer/profile/job count or direct any job outside benchmark artifact roots.",
+      "owner": "repair_core",
+      "evidence": [
+        "core_audit: CRF12\u219250 and appended preexisting output accepted; stale original batch hash and success=true."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-388",
+      "component": "docs/options.md:88; docs/code-health.md:38; docs/acceptance.md:EXT-10",
+      "classification": "Confirmed contradictory current guidance against existing code/workflow",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Options still says scale only1 despite implemented spatial draft; health resume says five-cycle cap; acceptance says capture unimplemented despite under-review implementation.",
+      "root_cause": "Historical guidance retained as present-tense instructions.",
+      "proposed_action": "Align current guidance with implemented finite scale, checkpoint interval and capture under-review status without claiming acceptance.",
+      "acceptance": "Docs cross-checked against config/spatial-draft and current validation; external acceptance remains unverified.",
+      "owner": "coordinator_pending_writer",
+      "evidence": [
+        "docs/options.md table25 vs prose88; docs/code-health.md38; docs/acceptance.mdEXT10"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-389",
+      "component": "corridorkey/benchmark.py:CPU subprocess deadline",
+      "classification": "Current actual passing baseline exceeds inherited fixed deadline",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Default CPU benchmark terminates test repetitions after120s while valid current1481-test baseline requires123.188s.",
+      "root_cause": "Fixed deadline did not track grown suite and is not configurable.",
+      "proposed_action": "Expose strictly validated bounded CPU timeout_seconds,600s default, report requested/effective deadline and retain cancellation/failure truth.",
+      "acceptance": "Manifest timeout validation, actual subprocess argument and report coverage; headless runner accommodates current suite without weakening tests.",
+      "owner": "repair_core",
+      "evidence": [
+        "benchmark-results/audit-20261023/baseline-tests-unsandboxed.txt:1481PASS123.188s; inherited hardcoded120s timeout"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-390",
+      "component": "corridorkey/desktop_ofx_capture.py:_show_publications",
+      "classification": "Confirmed source boundary during performer self-review; regression before repair required",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Retained-publication review_text raises before slicing if up to8 valid long-path records exceed64KiB, losing safe presentation.",
+      "root_cause": "Strict full review admission reused for bounded publication history rendering.",
+      "proposed_action": "Bound displayed history with explicit truncation while retaining exact internal publication records.",
+      "acceptance": "Oversized history renders safely and truthfully; immutable exact paths retained; no unreviewed attachment submission.",
+      "owner": "repair_ui",
+      "evidence": [
+        "Performer self-review native path bound32768bytes vs8-record64KiB history"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/final-tests.txt:1497PASS125.414s no skips",
+        "benchmark-results/audit-20261023/code-health/health.json:418Python files,0new vs baseline",
+        "benchmark-results/audit-20261023/static-vs-prior.json:0new vs preceding accepted source",
+        "Independent final code/architecture review found only separate AUDIT-391 retry defect; batch acceptance pending that repair.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-391",
+      "component": "corridorkey/desktop_ofx_capture.py:Convert completion",
+      "classification": "Independent final code review actual offscreen reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Fresh conversion after failed render retains prior submitted_id, leaving Submit permanently disabled despite review-ready status.",
+      "root_cause": "Conversion acceptance replaces prepared job but does not retire previous render submission state.",
+      "proposed_action": "Clear old submission/record/cancel state when accepting a newly reviewed prepared job; preserve historical artifacts.",
+      "acceptance": "Actual failed-before-output render then rematerialize and submit works; stale prior result cannot bind to new job.",
+      "owner": "repair_ui",
+      "evidence": [
+        "final_code_review actual Qt harness 2026-10-23"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/ui-retry-before.txt",
+        "benchmark-results/audit-20261023/ui-retry-receipt-before.txt",
+        "benchmark-results/audit-20261023/ui-retry-final.txt:14PASS7.181s",
+        "Independent code-reviewer APPROVE and architect CLEAR;433frozen entries compared,only2intended files changed,exact4lineproductiondelta.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-392",
+      "component": "corridorkey/foundations.py:build_moge_vitb",
+      "classification": "Bounded fault injection confirms silent failure path; no invalid neural output/performance result claimed",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Unexpected bundled native-SDPA setup error is silently swallowed after potentially partial block conversion.",
+      "root_cause": "Broad exception/pass hides setup failure; bundled API is present.",
+      "proposed_action": "Propagate unexpected setup failures with regression proving successful setup unchanged; do not invent unsupported backend fallback.",
+      "acceptance": "Injected setup error cannot return successful model; successful frozen/eval path unchanged.",
+      "owner": "repair_core",
+      "evidence": [
+        "static_triage independent retained S110 investigation2026-10-23"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/foundation-repair-tests.txt:18PASS0.583s",
+        "benchmark-results/audit-20261023/inventory-repair-tests.txt:5PASS0.004s",
+        "shell launcher1PASS0.791s; new tests clean; zero new runtime static fingerprints. Independent integration review pending.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-393",
+      "component": "run_interactive.py:resolve_image_seq_dirs",
+      "classification": "Bounded fault injection confirms silent failure path; no invalid neural output/performance result claimed",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Directory scan failure after partial discovery silently drops companion hint path and returns usable partial input inventory.",
+      "root_cause": "Broad exception/pass treats incomplete scan as successful absence.",
+      "proposed_action": "Reject incomplete directory scans; preserve successful source/hint discovery.",
+      "acceptance": "Actual temporary input+alphahint with injected mid-iteration PermissionError fails clearly instead of returning input,None.",
+      "owner": "repair_core",
+      "evidence": [
+        "static_triage independent retained S110 investigation2026-10-23"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/foundation-repair-tests.txt:18PASS0.583s",
+        "benchmark-results/audit-20261023/inventory-repair-tests.txt:5PASS0.004s",
+        "shell launcher1PASS0.791s; new tests clean; zero new runtime static fingerprints. Independent integration review pending.",
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-394",
+      "component": "corridorkey/desktop_bundle.py; recovery_identity.py",
+      "classification": "Independent actual local reconstruction/fault reproduction before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Packaged recovery requires loose shared runtime source but bundle recipe omits it.",
+      "root_cause": "PyInstaller recipe collects modules into archive while implementation_identity requires runtime.py on disk.",
+      "proposed_action": "Provide authenticated executable implementation sources/provenance compatible with recovery identity; verify selected bundle layout.",
+      "acceptance": "Exact recipe layout supports real implementation_identity; packaged runtime identity binds executing implementation; actual Windows packaging remains separately unverified.",
+      "owner": "persistence_audit",
+      "evidence": [
+        "persistence_audit2026-10-23; exact temporary batch/source bytes overwritten without model or child",
+        "Packaging selected-data reconstruction fails real implementation_identity missing runtime.py"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-395",
+      "component": "corridorkey/worker_client.py:run_worker_batch; corridorkey/batch.py; infer.py",
+      "classification": "Independent actual local reconstruction/fault reproduction before remediation",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P0",
+      "problem": "User report/diagnostics destination can overwrite input manifest or source media before admission.",
+      "root_cause": "Report writes occur before complete protected-path admission.",
+      "proposed_action": "Shared bounded report destination validation before any writes, protect manifest/alljob inputs/hints/correction assets/model dependencies and aliases; retain safe report replacement.",
+      "acceptance": "Actual CLI/API colliding destinations preserve exact original bytes, return error before child/model startup; safe reports still publish including permitted failures.",
+      "owner": "report_safety_design",
+      "evidence": [
+        "persistence_audit2026-10-23; exact temporary batch/source bytes overwritten without model or child",
+        "run_worker_batch(batch,batch) and run_worker_batch(batch,source.mov) reproduced"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-396",
+      "component": "corridorkey/benchmark.py:main output publication",
+      "classification": "Same-root source inspection after independently reproduced report overwrite defect; regression required before repair",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P0",
+      "problem": "Benchmark CLI writes user-selected output without protecting benchmark/batch manifests, source or quality-reference dependencies.",
+      "root_cause": "Generic atomic replacement invoked without report-destination admission.",
+      "proposed_action": "Reuse shared guard before run/publication with complete manifest/job/reference inventory; preserve failed-admission report bytes.",
+      "acceptance": "Actual CLI/API harness colliding output preserves source/manifest/reference bytes; safe failure/success report output remains functional.",
+      "owner": "repair_core",
+      "evidence": [
+        "report_safety_design benchmark.py340\u2013349 same-root inspection"
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "AUDIT-397",
+      "component": "corridorkey/output_paths.py:validate_report_destination missing dependency names",
+      "classification": "Main integration reproduction on actual case-insensitive APFS before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Guard admits uppercase report path alias of a declared but missing lowercase model weight path.",
+      "root_cause": "Missing paths have no inode; lexical/resolved PosixPath comparisons retain case on case-insensitive macOS.",
+      "proposed_action": "Conservative normalized casefold name/ancestry admission for protected missing names, retaining native inode checks.",
+      "acceptance": "Case/Unicode spelling aliases of absent selected assets refuse without filesystem writes; valid unrelatedreports remain allowed.",
+      "owner": "repair_ui",
+      "evidence": [
+        "Actual temp probe/PROBE exists=True; uppercase CORRIDORKEY_V2.SAFETENSORS admitted against default missing lowercase path."
+      ],
+      "verification": [
+        "benchmark-results/audit-20261023/second-batch/tests.txt:1533PASS126.062s/no skips",
+        "benchmark-results/audit-20261023/second-batch/code-health/health.json:422filesPASS;0new findings",
+        "benchmark-results/audit-20261023/second-batch/static-vs-first-batch.json:0newRuff/Pyright,7Ruff removed",
+        "Independent safety_code_review APPROVE22files and safety_arch_review CLEAR; final frozen437source hashes unchanged."
+      ]
+    },
+    {
+      "id": "ARCH-001",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P0",
+      "problem": "See docs/audits/findings-register.md (ARCH-001)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "ARCH-002",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (ARCH-002)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "SEC-001",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P1",
+      "problem": "See docs/audits/findings-register.md (SEC-001)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "SEC-002",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (SEC-002)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "INF-001",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P1",
+      "problem": "See docs/audits/findings-register.md (INF-001)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "INF-002",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P1",
+      "problem": "See docs/audits/findings-register.md (INF-002)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "INF-003",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (INF-003)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "INF-004",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P1",
+      "problem": "See docs/audits/findings-register.md (INF-004)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "INF-005",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (INF-005)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "UI-001",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (UI-001)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "UI-002",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P1",
+      "problem": "See docs/audits/findings-register.md (UI-002)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "UI-003",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (UI-003)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "UI-004",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (UI-004)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "QA-001",
+      "component": "comprehensive repository audit",
+      "status": "resolved",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (QA-001)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json",
+        "docs/audits/remediation-review.md"
+      ],
+      "resolution": "Implemented in existing responsible layer with regression proof; see docs/audits/remediation-status.md"
+    },
+    {
+      "id": "QA-002",
+      "component": "comprehensive repository audit",
+      "status": "open",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (QA-002)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json"
+      ],
+      "next_action": "Open classified legacy static debt; no suppression/baseline refresh"
+    },
+    {
+      "id": "REL-001",
+      "component": "comprehensive repository audit",
+      "status": "external",
+      "priority": "P2",
+      "problem": "See docs/audits/findings-register.md (REL-001)",
+      "classification": "Reproduced code behavior or explicitly separated QA/release evidence gap from read-only audit",
+      "proposed_action": "Implement in existing responsible layer with regression proof; preserve historical external acceptance.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md"
+      ],
+      "verification": [
+        "benchmark-results/audit-fixes/verification-summary.json"
+      ],
+      "next_action": "NOT VERIFIED: actual GPU/weights/FFmpeg/provider/Windows/Resolve/distribution acceptance"
+    },
+    {
+      "id": "PERF-J-001",
+      "component": "corridorkey/regression_gate.py",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P1",
+      "classification": "Independent read-only reviewer reproduction before remediation",
+      "problem": "Pinned regression context omitted quality/reference contracts",
+      "root_cause": "Consistent reference/definition swaps across all repetitions left context digest unchanged.",
+      "proposed_action": "Include result-free quality contracts and match source/range binding.",
+      "owner": "regression_gates",
+      "evidence": [
+        "review_gate independent result",
+        "docs/regression-gates.md"
+      ],
+      "verification": [
+        "9 targeted regression gate tests",
+        "review_gate repair APPROVE",
+        "benchmark-results/product-next/batch1-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-J-002",
+      "component": "corridorkey/regression_gate.py",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P1",
+      "classification": "Independent read-only reviewer reproduction before remediation",
+      "problem": "Actual matched workload lifecycle evidence not admitted",
+      "root_cause": "Actual input/hints/writer/cache/model-state/warmup changes were not rematched to frozen contracts.",
+      "proposed_action": "Admit complete actual workload/lifecycle and fail unavailable evidence closed.",
+      "owner": "regression_gates",
+      "evidence": [
+        "review_gate independent result",
+        "docs/regression-gates.md"
+      ],
+      "verification": [
+        "9 targeted regression gate tests",
+        "review_gate repair APPROVE",
+        "benchmark-results/product-next/batch1-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-J-003",
+      "component": "corridorkey/regression_gate.py",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P2",
+      "classification": "Independent read-only reviewer reproduction before remediation",
+      "problem": "Finite timings produced unrepresentable derived arithmetic",
+      "root_cause": "1e308/1e-308 timing pairs underflowed/overflowed ratios and spread, causing crash/non-JSON evidence.",
+      "proposed_action": "Validate finite positive derived arithmetic; return NOT VERIFIED for unrepresentable results.",
+      "owner": "regression_gates",
+      "evidence": [
+        "review_gate independent result",
+        "docs/regression-gates.md"
+      ],
+      "verification": [
+        "9 targeted regression gate tests",
+        "review_gate repair APPROVE",
+        "benchmark-results/product-next/batch1-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-I-001",
+      "component": "feasibility/desktop benchmark",
+      "status": "resolved",
+      "priority": "P2",
+      "severity": "medium",
+      "classification": "Independent reviewer exact failed-runner/malformed-observation probes",
+      "problem": "Optional projection discarded valid raw/baseline report inspection",
+      "resolution": "Separate admitted raw inspection and optional feasibility failure boundary; preserve explicit NOT VERIFIED rows.",
+      "verification": [
+        "benchmark-results/product-next/batch1-summary.json",
+        "review_gate repair-only APPROVE"
+      ]
+    },
+    {
+      "id": "PERF-I-002",
+      "component": "feasibility/desktop benchmark",
+      "status": "resolved",
+      "priority": "P2",
+      "severity": "medium",
+      "classification": "Independent reviewer exact failed-runner/malformed-observation probes",
+      "problem": "Malformed resource/telemetry values were displayed as recorded",
+      "resolution": "Admit structured observation shapes or show NOT VERIFIED with reason.",
+      "verification": [
+        "benchmark-results/product-next/batch1-summary.json",
+        "review_gate repair-only APPROVE"
+      ]
     }
   ]
 }

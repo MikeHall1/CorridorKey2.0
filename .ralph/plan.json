@@ -3,6 +3,189 @@
   "objective": "Implement and integrate the ten product improvements in docs/product-improvements-brief.md, preserving the shared engine and explicit external acceptance.",
   "tasks": [
     {
+      "id": "PERF-A",
+      "title": "PERF-A product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-A and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-B",
+      "title": "PERF-B product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-B and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-C",
+      "title": "PERF-C product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-C and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-D",
+      "title": "PERF-D product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-D and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-E",
+      "title": "PERF-E product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-E and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-F",
+      "title": "PERF-F product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-F and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-G",
+      "title": "PERF-G product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-G and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-H",
+      "title": "PERF-H product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-H and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-I",
+      "title": "PERF-I product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-I and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-J",
+      "title": "PERF-J product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-J and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-OPT",
+      "title": "PERF-OPT product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-OPT and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-CLEAN",
+      "title": "PERF-CLEAN product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-CLEAN and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-DEPS",
+      "title": "PERF-DEPS product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-DEPS and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-TARGET",
+      "title": "PERF-TARGET product performance extension",
+      "status": "external",
+      "acceptance": "See docs/product-performance-brief.md PERF-TARGET and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "audit-remediation-20261024",
+      "title": "Resolve comprehensive audit findings",
+      "status": "in_progress",
+      "acceptance": "Reproduced code defects fixed with regression tests and independent review; CI tracked; static debt and hardware-dependent acceptance remain explicit until actually verified.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md",
+        "benchmark-results/audit-fixes/",
+        "docs/audits/remediation-status.md",
+        "docs/audits/remediation-review.md",
+        "benchmark-results/audit-fixes/verification-summary.json"
+      ],
+      "next_action": "Continue QA-002 only through evidence-backed scoped diagnostic work; REL-001 requires actual target prerequisites. Reuse this unchanged passing baseline; no unbounded supervisor."
+    },
+    {
       "id": "EXT-01",
       "title": "Readiness and guided short real render",
       "status": "in_progress",
@@ -243,7 +426,7 @@
         "docs/product-improvements.md",
         "docs/resolve-assisted-preparation.md"
       ],
-      "next_action": "Implement bounded host-action source capture against actual supported interfaces; target Resolve Developer docs and host validation remain external."
+      "next_action": "Implement explicit supported InstanceChanged upstream capture, strict13field local manifest/COMPLETE intake, FLOAT EXR bitproof, shared worker job and verified deliberate attachment receipt; count120/pixels16M/payload512MiB. Actual Resolve remains NOT VERIFIED."
     },
     {
       "id": "fresh-repository-review",
@@ -944,7 +1127,215 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Implement the bounded supported-OFX upstream capture and shared-engine companion preparation increment after native/interface feasibility review; preserve previous cache and leave actual Resolve acceptance unverified.",
+  "next_action": "Current audit locally complete. Remaining product tasks and external GPU/quality/Windows/Resolve acceptance remain in their existing task rows; no automatic supervisor/push.",
   "objective_source": "docs/product-improvements-brief.md",
-  "current_checkpoint_evidence": "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+  "current_checkpoint_evidence": "benchmark-results/ext05-export-connected-final-fixed/source-verification.json",
+  "active_audit": {
+    "objective": "Comprehensive current-repository audit and repair, user request2026-10-23",
+    "workflow": ".omx/ultragoal/goals.json",
+    "context": ".omx/context/repository-audit-20261023.md",
+    "baseline": "benchmark-results/audit-20261023/baseline-tests-unsandboxed.txt",
+    "baseline_tests": 1481,
+    "baseline_seconds": 123.188,
+    "status": "locally_complete",
+    "issues": [
+      "HEALTH-CAPTURE-377",
+      "HEALTH-CAPTURE-378",
+      "HEALTH-CAPTURE-379",
+      "HEALTH-CAPTURE-380",
+      "AUDIT-381",
+      "AUDIT-382",
+      "AUDIT-383",
+      "AUDIT-384",
+      "AUDIT-385",
+      "AUDIT-386",
+      "AUDIT-387"
+    ],
+    "scope_note": "Preserve prior product extension tasks; current audit does not claim full external acceptance.",
+    "no_push": true,
+    "final_batch_tests": 1497,
+    "final_batch_seconds": 125.414,
+    "review_issue": null,
+    "new_issues_resolved": 17,
+    "final_tests": 1533,
+    "final_seconds": 126.062,
+    "evidence": "benchmark-results/audit-20261023/second-batch/verification-summary.json",
+    "product_complete": false
+  },
+  "audit_remediation": {
+    "started_utc": "2026-10-23T21:42:54.612796+00:00",
+    "status": "local_code_fixes_accepted_two_findings_open",
+    "finding_ids": [
+      "ARCH-001",
+      "ARCH-002",
+      "SEC-001",
+      "SEC-002",
+      "INF-001",
+      "INF-002",
+      "INF-003",
+      "INF-004",
+      "INF-005",
+      "UI-001",
+      "UI-002",
+      "UI-003",
+      "UI-004",
+      "QA-001",
+      "QA-002",
+      "REL-001"
+    ],
+    "evidence": "benchmark-results/audit-fixes",
+    "cycles_since_checkpoint": 0,
+    "implementation_workers": [
+      "fix_models",
+      "fix_desktop"
+    ],
+    "reviewer": "review_safety",
+    "external_acceptance": "NOT VERIFIED",
+    "updated_utc": "2026-10-23T21:54:33.354932+00:00",
+    "verification": {
+      "status": "local_code_fixes_accepted_two_findings_open",
+      "tests": {
+        "count": 1568,
+        "seconds": 131.43,
+        "errors": 0,
+        "failures": 0,
+        "skips": 0,
+        "command_record": "accepted-tests.json"
+      },
+      "static": {
+        "files": 427,
+        "gate_success": true,
+        "static_clean": false,
+        "ruff_findings": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_findings": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "command_record": "accepted-static.json"
+      },
+      "source_identity": "734d804b0b07589f79e4809abc35833c5e1b47302ba87d2801db1f67388dd135",
+      "fixed_or_implemented": [
+        "ARCH-001",
+        "ARCH-002",
+        "SEC-001",
+        "SEC-002",
+        "INF-001",
+        "INF-002",
+        "INF-003",
+        "INF-004",
+        "INF-005",
+        "UI-001",
+        "UI-002",
+        "UI-003",
+        "UI-004",
+        "QA-001"
+      ],
+      "remaining": {
+        "QA-002": "Open classified legacy static debt; no suppression/baseline refresh",
+        "REL-001": "NOT VERIFIED: actual GPU/weights/FFmpeg/provider/Windows/Resolve/distribution acceptance"
+      },
+      "independent_review": {
+        "code": "APPROVE plus final three-file addendum",
+        "architecture": "CLEAR",
+        "report": "docs/audits/remediation-review.md"
+      },
+      "requested_model": "gpt-6.1-sol medium",
+      "observed_model": "gpt-6.1-sol (developer runtime metadata)",
+      "observed_leader_effort": "not exposed; not inferred",
+      "remote_publication": false,
+      "product_complete": false
+    },
+    "next_action": "Continue QA-002 only through evidence-backed scoped diagnostic work; REL-001 requires actual target prerequisites. Reuse this unchanged passing baseline; no unbounded supervisor."
+  },
+  "current_objective_source": "docs/product-performance-brief.md",
+  "active_product_extension": {
+    "started_utc": "2026-10-23T22:03:24.816301+00:00",
+    "session": "omx-1792790265529-l6n3bp",
+    "task_ids": [
+      "PERF-A",
+      "PERF-B",
+      "PERF-C",
+      "PERF-D",
+      "PERF-E",
+      "PERF-F",
+      "PERF-G",
+      "PERF-H",
+      "PERF-I",
+      "PERF-J",
+      "PERF-OPT",
+      "PERF-CLEAN",
+      "PERF-DEPS",
+      "PERF-TARGET"
+    ],
+    "baseline": "benchmark-results/audit-fixes/verification-summary.json",
+    "baseline_source_unchanged": true,
+    "standalone_supervisor": false,
+    "next_action": "Edge finishing and report acceptance gates; then connected feasibility/shot/region/incremental workflows.",
+    "current_task": "Checkpoint/push accepted G/J/I/OPT increments; continue B/H/A/D/E/F and remaining acceptance",
+    "workers": {},
+    "dependency_disposition": "Retain all declared core/optional/transitive dependencies; dynamic foundations/packaging consumers prevent deletion proof. Optional groups unchanged. Details in native dependency_cleanup result.",
+    "cleanup_disposition": "Public reader triple retained; opt-out candidate removes only unused production window allocation. No internal module deletion justified.",
+    "updated_utc": "2026-10-23T22:13:06.597525+00:00",
+    "status": "batch1_locally_accepted_publication_pending",
+    "owned_processes": [],
+    "cycles_completed": 4,
+    "verification": {
+      "status": "batch1_locally_accepted",
+      "tests": {
+        "count": 1597,
+        "seconds": 135.731,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "command_record": "batch1-tests.json"
+      },
+      "static": {
+        "files": 433,
+        "gate_pass": true,
+        "static_clean": false,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_vs_legacy": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "new_vs_actual_accepted_audit": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "command_record": "batch1-static.json"
+      },
+      "source_identity": "b8b8635f7db424eba210f67b0915abd03d5984f2ef588c51b995874ccf290602",
+      "review": {
+        "code": "APPROVE G/J/I/OPT after repaired findings",
+        "architecture": "CLEAR",
+        "architecture_scope_identity": "ed8f60de7d02c976b87fe49d35e7abd8d3bfd4eaf849d992ed35bf18fafabf1c"
+      },
+      "accepted_increments": [
+        "PERF-G native final alpha expansion/contraction/feather",
+        "PERF-J supported report-level policy screen",
+        "PERF-I recorded-report feasibility tab",
+        "PERF-OPT unused production review stack elision"
+      ],
+      "resource_measurement": {
+        "returned_stack_payload_before": 7077888,
+        "after": 10,
+        "reduction_fraction": 0.3333333333333333,
+        "stack_calls_before": 15,
+        "preprocess_calls": 24,
+        "pixels": "exact model/foundation equality",
+        "timing": "INCONCLUSIVE",
+        "png_median_candidate_over_reference": 1.0688,
+        "mjpg_median_candidate_over_reference": 1.0139,
+        "timing_speedup_accepted": false,
+        "rss_gpu_memory_inference_fps": "NOT VERIFIED",
+        "raw": "reader-experiment-results.json"
+      },
+      "product_complete": false,
+      "publication": "pending git performer checkpoint"
+    }
+  }
 }
