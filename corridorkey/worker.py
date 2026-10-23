@@ -40,7 +40,10 @@ def main(argv=None):
                               durable_foundations=args.durable_foundations, durable_rvm=args.durable_rvm,
                               durable_hann=args.durable_hann, durable_stage2=args.durable_stage2,
                               durable_writer_prefix=args.durable_writer_prefix)
-    print(f"worker batch: {report['status']}; report: {args.report}")
+    if report.get('report_write', {}).get('status') == 'not_written':
+        print(f"worker batch: {report['status']}; report NOT WRITTEN: {report.get('error', report['report_write'])}")
+    else:
+        print(f"worker batch: {report['status']}; report: {args.report}")
     return 0 if report['status'] == 'complete' else 130 if report['status'] == 'cancelled' else 1
 
 

@@ -14,6 +14,7 @@ class CorrectionRasters:
         self.document = document
         data = document.to_dict()
         self._entries = data["entries"]
+        self._tracks = data.get('tracks', [])
         self._cache = OrderedDict()
         self.check = check or (lambda: None)
         source = data["source"]
@@ -24,22 +25,37 @@ class CorrectionRasters:
                 or not math.isclose(source["fps"], meta["native_fps"], rel_tol=1e-6, abs_tol=1e-6)):
             raise ValueError("correction source geometry/selected range/FPS does not match the current job")
         # Decode/validate early; retain no more than two float32 native masks.
+        document.admit_track_assets(check=self.check)
         for entry in self._entries:
             if entry["kind"] != "reset":
                 self._mask(entry)
+        for track in self._tracks:
+            owner = next(entry for entry in self._entries if entry['id'] == track['owner_id'])
+            for row, observation in zip(track['frames'], track['observations'], strict=True):
+                self._mask({**owner, 'asset': row['asset'], '_tracked': True,
+                            '_mask_sha256': observation['derived_mask_sha256']})
 
     def _mask(self, entry):
         self.check()
+        tracked = entry.get('_tracked', False)
         path = ((self.document.base_dir / entry["asset"]["path"])
-                if entry["kind"] == "trimap" else self.document.asset_path(entry))
+                if entry["kind"] == "trimap" or tracked else self.document.asset_path(entry))
         key = (str(path), entry["asset"]["sha256"], entry["kind"],
-               "strict-trimap-v1" if entry["kind"] == "trimap" else "coverage-v1")
+               'tracked-float32-v1' if tracked else ("strict-trimap-v1" if entry["kind"] == "trimap" else "coverage-v1"),
+               entry.get('_mask_sha256'))
         if key in self._cache:
             self._cache.move_to_end(key)
             return self._cache[key]
         # Evict before decoding/admitting a new native-size mask.
         if len(self._cache) >= 2:
             self._cache.popitem(last=False)
+        if tracked:
+            from .corrections import load_tracked_asset
+            mask = load_tracked_asset(path, expected_hw=self.shape,
+                                      expected_sha256=entry['asset']['sha256'],
+                                      expected_mask_sha256=entry['_mask_sha256'], check=self.check)
+            self._cache[key] = mask
+            return mask
         if entry["kind"] == "trimap":
             from .trimap_refinement import load_trimap_asset
             mask = load_trimap_asset(path, expected_hw=self.shape,
@@ -74,9 +90,24 @@ class CorrectionRasters:
         return mask
 
     def _active(self, frame, *, temporal=False):
-        return [entry for entry in self._entries if entry["kind"] != "reset" and entry["strength"] > 0
-                and entry["range"][0] <= frame < entry["range"][1]
-                and (not temporal or (entry["direction"] == "both" and entry["kind"] != "trimap"))]
+        if temporal:
+            return [entry for entry in self._entries if entry['kind'] not in ('reset', 'trimap') and entry['strength'] > 0
+                    and entry['range'][0] <= frame < entry['range'][1] and entry['direction'] == 'both']
+        tracks = [track for track in self._tracks if track['range'][0] <= frame < track['range'][1]]
+        consumed = {identifier for track in tracks for identifier in track['anchor_ids']}
+        owners = {track['owner_id']: track for track in tracks}
+        active = []
+        for entry in self._entries:
+            if entry['id'] in consumed:
+                track = owners.get(entry['id'])
+                if track is not None and entry['strength'] > 0:
+                    row = track['frames'][frame - track['range'][0]]
+                    observation = track['observations'][frame - track['range'][0]]
+                    active.append({**entry, 'asset': row['asset'], '_tracked': True,
+                                   '_mask_sha256': observation['derived_mask_sha256']})
+            elif entry['kind'] != 'reset' and entry['strength'] > 0 and entry['range'][0] <= frame < entry['range'][1]:
+                active.append(entry)
+        return active
 
     def has_effect(self, frame, *, temporal=False):
         return bool(self._active(frame, temporal=temporal))

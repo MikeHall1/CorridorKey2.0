@@ -56,7 +56,7 @@ All CLI flags from the starting revision remain accepted. Runtime defaults are i
 | `--low_vram_swin_window_batch` | `16` |  |
 | `--low_vram_full_attn_query_chunk_tokens` | `2048` |  |
 | `--corrections` | `None` | Local versioned correction document; core/batch field is `corrections_path`. |
-| `--diagnostics` | `None` | Write an atomic JSON job record, including runtime failures. |
+| `--diagnostics` | `None` | Write an atomic JSON job record, including runtime failures, only after report-destination safety admission. |
 | `--profile_stages` | `False` | Synchronize GPU stages for diagnostic timings; changes measurement overhead. |
 | `--quick_key` | `False` | Enable offline source-RGB draft approximation. |
 | `--quick_interval` | `5` | Native anchor distance; 1 retains the original full-rate path. |
@@ -85,16 +85,18 @@ All CLI flags from the starting revision remain accepted. Runtime defaults are i
 - RAM foundation cache budget is a nonnegative integer MiB; default off. Explicit low-VRAM plus RAM cache is rejected because low-VRAM already uses disk features. An automatic switch to low-VRAM records effective cache budget 0 and a warning. Cache does not change RVM chronology or skip native-rate keying stages.
 - Automatic VRAM budget is null or a positive integer MiB and requires automatic selection. It caps a heuristic selection budget, not allocations. Oversized process allocations/no estimated fitting profile cause an actionable error. See `feature-cache.md` for precise budget scope and unmeasured GPU acceptance.
 - Quick Key defaults off. Sparse mode uses contiguous native contexts, full-rate RVM, supplied cut/reset boundaries, current source RGB and explicit uncertainty fallback. Contexts must fit the effective Hann chunk. Cut/reset values must be nonnegative integer frame indices within the selected clip and require sparse Quick Key; interval 1 retains the original full-rate path. Automatic cuts and adaptive/max-gap/hold/causal modes are implemented; authored matte/keep/remove/reset documents are implemented with explicit static-range and conditioning limits. Automatic cuts, maximum gap, hold/causal and adaptive controls require sparse Quick Key; interval 1 retains the baseline defaults. Adaptive requires explicit neural fallback and is rejected for hold. Causal contexts are past-only/anchor-owned and omit final anchors requiring future boundary knowledge; RVM chunks are one frame. Zero propagation look-ahead does not make whole-clip precompute live. See `quick-key.md` for approximation, diagnostics and cost limits.
-- Model scale currently accepts only 1.0. Other values previously failed after expensive inference; they now fail before loading the model. Reduced-resolution/Lanczos output rendering is deferred.
+- Model scale accepts finite `0 < model_scale <= 1`, with default `1.0` retaining full-quality native processing. Smaller values explicitly select spatial approximation with native-sized exports; no resource failure automatically selects them. Invalid values reject before inference. See [spatial draft](spatial-draft.md) for geometry, resampling and quality limitations.
 - num_frames <=0 retains the legacy all-frames convention; positive limits cap the clip. Video start modes are begin/middle/random_middle with nonnegative seed. Frame-directory middle/random and brightness/contrast changes were silently ignored; they now fail with actionable errors.
 - FPS finite and >0; brightness and contrast finite/nonzero so inversion is defined (signed values remain accepted); contrast pivot finite. Video adjustments occur in linear light and are inverted at rendering. Frame-directory linear mode is explicit (CLI default off); no transfer inference from extension.
 - Outputs: nonempty subset alpha/fg/checker/cutout. Video or EXR only; EXR half/float. CLI defaults alpha+fg; interactive defaults all four. Preview RGB clips to [0,1]; cutout video is ProRes 4444 regardless of ffmpeg_codec/pix_fmt. Cutout defaults to straight RGB/alpha; explicit premultiplied association is supported for EXR cutout only and labelled in the filename/contracts. EXR is linear regardless of cutout_linear. Half saturation outside finite float16 range is inherited behavior.
-- Decoded uint8/uint16 image RGB/grayscale normalizes to float32 without eight-bit quantization; float EXR preserves signed HDR in explicit linear mode. Source/foundation model conversion remains bfloat16. Decoded precision observations are recorded per successful frame read, not original EXR pixel-type claims. Video remains an explicitly reported OpenCV uint8 path without source-depth/PQ/HLG detection; higher-bit video and managed source-colour transforms remain pending.
+- Decoded uint8/uint16 image RGB/grayscale normalizes to float32 without eight-bit quantization; float EXR preserves signed HDR in explicit linear mode. Source/foundation model conversion remains bfloat16. Decoded precision observations are recorded per successful frame read, not original EXR pixel-type claims. Video remains an explicitly reported OpenCV uint8 path without source-depth/PQ/HLG detection. Decoded frames must retain the probed native geometry and three channels before full-quality or explicit spatial-draft resizing; geometry drift rejects rather than silently distorting input. Higher-bit video and managed source-colour transforms remain pending.
 - ffmpeg codec/preset/pix_fmt/bitrate strings are passed to FFmpeg for validation. crf is integer codec-dependent; thread count is clamped to >=1 by the writer. EXR writing no longer requires FFmpeg. Writer queue/finalization waits default to a finite 60 seconds, configurable with `writer_timeout_seconds` (CLI) or `WriterConfig.timeout_seconds` (API/batch). Stalled encoders are terminated/reaped. Native in-process EXR/decode calls cannot be killed by a Python token; partial outputs can remain.
+
+Report destinations for inference diagnostics, batch and worker runs are checked against all admitted jobs, manifests, correction assets, selected model paths and generated output paths before processing and each publication. Worker recovery workspaces are also protected. An invalid or incomplete inventory leaves the report unwritten rather than risking a source overwrite. Unrelated existing regular report files can still be replaced, and a noncolliding report inside the job output directory remains supported. Alias/special-file and bounded-scan refusals are deliberate; missing model files are protected by name without requiring a download. Conservative Unicode/case comparison may refuse distinct case-sensitive names, and the checks are sampled local safeguards rather than a filesystem reservation.
 
 ## Interactive launcher and drag/drop settings
 
-Single and batch workflows keep companion hint discovery, Windows-path mapping, video/frame-directory resolution and per-clip output folders. Launcher flags and file names are retained. Interactive execution now calls the same CLI parser in process and retains one model session across clips; failed inference resets the model. Models remain resident while the interactive session is open and are released on exit. No prompt or output default was removed.
+Single and batch workflows keep companion hint discovery, Windows-path mapping, video/frame-directory resolution and per-clip output folders. Directory enumeration errors now abort clip/sequence discovery rather than returning a partial inventory that could omit companion hints or clips. A missing/non-directory input retains its existing explicit no-match behavior. Launcher flags and file names are retained. Interactive execution now calls the same CLI parser in process and retains one model session across clips; failed inference resets the model. Models remain resident while the interactive session is open and are released on exit. No prompt or output default was removed.
 
 | Setting | Default / choices |
 |---|---|
@@ -219,3 +221,152 @@ payload bounds within the configured cache budget. Invalid cache data recomputes
 unverifiable ownership fails closed before pruning. Generic completed manifests
 retain the configured store quota rather than the tighter typed-adapter limit.
 No new inference flag or precision change is introduced.
+
+
+Desktop **Readiness / first render…** opens without automatic checks or processing.
+**Check readiness** inspects local metadata off-thread. **Prepare short render**
+uses explicit absolute In and 1–120 frames (default8) in a fresh unique output child;
+**Run displayed snapshot** submits only after review. Quality/backend/precision
+remain requested; supplied cuts/resets rebase, moved first hints and correction
+subranges refuse rather than silently change meaning. No new inference defaults
+or CLI aliases. See [scope and pending acceptance](product-improvements.md).
+
+Desktop **Play sequence / Pause** requires a selected completed source image
+sequence/EXR render with recorded declared timing. Optional loop source In/Out
+are exclusive ranges; blank uses the common range. Speeds¼×–4× affect preview
+scheduling only. Source frame/time and buffering/drop counters are shown. Manual
+preview/navigation/view/selection/settings changes pause playback. Video/VFR
+explicitly refuses; 50ms UI polling and per-frame reader reopening are documented
+limits. No inference/export setting or persisted project schema changes.
+
+
+First launch now shows the readiness introduction once (no automatic checks or
+render). Desktop `--readiness` forces the introduction; `--no-first-run` suppresses
+it for this invocation. Explicit **Probe backend / encoders** runs bounded
+subprocess metadata queries. **Inspect completed frame** decodes one matching
+completed Alpha/Foreground/composite frame, at most512px thumbnail, with separate
+decode/display evidence. It invalidates any newly prepared render whose displayed
+details it replaces. No inference defaults/aliases or queued settings change.
+See [workflow, bounds and unverified acceptance](readiness.md).
+
+
+The readiness report retains matching failed/cancelled worker metadata and the
+last attempted checkpoint, copied before cleanup. Missing/contradictory metadata
+remains NOT VERIFIED; partial CUDA work never implies success. A/B preview
+surfaces share decoded-pixel zoom and normalized pan with wheel/drag and explicit
+Zoom/Fit controls. Display transformations preserve render settings and pixels;
+scale refers to bounded decoded previews, not native source resolution. No
+inference default, precision, dependency or saved-format change is introduced.
+
+
+Tracked corrections use explicit Preview/Inspect/Accept in the existing editor,
+with forward/backward/both range, artist anchors and request_anchor/stop/explicit
+retain_approximation policies. Persisted schema3 final constraints preserve old
+schema1/2 semantics; no new inference default. Video/trimap tracking and crossing
+cuts/resets are unavailable. Limits, compatibility and validation:
+[tracked corrections](tracked-corrections.md). Source-only sequence Play prepares
+a bounded index off-thread; Refresh source index reinspects membership explicitly.
+Declared sequence FPS remains separate from observed video timestamps.
+
+
+Correction editor **Clean plate** is collapsed by default. Explicit reference
+colour, source/reference index, background sample mask or whole-frame assumption,
+alignment/translation, exposure and BG/FG thresholds affect Preview. Guidance
+inspection is required before Accept; diagnostic views remain read-only. **New
+mask** reloads source pixels before painting after plate inspection or frame
+changes. Schema4 adds generation provenance without changing existing schema1–3
+behavior, inference flags or quality defaults. Bounds, detach semantics, formats
+and validation: [clean-plate guidance](clean-plate-guidance.md). The optional SAM2
+provider foundation is headless; there are no nonfunctional model controls.
+
+
+Correction editor **Subject clicks** is collapsed by default. **Prepare selected
+frame** captures the source with explicit local config/checkpoint; **Predict**
+starts the optional isolated CPU float32 provider only on request. Click mode,
+positive/negative native XY, Undo click, Clear selection, Inspect, **Accept as
+Keep** and Discard affect the captured selection. Keep at strength1 makes its
+interior opaque and leaves outside unchanged; existing strength/range controls
+apply after acceptance. Limits, cancellation and pending optional-model/frozen
+platform acceptance: [subject clicks](subject-clicks.md). No render defaults,
+precision aliases, queued requests or dependencies change.
+
+
+Desktop **Projects…** groups **Open desktop snapshot…**, **Save desktop snapshot…**
+and **Portable projects…**. Existing schema1 format and CLI/API remain; Save now
+requires readable correction metadata to protect every referenced asset/alias.
+Portable collection defaults to reference-only, verification budget256MiB and
+copy budget0; dialog limits0–65536MiB are explicit per operation/pass. Explicit
+Verify/Publish/Inspect/Relink/Apply never enqueue or change the active model owner.
+Apply requires separate output/scratch; desktop preview frame maximum stays1e9
+and larger portable frame values refuse rather than clamp. Native path flavour
+only initially; no model/cache/environment collection or compatibility claim.
+See [bounds, provenance and validation](portable-projects.md).
+
+Desktop **Progressive preview…** adds an explicitly enabled, transient inference
+workflow; default off and opening performs no I/O/model work. Capture/start uses
+the current job, explicitly selected scratch and Alpha/Foreground/composite view.
+Optional draft defaults unchecked, scale0.5 (must be below captured model_scale);
+idle surrounding refinement defaults checked. Core scheduler limits and workspace
+bounds are fixed explicit admission policies, not hardware memory caps. Normal
+exports retain their settings and disable previews. Worker protocol `preview`
+accepts the same strict job wire as `render`, shares the same sequential session,
+and is excluded from durable render history. No existing CLI flag, inference
+precision/colour/backend default or persisted format changes. Initial sequences
+only, no Quick Key/hints/corrections; single-frame temporal state restarts.
+[Workflow and verification limits](progressive-previews.md).
+
+Correction editor **Show spatial tracking diagnostics** is collapsed by default;
+**Capture diagnostic maps on next Preview track** defaults false. Opt-in capture
+reuses existing flow and adds a separate64MiB map/receipt admission budget to the
+existing512MiB tracking-mask budget. Explicit reliability/uncertainty inspection
+and staged opacity (default0.55) affect source-display pixels only. Navigation,
+captured range and new-correction actions use existing safeguards/source reload.
+No CLI/inference flag, correction schema, persisted track semantics or render
+pixel/default change. Saved-track maps remain unavailable. Limits and commands:
+[spatial tracking diagnostics](tracking-overlays.md).
+
+
+## Optional machine calibration
+
+Calibrate performance… opens an explicit metadata → budgeted Verify → Start workflow.
+No render defaults or aliases change. Profiles cover scale, temporal window/stride,
+Stage 2 batching, explicit memory/cache and Quick Key settings; recommendations
+never change jobs. Sequence-only; hints/corrections/video and auto-VRAM/stage
+profiling are explicitly refused. See [workflow, limits and verification](calibration.md).
+
+
+## Foreign portable collection paths
+
+The all-collected Windows/POSIX schema2 reader extension is locally verified. It preserves original archival settings and requires explicit native
+absolute output/scratch destinations for foreign Apply; native package destination
+behavior is unchanged. Partial/reference-only foreign packages and direct foreign
+publication refuse. EXR retains unused encoder references; foreign absolute video
+encoders refuse without replacement. See [scope and review](portable-foreign-review.md).
+
+
+## Photo composite previews
+
+Photo… explicitly prepares a session-only RGB photo through the existing preview
+worker; Photo composite supports still and synchronized sequence playback. Choose
+assumed sRGB PNG/JPEG or scene-linear BT.709/D65 EXR and exact native geometry.
+Use checkerboard clears live photo selection. No render defaults, precision,
+writer options or queued jobs change. Combined work limits admit1080p but not
+native4K; no ICC/OCIO/EXIF automation or implicit resize/profile fallback. See
+[workflow/limits](photo-backgrounds.md) and [review](photo-backgrounds-review.md).
+
+
+## Export playback sequence indexes
+
+Play sequence prepares bounded metadata off-thread on the existing loader and
+reuses it across frames, seek and resume. Refresh sequence indexes replaces the
+former Refresh source index label; internal refresh_source alias remains. New
+files are ignored until explicit Refresh; changed captured files pause playback.
+No automatic reindex or geometry/colour/precision fallback. Manual still decoding
+is unchanged. Aggregate defaults: six directories,100,000 entries/frames,32MiB
+path bytes,64MiB estimated metadata; these are not a hard RSS cap or native decode
+pixel limit. [Workflow and validation](export-playback-indexes.md).
+
+
+## Audit-remediation admission changes (2026-10-24)
+
+No new processing control or precision/backend default. Legacy tensor/dict checkpoints load with restricted `weights_only=True`; executable/custom-object legacy payloads refuse. Runtime-format checkpoints must omit frozen `foundations.*` state and use separate validated assets/stats. Incomplete MoGe state, invalid enabled-model statistics and unavailable video FPS now refuse instead of silently substituting. Batch outputs cannot overwrite another admitted job’s sources/hints/corrections/model assets. Model inventory rejects linked/reparse children. See [compatibility and proof](audits/remediation-status.md).

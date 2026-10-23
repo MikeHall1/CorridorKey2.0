@@ -68,12 +68,17 @@ class InferenceConfig:
     alpha_refine_radius: int = 0
     alpha_refine_strength: float = 1.0
     alpha_refine_sigma: float = 0.1
+    alpha_expand_radius: int = 0
+    alpha_feather_radius: int = 0
     despill_screen: str = "green"
     despill_space: str = "legacy"
     despill_preserve_luma: bool = False
     despill_edges_only: bool = False
 
     def validate(self):
+        for name, minimum in (("alpha_expand_radius", -32), ("alpha_feather_radius", 0)):
+            if type(getattr(self, name)) is not int or not minimum <= getattr(self, name) <= 32:
+                raise ValueError(f"{name} must be an integer in [{minimum},32]")
         if type(self.alpha_refine_radius) is not int or not 0 <= self.alpha_refine_radius <= 4:
             raise ValueError("alpha_refine_radius must be an integer in [0,4]")
         for name in ("alpha_refine_strength", "alpha_refine_sigma"):

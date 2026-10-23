@@ -106,6 +106,8 @@ def main(argv=None, *, session=None):
     ap.add_argument("--alpha_refine_radius", type=int, default=0, help="Opt-in native spatial alpha filter radius [0,4]; 0 is off. Not a quality guarantee.")
     ap.add_argument("--alpha_refine_strength", type=float, default=1.0)
     ap.add_argument("--alpha_refine_sigma", type=float, default=0.1)
+    ap.add_argument("--alpha_expand_radius", type=int, default=0, help="Native coverage square expansion (+) / contraction (-) pixels [-32,32]; before authored constraints, 0 off.")
+    ap.add_argument("--alpha_feather_radius", type=int, default=0, help="Native coverage Gaussian feather support radius [0,32] pixels; after expansion, before authored constraints, 0 off.")
     ap.add_argument("--linear_brightness", type=float, default=1.0)
     ap.add_argument("--linear_contrast", type=float, default=1.0)
     ap.add_argument("--linear_contrast_pivot", type=float, default=0.18)
@@ -203,6 +205,7 @@ def main(argv=None, *, session=None):
         despill_preserve_luma=args.despill_preserve_luma, despill_edges_only=args.despill_edges_only,
         alpha_refine_radius=args.alpha_refine_radius, alpha_refine_strength=args.alpha_refine_strength,
         alpha_refine_sigma=args.alpha_refine_sigma,
+        alpha_expand_radius=args.alpha_expand_radius, alpha_feather_radius=args.alpha_feather_radius,
         output_format=args.output_format,
         exr_dtype=args.exr_dtype,
         quick_key=args.quick_key, quick_interval=args.quick_interval,
@@ -246,6 +249,14 @@ def main(argv=None, *, session=None):
 
 
 def _run_job(session, job, diagnostics_path):
+    from corridorkey.output_paths import validate_report_destination
+    def persist():
+        validate_report_destination(diagnostics_path, (job,), weights=session.weights,
+                                    package_root=session.package_root, asset_root=session.asset_root)
+        write_json_atomic(diagnostics_path, session.last_result.to_dict())
+    if diagnostics_path is not None:
+        validate_report_destination(diagnostics_path, (job,), weights=session.weights,
+                                    package_root=session.package_root, asset_root=session.asset_root)
     previous = session.last_result
     try:
         return session.run(job)
@@ -255,8 +266,7 @@ def _run_job(session, job, diagnostics_path):
             # Report failure must not replace an inference/cancellation exception.
             import sys
             from corridorkey.lifecycle import cleanup_all
-            cleanup_all([lambda: write_json_atomic(diagnostics_path, session.last_result.to_dict())],
-                        primary_error=sys.exception())
+            cleanup_all([persist], primary_error=sys.exception())
 
 if __name__ == "__main__":
     main()

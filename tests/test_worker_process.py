@@ -87,6 +87,16 @@ class WorkerProcessTests(unittest.TestCase):
     def test_actual_hard_child_exit_marks_job_lost_and_explicit_restart_is_new_generation(self):
         client = self.client()
         generation = client.generation
+        if os.name != 'nt':
+            # Restart requires proven descendant discovery before the leader
+            # exits. Keep the ready fixture idle until that prerequisite holds;
+            # first discovery after a hard exit correctly remains fail-closed.
+            with client.kill_lock:
+                client._capture_descendants()
+            self.assertIsNotNone(client.containment)
+            assert client.containment is not None
+            self.assertGreater(client.containment.complete_samples, 0)
+            self.assertIsNone(client.containment.failure)
         request_id = client.submit(self.job('crash', {'exit': True}))
         self.wait(client, 'lost', request_id)
         client.process.wait(timeout=3)
@@ -133,9 +143,12 @@ class WorkerProcessTests(unittest.TestCase):
         self.assertTrue(report['jobs'][1]['record']['model_reused'])
         self.assertEqual(json.loads(report_path.read_text())['status'], 'complete')
         self.assertTrue(report['worker_clean_stop'])
+        previous_report = report_path.read_bytes()
         failed = run_worker_batch(self.root / 'missing.json', report_path)
         self.assertEqual(failed['status'], 'failed')
-        self.assertEqual(json.loads(report_path.read_text())['error']['type'], 'FileNotFoundError')
+        self.assertEqual(failed['error']['type'], 'FileNotFoundError')
+        self.assertEqual(failed['report_write']['status'], 'not_written')
+        self.assertEqual(report_path.read_bytes(), previous_report)
 
     def test_production_child_reports_unsupported_backend_without_fixture_fallback(self):
         client = WorkerClient()

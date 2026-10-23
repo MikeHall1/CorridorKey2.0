@@ -3,16 +3,18 @@ from pathlib import Path
 import re
 
 
+def frame_path_key(path):
+    # Tagged segments remain comparable for names with mixed digit positions.
+    parts = tuple((1, int(p)) if p.isdigit() else (0, p.casefold())
+                  for p in re.split(r"(\d+)", path.name))
+    return parts, path.name
+
+
 def frame_paths(frame_dir):
-    def key(path):
-        # Tagged segments remain comparable for names with mixed digit positions.
-        parts = tuple((1, int(p)) if p.isdigit() else (0, p.casefold())
-                      for p in re.split(r"(\d+)", path.name))
-        return parts, path.name
     return [str(p) for p in sorted(
         (p for p in Path(frame_dir).iterdir()
          if p.is_file() and p.suffix.lower() in {".exr", ".png", ".jpg", ".jpeg"}),
-        key=key)]
+        key=frame_path_key)]
 
 
 def window_starts(T_all: int, chunk: int, stride: int) -> list[int]:

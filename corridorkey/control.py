@@ -40,6 +40,7 @@ class JobControl:
         self.cancellation = cancellation if cancellation is not None else CancellationToken()
         self.progress = progress
         self.check_hook = check_hook
+        self.last_checkpoint: ProgressEvent | None = None
 
     def check(self):
         self.cancellation.check()
@@ -47,7 +48,10 @@ class JobControl:
             self.check_hook()
 
     def checkpoint(self, stage, completed=0, total=None):
+        # Retain the attempted boundary even when cancellation, resource checks
+        # or progress delivery fail before the consumer receives an event.
+        self.last_checkpoint = ProgressEvent(stage, completed, total)
         self.check()
         if self.progress is not None:
-            self.progress(ProgressEvent(stage, completed, total))
+            self.progress(self.last_checkpoint)
         self.check()

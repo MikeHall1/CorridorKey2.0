@@ -10,6 +10,8 @@ from .diagnostics import write_json_atomic
 from .session import JobRequest
 from .worker_protocol import MAX_FRAME_BYTES, decode_frame, job_from_wire, job_to_wire
 
+DESKTOP_MAX_PREVIEW_FRAME = 1_000_000_000
+
 
 def settings_job(source: str, destination: str, config: str, writer: str, *,
                  first_hint: str = '', full_hint: str = '', profile: bool = False) -> JobRequest:
@@ -31,12 +33,21 @@ def save_project(path: Path, job: JobRequest, frame: int = 0) -> None:
     path = path.resolve()
     settings, _ = job.configurations()
     protected = [job.input_path, job.initial_hint_path, job.hint_video_path, settings.corrections_path]
+    if settings.corrections_path is not None:
+        from .corrections import MAX_CORRECTION_BYTES, CorrectionDocument
+        from .local_json import read_object
+        correction_path = Path(settings.corrections_path).resolve()
+        data, _ = read_object(correction_path, max_bytes=MAX_CORRECTION_BYTES, regular_file=True)
+        document = CorrectionDocument.parse(data, correction_path.parent)
+        protected.extend(document.asset_paths())
     for item in protected:
         if item is None:
             continue
         source = Path(item).resolve()
         if path == source or (source.is_dir() and path.is_relative_to(source)):
             raise ValueError('A project must be saved separately from source, hints and corrections.')
+        if path.exists() and source.exists() and path.samefile(source):
+            raise ValueError('A project must be saved separately from source, hint and correction asset aliases.')
     record = {'schema_version': 1, 'type': 'corridorkey_desktop',
               'job': job_to_wire(job), 'preview_frame': frame}
     if len((json.dumps(record, indent=2, allow_nan=False) + '\n').encode('utf-8')) > MAX_FRAME_BYTES:

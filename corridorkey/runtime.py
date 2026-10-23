@@ -176,7 +176,7 @@ def load_runtime_checkpoint(path: Path) -> dict:
             "metadata": json.loads(header.get("metadata", "{}")),
             "state_dict": load_file(str(path), device="cpu"),
         }
-    return torch.load(path, map_location="cpu", weights_only=False, mmap=True)
+    return torch.load(path, map_location="cpu", weights_only=True, mmap=True)
 
 
 def load_model(paths: RuntimePaths, device: str = "cuda") -> CorridorKeyV3:
@@ -185,6 +185,11 @@ def load_model(paths: RuntimePaths, device: str = "cuda") -> CorridorKeyV3:
     ckpt = load_runtime_checkpoint(paths.weights)
     if ckpt.get("format") != "corridorkey_v2_runtime_checkpoint":
         raise RuntimeError(f"{paths.weights} is not a CorridorKey v2 runtime checkpoint")
+    foundation_keys = [key for key in ckpt["state_dict"] if key.startswith("foundations.")]
+    if foundation_keys:
+        raise RuntimeError(
+            "runtime checkpoint must omit frozen foundations; use the separately "
+            f"selected model and stats assets instead: {foundation_keys[:8]}")
     cfg = dict(ckpt["model_config"])
     cfg["cradio_repo"] = str(paths.cradio_dir)
     cfg["moge_checkpoint"] = str(paths.moge_checkpoint)
@@ -1013,7 +1018,8 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
     if not is_dir and cfg.frame_dir_alpha != "ignore":
         raise ValueError("premultiplied source decoding requires a scene-linear frame directory")
     reader_kind = "frame_dir" if is_dir else "video"
-    reader_cls = SequentialFrameDirWindowReader if is_dir else SequentialVideoWindowReader
+    reader_cls = partial(SequentialFrameDirWindowReader if is_dir else SequentialVideoWindowReader,
+                         include_review=False)
     if is_dir:
         meta = probe_frame_dir_meta(
             input_path, num_frames=cfg.num_frames, start_frame=cfg.start_frame,
@@ -1068,16 +1074,14 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
         correction_resets = list(correction_document.resets)
         boundaries = sorted({0, T_all} | set(correction_cuts) | set(correction_resets))
         correction_segments = tuple(zip(boundaries, boundaries[1:]))
-        diagnostics.corrections = {"identity": correction_document.identity, "revision": authored["revision"],
-                                   "source": authored["source"], "shots": authored["shots"],
-                                   "authored_frames": list(correction_document.frames), "reset_frames": correction_resets,
-                                   "entries": authored["entries"], "document_path": str(cfg.corrections_path),
+        from .correction_reporting import correction_report
+        diagnostics.corrections = correction_report(correction_document, cfg.corrections_path, runtime_fields={
                                    "hint_frame_evaluations_conditioned": 0, "aux_frame_evaluations_refined": 0,
                                    "output_frames_refined": 0, "refinement_dtype": "float32",
                                    "propagation_anchor_evaluations_refined": 0,
-                                   "directional_range_mode": "static_raster_direct_constraints",
+                                   "directional_range_mode": "tracked_final_constraints_and_authored_static_ranges" if authored.get("tracks") else "static_raster_direct_constraints",
                                    "model_conditioning": "both_direction_authored_hints_and_auxiliary_carry_only",
-                                   "output_cache_reuse": "none; every job recomputes"}
+                                   "output_cache_reuse": "none; every job recomputes"})
     if cfg.auto_vram:
         diagnostics.memory_policy = apply_auto_vram(cfg, (H, W), T_all)
         if cfg.low_vram and cfg.foundation_cache_mb:
@@ -1113,6 +1117,13 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
             raise
         effective_cuts = sorted(set(effective_cuts) | set(analysis["detected_cuts"]))
     if correction_document is not None:
+        from .correction_tracking_context import tracking_cuts, tracking_decode
+        correction_document.validate_track_context(
+            cuts=tracking_cuts(cfg), decode=tracking_decode(cfg, input_path))
+        correction_document.validate_guidance_context(decode=tracking_decode(cfg, input_path))
+        for track in correction_document.to_dict().get('tracks', []):
+            if any(track['range'][0] < cut < track['range'][1] for cut in effective_cuts):
+                raise ValueError('Tracked correction crosses an effective cut; regenerate with another anchor/range.')
         for entry in correction_document.to_dict()["entries"]:
             if entry["kind"] != "reset" and any(entry["range"][0] < cut < entry["range"][1] for cut in effective_cuts):
                 raise ValueError("correction raster range crosses an effective cut; revise shot/range metadata or the heuristic cut policy")
@@ -1144,11 +1155,19 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
     meta.update(despill_screen=cfg.despill_screen, despill_space=cfg.despill_space,
                 despill_preserve_luma=cfg.despill_preserve_luma, despill_edges_only=cfg.despill_edges_only)
     refine_active = cfg.alpha_refine_radius > 0 and cfg.alpha_refine_strength > 0
+    finish_active = cfg.alpha_expand_radius != 0 or cfg.alpha_feather_radius > 0
+    edge_finishing: dict[str, Any] = {
+        'active': finish_active, 'expand_radius': cfg.alpha_expand_radius,
+        'feather_radius': cfg.alpha_feather_radius, 'units': 'native output pixels',
+        'order': 'spatial refinement, expansion/contraction, feather, trimap/authored constraints, render/despill/association',
+        'scope': 'final output only; never propagation anchors or carried hints',
+        'frames_evaluated': 0, 'frames_changed': 0, 'seconds': 0.0}
     diagnostics.alpha_refinement = {"active": refine_active, "radius": cfg.alpha_refine_radius,
                                     "strength": cfg.alpha_refine_strength, "sigma": cfg.alpha_refine_sigma,
                                     "frames_evaluated": 0, "frames_changed": 0, "seconds": 0.0,
                                     "guidance": "current source SDR proxy", "hard_endpoints_locked": True,
-                                    "quality_improvement": "unvalidated", "before_authored_constraints": True}
+                                    "quality_improvement": "unvalidated", "before_authored_constraints": True,
+                                    "edge_finishing": edge_finishing}
     fps = float(meta["native_fps"])
     diagnostics.effective = json_value(cfg)
     diagnostics.source = {k: json_value(v) for k, v in meta.items() if k != "frame_paths" and not k.startswith('_')}
@@ -1416,6 +1435,28 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
         fallback_raw_alpha = {}
         neural_refined_frames = set()
 
+        def finish_native(alpha):
+            from .refinement import finish_alpha
+            record = edge_finishing
+            started = time.perf_counter()
+            try:
+                result = finish_alpha(alpha, expansion=cfg.alpha_expand_radius,
+                                      feather=cfg.alpha_feather_radius, check=diagnostics.control.check)
+                record['frames_evaluated'] += 1
+                changed = False
+                for y in range(0, alpha.shape[0], 256):
+                    for x in range(0, alpha.shape[1], 256):
+                        diagnostics.control.check()
+                        if not np.array_equal(alpha[y:y + 256, x:x + 256], result[y:y + 256, x:x + 256]):
+                            changed = True
+                            break
+                    if changed:
+                        break
+                record['frames_changed'] += int(changed)
+                return result
+            finally:
+                record['seconds'] += time.perf_counter() - started
+
         def refine_native(alpha, guidance):
             from .refinement import refine_alpha
             started = time.perf_counter()
@@ -1478,21 +1519,26 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                             prediction_store.put(prediction_identity, logits)
                 diagnostics.execution["completed_prediction_frames"] += len(sub)
                 native_alpha = None
-                if spatial and (refine_active or (quick_plan is None and correction_rasters is not None
+                if spatial and (refine_active or (quick_plan is None and finish_active) or (quick_plan is None and correction_rasters is not None
                                                  and any(correction_rasters.has_effect(item[0]) for item in sub))):
                     native_alpha = _resize_output_torch(_crop_native_torch(logits[0, :, 0:1].float(), meta), meta).clamp(0, 1)
                     for index, item in enumerate(sub):
                         alpha = native_alpha[index, 0].cpu().numpy()
+                        guide = None
                         if refine_active:
                             assert guidance_source is not None
-                            guide = guidance_source.read(item[0])
-                            alpha = refine_native(alpha, cu.linear_to_vfm_sdr(guide))
+                            guide = cu.linear_to_vfm_sdr(guidance_source.read(item[0]))
+                            alpha = refine_native(alpha, guide)
                             neural_refined_frames.add(item[0])
+                        if finish_active and quick_plan is None:
+                            alpha = finish_native(alpha)
                         if quick_plan is None and correction_rasters is not None and correction_rasters.has_effect(item[0]):
                             trimap_guide = None
                             if correction_rasters.requires_guidance(item[0]):
                                 assert guidance_source is not None
-                                trimap_guide = cu.linear_to_vfm_sdr(guidance_source.read(item[0]))
+                                if guide is None:
+                                    guide = cu.linear_to_vfm_sdr(guidance_source.read(item[0]))
+                                trimap_guide = guide
                             alpha = correction_rasters.apply(alpha, item[0], guidance=trimap_guide)
                             diagnostics.corrections['output_frames_refined'] += 1
                         native_alpha[index, 0] = torch.from_numpy(alpha).to(device)
@@ -1509,6 +1555,10 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                         refined = refine_native(native, guidance[index])
                         logits[0, index, 0, top:top + height, left:left + width] = torch.from_numpy(refined).to(device)
                         neural_refined_frames.add(item[0])
+                if finish_active and not spatial and quick_plan is None:
+                    native_alpha = _resize_output_torch(_crop_native_torch(logits[0, :, 0:1].float(), meta), meta).clamp(0, 1)
+                    for index in range(len(sub)):
+                        native_alpha[index, 0] = torch.from_numpy(finish_native(native_alpha[index, 0].cpu().numpy())).to(device)
                 if not spatial and quick_plan is None and correction_rasters is not None and any(correction_rasters.has_effect(item[0]) for item in sub):
                     logits = logits.float().clone()
                     top, left = meta["pad"][2], meta["pad"][0]
@@ -1516,13 +1566,17 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                     for index, item in enumerate(sub):
                         frame = item[0]
                         if correction_rasters.has_effect(frame):
-                            native = logits[0, index, 0, top:top + height, left:left + width].cpu().numpy()
+                            native = (native_alpha[index, 0] if native_alpha is not None else
+                                      logits[0, index, 0, top:top + height, left:left + width]).cpu().numpy()
                             trimap_guide = None
                             if correction_rasters.requires_guidance(frame):
                                 assert guidance_source is not None
                                 trimap_guide = cu.linear_to_vfm_sdr(guidance_source.read(frame))
                             refined = correction_rasters.apply(native, frame, guidance=trimap_guide)
-                            logits[0, index, 0, top:top + height, left:left + width] = torch.from_numpy(refined).to(device)
+                            if native_alpha is not None:
+                                native_alpha[index, 0] = torch.from_numpy(refined).to(device)
+                            else:
+                                logits[0, index, 0, top:top + height, left:left + width] = torch.from_numpy(refined).to(device)
                             diagnostics.corrections["output_frames_refined"] += 1
                 if quick_plan is not None:
                     alphas = (native_alpha if native_alpha is not None else
@@ -1663,6 +1717,17 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                         if refine_active and frame.index not in neural_refined_frames:
                             frame.alpha = refine_native(frame.alpha, cu.linear_to_vfm_sdr(frame.rgb))
                             frame.diagnostics["alpha_refinement"] = True
+                        if finish_active:
+                            # Match known-frame raw-alpha constraint precedence without
+                            # feeding artist finishing into propagation or fallback state.
+                            if correction_rasters is not None and correction_rasters.has_effect(frame.index):
+                                if frame.index in anchor_rows:
+                                    assert anchor_alpha is not None
+                                    raw = anchor_alpha[anchor_rows[frame.index]]
+                                if raw is not None:
+                                    frame.alpha = raw
+                            frame.alpha = finish_native(frame.alpha)
+                            frame.diagnostics['edge_finishing'] = True
                         if correction_rasters is not None and correction_rasters.has_effect(frame.index):
                             # Known neural frames get their complete ordered
                             # output constraints exactly once, from raw alpha.
@@ -1671,7 +1736,7 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                                 assert anchor_alpha is not None
                                 raw = anchor_alpha[anchor_rows[frame.index]]
                             frame.alpha = correction_rasters.apply(
-                                raw if raw is not None else frame.alpha, frame.index,
+                                raw if raw is not None and not finish_active else frame.alpha, frame.index,
                                 guidance=(cu.linear_to_vfm_sdr(frame.rgb)
                                           if correction_rasters.requires_guidance(frame.index) else None))
                             assert diagnostics.corrections is not None

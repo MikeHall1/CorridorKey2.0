@@ -111,10 +111,9 @@ def _separate_workspace(root, jobs, assets, *, check=None):
             data, _ = read_object(path, max_bytes=MAX_CORRECTION_BYTES, regular_file=True)
             check()
             document = CorrectionDocument.parse(data, path.parent)
-            for entry in document.to_dict()['entries']:
+            for asset_path in document.asset_paths():
                 check()
-                if 'asset' in entry:
-                    inputs.append(document.base_dir / entry['asset']['path'])
+                inputs.append(asset_path)
     for path in inputs:
         check()
         path = Path(path).resolve()
@@ -145,6 +144,11 @@ def run_recoverable(jobs, *, workspace, max_cache_bytes, assets, environment, im
     identity_environment = {**environment, 'recovery_policy': policy} if policy else environment
     control = JobControl(cancellation, progress)
     root = Path(workspace).resolve()
+    from .output_paths import validate_batch_output_paths
+
+    validate_batch_output_paths(
+        jobs, weights=weights, protected_paths=assets.values(),
+        protected_directories=(assets['cradio_dir'],) if 'cradio_dir' in assets else (), check=control.check)
     _separate_workspace(root, jobs, assets, check=control.check)
     store_owner = (BundleStore(root, max_cache_bytes, structural_admission=True) if durable_writer_prefix
                    else BundleStore(root, max_cache_bytes))

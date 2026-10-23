@@ -3,6 +3,50 @@ import math
 import numpy as np
 
 
+def finish_alpha(alpha, *, expansion=0, feather=0, check=None):
+    """Native coverage: signed square max/min radius, then finite Gaussian feather.
+
+    Replicate image borders. 256-pixel tiles with exact combined halos bound
+    filter scratch independently of image dimensions; only the result is full size.
+    RGB and temporal state are deliberately outside this operation.
+    """
+    if type(expansion) is not int or not -32 <= expansion <= 32:
+        raise ValueError('alpha expansion must be an integer in [-32,32]')
+    if type(feather) is not int or not 0 <= feather <= 32:
+        raise ValueError('alpha feather must be an integer in [0,32]')
+    alpha = np.asarray(alpha, dtype=np.float32)
+    if alpha.ndim != 2 or min(alpha.shape) < 1:
+        raise ValueError('edge finishing requires nonempty 2D coverage')
+    if check is not None:
+        check()
+    import cv2
+    result = np.empty_like(alpha)
+    halo = abs(expansion) + feather
+    kernel = np.ones((2 * abs(expansion) + 1,) * 2, dtype=np.uint8) if expansion else None
+    for y in range(0, alpha.shape[0], 256):
+        for x in range(0, alpha.shape[1], 256):
+            if check is not None:
+                check()
+            y0, x0 = max(0, y - halo), max(0, x - halo)
+            y1, x1 = min(alpha.shape[0], y + 256 + halo), min(alpha.shape[1], x + 256 + halo)
+            tile = alpha[y0:y1, x0:x1]
+            if not np.isfinite(tile).all() or np.any((tile < 0) | (tile > 1)):
+                raise ValueError('edge finishing requires finite coverage in [0,1]')
+            if expansion:
+                assert kernel is not None
+                operation = cv2.dilate if expansion > 0 else cv2.erode
+                tile = operation(tile, kernel, borderType=cv2.BORDER_REPLICATE)
+            if feather:
+                tile = cv2.GaussianBlur(tile, (2 * feather + 1,) * 2, max(.5, feather / 2),
+                                        borderType=cv2.BORDER_REPLICATE)
+                tile = np.clip(tile, 0, 1)
+            h, w = min(256, alpha.shape[0] - y), min(256, alpha.shape[1] - x)
+            result[y:y + h, x:x + w] = tile[y - y0:y - y0 + h, x - x0:x - x0 + w]
+    if check is not None:
+        check()
+    return result
+
+
 def refine_alpha(alpha, guidance, *, radius=0, strength=1.0, sigma=0.1, check=None):
     """Joint RGB/spatial weighted averaging of partially covered pixels only.
 

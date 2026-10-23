@@ -1,7 +1,7 @@
 # Shared engine
 
-Current review scope and acceptance are recorded in [review-objective.md](review-objective.md)
-and [checkpoint.md](checkpoint.md). The chronological implementation notes below
+Current extension scope and acceptance are recorded in [product-improvements-brief.md](product-improvements-brief.md)
+and [checkpoint.md](checkpoint.md); [review-objective.md](review-objective.md) records the earlier review. The chronological implementation notes below
 retain their original verification limits.
 
 Milestone28 adds a companion completed-cache workflow: pure `ofx_record.cache_spec` admission is shared by the desktop and sealer; `CachePreparation` owns immutable bounded record bytes, background path/native I/O, coalesced progress, cancellation and one terminal result. `desktop_ofx.OfxCachePanel` consumes that result through the existing main poll and close ownership. No Qt objects enter the worker, no model loads during UI import, no new inference implementation is introduced. Publication remains authoritative after commit even if owned-stage unlink fails. Exact channel admission is opt-in for the existing reader and required for cache sealing. The version1 native cache/host contract is unchanged; source-content/time/colour binding remains unfinished.
@@ -147,3 +147,167 @@ one pinned regular descriptor, admitted extent/hash and exact header/provenance
 checks before safetensors loading. Worker class-owned reaping and root signalling
 share one lock; timeout releases it before forced cleanup. See the final
 [review evidence and limits](review-2026-10-23.md).
+
+
+The ten-feature extension starts with `readiness.py`, a Qt/model-independent
+metadata service returning named PASS/FAIL/WARNING/NOT VERIFIED observations.
+`desktop_readiness.py` owns cancellable off-thread checks, export and immutable
+short-job preparation; actual processing uses the existing `DesktopBridge` and
+shared engine. Requested/effective settings and unexecuted stages remain distinct.
+No new inference implementation or automatic model/backend selection is added.
+
+`playback.py` plans one outstanding source-coordinate frame or atomic A/B pair.
+Its caller-bound identity and generation reject obsolete completions after
+pause/seek/rebind; it reuses `RenderView` for original recorded export offsets.
+`desktop_playback.py` consumes the workspace's existing sole `PreviewLoader` and
+50ms timer, retiring pending ownership even when manual previews supersede it.
+Initial desktop playback requires source sequences with declared rates and EXR
+exports; video/VFR timing is explicitly unsupported. Preview display conversion
+and scheduling do not change rendered pixels or future job settings.
+
+
+Explicit `readiness_capabilities.py` probes use stdlib nonblocking bounded pipe
+reads and direct owned subprocess cleanup; they are separate from lightweight
+metadata checks and model execution. The readiness panel reuses its existing
+single I/O owner for explicit completed-frame decoding, retaining one thumbnail
+and immutable matching engine metadata. GUI presentation and JSON evidence are
+separate from model/quality acceptance; no pixels enter reports. `desktop.py`
+defers first-run introduction through the existing Qt loop/preferences, without
+starting work. See [readiness](readiness.md).
+
+
+The readiness report retains matching failed/cancelled worker metadata and the
+last attempted checkpoint, copied before cleanup. Missing/contradictory metadata
+remains NOT VERIFIED; partial CUDA work never implies success. A/B preview
+surfaces share decoded-pixel zoom and normalized pan with wheel/drag and explicit
+Zoom/Fit controls. Display transformations preserve render settings and pixels;
+scale refers to bounded decoded previews, not native source resolution. No
+inference default, precision, dependency or saved-format change is introduced.
+
+
+The headless correction_tracking kernel streams immutable float32 candidates from
+explicit source/anchor requests. The existing editor owner publishes bounded
+sequence previews, then one explicit schema3 history revision. CorrectionRasters
+replaces participating constraints once at their original slot for final alpha;
+original hints/carry remain separate. Shared asset inventories protect authored
+and derived dependencies, and runtime admission checks decode/cut bindings.
+[Tracking contracts](tracked-corrections.md). SequenceIndex is a bounded frozen
+path/stat manifest consumed by the existing preview decoder; source preparation
+shares its single queue and lifecycle, without a second decoding owner.
+
+
+Clean-plate assistance runs on the existing correction service owner. The pure
+linear-RGB kernel produces conservative trimap guidance; explicit Inspect/Accept
+uses the existing atomic raster import/history path. Schema4 origins bind local
+references, decoded observations and generation settings while the shared runtime
+continues to apply ordinary corrections. Source decode contracts are checked at
+session preflight and effective runtime boundaries. Generated guidance does not
+add a neural channel. The bounded image-admission helper captures immutable
+encoded bytes after header geometry checks; `video_io` accepts those bytes through
+the same channel/precision/association/color math as its existing path decoder.
+See [clean-plate guidance](clean-plate-guidance.md). Optional segmentation has a
+headless single-owner provider foundation only; no model is loaded at UI import.
+
+
+Optional subject clicks connect through the same correction service and native
+canvas mapping. Prepare captures bounded immutable source/proxy bytes; Predict
+owns one persistent isolated CPU float32 provider child with separate32MiB
+framing, bounded queues/logs and deadline/cancel termination. This does not reuse
+the render worker's4MiB protocol or GPU ownership. Captured source, exact native
+RGB, ordered prompts and provider provenance bind accepted schema4 Keep masks.
+The service admits one active operation, preserves cancellation until retirement
+and retains child ownership until verified shutdown. See [subject clicks](subject-clicks.md).
+
+
+Portable project schema2 is separate from legacy desktop schema1 and sealed
+queue-history transfer. Typed dependency groups retain complete source ordering
+and offsets, immutable file pins/hashes and original job wire. Authored/tracked/
+guidance asset relocation reuses the shared correction inventory and verifies
+unchanged semantic document identity. Metadata preview precedes explicit bounded
+verification/collection. Completion authority is an exclusive zero-byte marker
+created after metadata sync/final fences; loader and Apply pin both marker and
+manifest. Correction relocation publishes from a private pending file in a fresh
+owned scratch directory. A single background UI owner formats bounded paged
+summaries and retains late committed results without applying them. Main applies
+only a strictly validated acknowledged snapshot, preserving queue/model owners.
+See [portable projects](portable-projects.md); cross-path-flavour support remains
+unsupported and model runtime compatibility remains unverified.
+
+Progressive preview scheduling is Qt-independent in `progressive_preview.py`:
+immutable context/stage/attempt identities, bounded priority work, one retained
+owner and exact-provenance thumbnail cache. `preview_execution.py` captures
+strict original jobs/source/model metadata, admits selected encoded/native frames
+and creates fresh per-request workspaces without importing neural models.
+The desktop panel submits the dedicated transient `preview` action through its
+existing DesktopBridge/WorkerCore/SharedEngine/InferenceSession. It serializes
+preparation, native terminal observation, thumbnail decode and verified cleanup;
+exports cancel/disable preview admission and keep their original recipes. Worker
+replacement/source/settings/view changes invalidate captured contexts. No preview
+artifact is promoted into export/recovery storage. The initial single-frame
+sequence path explicitly refuses unsupported temporal/hint/correction contexts;
+final labels mean the configured preview recipe, not full-range equivalence.
+
+`tracking_overlays.py` converts actual TrackingCandidate reliability/uncertainty
+bytes into bounded immutable display proxies and verified exclusive raw-map
+receipts. `correction_tracking_editor.py` captures them only when explicitly
+requested in the existing flow iteration, with separate retained-byte accounting.
+Inspection revalidates the original source/document/decode/frame/proxy binding,
+then composites red RGBA on a copied source thumbnail. The ordinary editor service
+returns a distinct diagnostic role; no masks/history/acceptance flags are changed.
+Dirty navigation guards, late-cancel display fencing and source reload before
+painting preserve ownership. Accepted-mask assets survive separate diagnostic
+subdirectory cleanup; missing historical spatial data stays unavailable.
+
+
+## Machine calibration ownership
+
+`calibration.py` supplies Qt-free immutable verified plans, controlled profile and
+workload admission, measured-only summaries, duration assumptions and validity.
+`calibration_task.py` owns one WorkerClient at a time, explicit warmup/cold/warm
+trials, cancellation/containment, retained raw records and committed reports.
+`desktop_calibration.py` performs inventory/hash/report I/O on an owned thread and
+uses bounded timer snapshots. DesktopWindow retires progressive/editor ownership
+before task creation, blocks competing processing, and waits for verified cleanup
+on close. No queue mutation or automatic recommendation application is exposed.
+See [calibration](calibration.md) for evidence scopes and unsupported contexts.
+
+
+## Archived versus operational portable paths
+
+The foreign all-collected reader extension uses
+`portable_paths.py` for bounded lexical archival job/settings validation.
+`portable_project.py` retains original provenance and exact package layout while
+resolving collected dependencies and rebuilding native jobs only after explicit
+destination and correction-resource rebinding. Desktop report projection reads
+archival settings without constructing an operational native job. Public
+plan/inspection/pin association checks precede path-derived filesystem work.
+See [review and remaining acceptance](portable-foreign-review.md).
+
+
+## Immutable photo preview snapshots
+
+`preview_background.py` admits a Qt-free explicit recipe, validates bounded local
+header/encoded/decode identity and produces immutable linear709 bytes with cached
+identity/profile/geometry/provenance. Compositing creates fresh linear pixels;
+`desktop_preview.py` applies the existing display conversion once. The existing
+PreviewLoader handles background preparation, ordinary decoding and atomic A/B
+on one owner, with capacity1 pending/result queues. Playback carries the same
+snapshot and binds by its cached identity. Desktop controls perform no image I/O
+on open, fence superseded selection/late results, and wait for loader close.
+Displayed metadata commits with accepted pixels so static pins retain the visible
+frame/photo identity even while a later frame is pending. No engine/export path
+or saved job format changes. [Workflow/limits](photo-backgrounds.md).
+
+
+## Reusable export playback metadata
+
+`preview_exports.py` captures immutable validated RenderView/mode requests without
+I/O. The existing PreviewLoader prepares deduplicated bounded source/FG/alpha
+indexes and cached identities. Playback attaches only matching generation/context
+metadata and retains source-global/output-local mapping; separate alpha indexes
+feed the same native preview decoder and colour path. Repeated frame reads avoid
+directory rescans. Sampled file/root stat fences reject ordinary mutation; explicit
+Refresh controls membership. One bundle and the existing single pending loader
+retain bounded references; no pixel cache, new thread or model owner. Common
+terminal acknowledgement precedes metadata routing, including superseded photo
+results. [Workflow/limits](export-playback-indexes.md).

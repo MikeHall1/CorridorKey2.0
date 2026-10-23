@@ -1,3 +1,5 @@
+import ast
+import hashlib
 import json
 import subprocess
 import tempfile
@@ -6,9 +8,55 @@ from pathlib import Path
 from unittest.mock import patch
 
 from corridorkey.desktop_bundle import ROOT, build, data_files, preflight, spec_text
+from corridorkey.recovery_identity import canonical, implementation_identity
 
 
 class DesktopBundleTests(unittest.TestCase):
+    def test_recipe_collects_executing_engine_packages_as_source_only(self):
+        tree = ast.parse(spec_text(ROOT))
+        analysis = next(node for node in ast.walk(tree)
+                        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                        and node.func.id == 'Analysis')
+        options = {keyword.arg: keyword.value for keyword in analysis.keywords}
+        self.assertIn('module_collection_mode', options)
+        self.assertEqual(ast.literal_eval(options['module_collection_mode']),
+                         {'corridorkey': 'py', 'moge': 'py'})
+
+    def test_source_only_bundle_identity_covers_both_moge_locations(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            sources = ('corridorkey/__init__.py', 'corridorkey/runtime.py',
+                       'moge/__init__.py', 'moge/model.py',
+                       'third_party/MoGe/moge/__init__.py', 'third_party/MoGe/moge/model.py')
+            for name in sources:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('# bundled source fixture\n')
+            initial = implementation_identity(root)
+            self.assertEqual({row['name'] for row in initial['files']}, set(sources))
+            for name in ('moge/model.py', 'third_party/MoGe/moge/model.py', 'corridorkey/runtime.py'):
+                path = root / name
+                before = path.read_text()
+                path.write_text(before + '# changed executing implementation\n')
+                self.assertNotEqual(implementation_identity(root)['sha256'], initial['sha256'])
+                path.write_text(before)
+            (root / 'corridorkey/runtime.py').unlink()
+            with self.assertRaisesRegex(ValueError, 'shared runtime source'):
+                implementation_identity(root)
+
+    def test_development_identity_without_collected_moge_keeps_original_digest(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            sources = ('corridorkey/runtime.py', 'third_party/MoGe/moge/model.py')
+            records = []
+            for name in sources:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b'# existing development source\n')
+                records.append({'name': name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
+            expected = hashlib.sha256(canonical(records).encode()).hexdigest()
+            self.assertEqual(implementation_identity(root), {'files': records, 'sha256': expected})
+
     def test_windows_target_rejects_cpu_torch_without_claiming_gpu_inference(self):
         versions = {'PyInstaller': '6.22.3', 'PySide6-Essentials': '6.10.2', 'shiboken6': '6.10.2'}
         with patch('sys.platform', 'win32'), patch('platform.machine', return_value='AMD64'), patch(

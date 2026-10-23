@@ -205,11 +205,12 @@ class InferenceSession:
                                                                       check=diagnostics.control.check)
                 finally:
                     diagnostics.correction_preflight_seconds = time.perf_counter() - preflight_started
-                diagnostics.corrections = {"identity": diagnostics.correction_document.identity,
-                                           "revision": diagnostics.correction_document.to_dict()["revision"],
-                                           "document_path": str(config.corrections_path),
-                                           "source": diagnostics.correction_document.to_dict()["source"],
-                                           "entries": diagnostics.correction_document.to_dict()["entries"]}
+                from .correction_tracking_context import tracking_cuts, tracking_decode
+                diagnostics.correction_document.validate_track_context(
+                    cuts=tracking_cuts(config), decode=tracking_decode(config, job.input_path))
+                from .correction_reporting import correction_report
+                diagnostics.correction_document.validate_guidance_context(decode=tracking_decode(config, job.input_path))
+                diagnostics.corrections = correction_report(diagnostics.correction_document, config.corrections_path)
                 diagnostics.control.checkpoint("correction_preflight", 1, 1)
             from .output_paths import validate_output_paths
 
@@ -222,8 +223,10 @@ class InferenceSession:
             # Check an encoder before allocating a model. EXR needs no FFmpeg.
             if writer.ffmpeg_bin and config.output_format == "video":
                 import shutil
+                diagnostics.control.checkpoint("encoder_preflight", 0, 1)
                 if shutil.which(writer.ffmpeg_bin) is None:
                     raise FileNotFoundError(f"ffmpeg binary not found: {writer.ffmpeg_bin}; install ffmpeg or select EXR output")
+                diagnostics.control.checkpoint("encoder_preflight", 1, 1)
             if guard is not None:
                 guard.check(force=True)
             if self._model is None:
@@ -244,6 +247,7 @@ class InferenceSession:
             # The rendered-batch latency excludes model load and preflight.
             diagnostics.started = processing_started
             try:
+                diagnostics.control.checkpoint("processing", 0, None)
                 if durable_foundations is not None:
                     durable_foundations.bind(self._asset_paths)
                 if durable_rvm is not None:
@@ -265,6 +269,7 @@ class InferenceSession:
                 record["end_to_end_fps"] = diagnostics.frames_submitted / record["processing_seconds"]
         except BaseException as exc:
             record["status"] = "cancelled" if isinstance(exc, (KeyboardInterrupt, CancelledError)) else "failed"
+            record["failure_checkpoint"] = json_value(diagnostics.control.last_checkpoint)
             error_info: dict[str, Any] = {"type": type(exc).__name__, "message": str(exc)}
             record["error"] = error_info
             # Failed jobs never leave a potentially contaminated model for reuse.

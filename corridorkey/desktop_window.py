@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import queue
 import uuid
+from dataclasses import asdict
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -34,24 +35,42 @@ from PySide6.QtWidgets import (
 )
 
 from .asset_inventory import AssetSelection
+from .calibration import CalibrationPlan
 from .desktop_assets import AssetsPanel
+from .desktop_background import BackgroundDialog
 from .desktop_benchmark import BenchmarkPanel
 from .desktop_bridge import DesktopBridge
 from .desktop_cache import CacheMaintenancePanel
+from .desktop_calibration import CalibrationDialog
 from .desktop_comparison import RenderView, common_range, completed_view
 from .desktop_corrections import CorrectionDialog
 from .desktop_diagnostic_ranges import DiagnosticRangesPanel
 from .desktop_loader import PreviewLoader
 from .desktop_ofx import OfxCachePanel
+from .desktop_ofx_capture import OfxCaptureDialog
+from .desktop_playback import PlaybackControls
+from .desktop_portable_project import PortableProjectDialog
 from .desktop_preview import PreviewPair
+from .desktop_progressive import ProgressivePreviewPanel
 from .desktop_queue import QueuePanel
+from .desktop_readiness import ReadinessPanel
 from .desktop_recovery import RecoveryPanel
 from .desktop_resources import ResourcesPanel
 from .desktop_settings import SettingsPanel
-from .desktop_state import load_project, pretty_settings, save_project, settings_job
+from .desktop_state import (
+    DESKTOP_MAX_PREVIEW_FRAME,
+    load_project,
+    pretty_settings,
+    save_project,
+    settings_job,
+)
+from .desktop_viewport import PreviewViewport, ViewportState
+from .preview_background import BackgroundRecipe, PreparedBackground
+from .preview_exports import PreparedExportIndexes
+from .preview_sequence import PreparedSequence
 from .session import JobRequest
 from .worker_client import WorkerClient
-from .worker_protocol import decode_frame, job_to_wire, request_frame
+from .worker_protocol import decode_frame, job_from_wire, job_to_wire, request_frame
 
 TERMINAL = {'result', 'failed', 'cancelled', 'rejected', 'lost'}
 
@@ -72,14 +91,24 @@ class DesktopWindow(QMainWindow):
         self._comparison_error: tuple[str, int, int] | None = None
         self.statusBar().messageChanged.connect(self._status_changed)
         self.background: tuple[float, float, float] | None = None
+        self.background_image: PreparedBackground | None = None
+        self.background_dialog: BackgroundDialog | None = None
+        self.background_serial: int | None = None
         self.pixmap: QPixmap | None = None
         self.reference: QPixmap | None = None
         self.preview_description = ''
+        self.displayed_preview_description = ''
         self.moving_reference: RenderView | None = None
         self.reference_mode = ''
         self.reference_description = ''
         self.editor: CorrectionDialog | None = None
+        self.portable_project: PortableProjectDialog | None = None
+        self.ofx_capture: OfxCaptureDialog | None = None
+        self.ofx_capture_publications: list[dict[str, str]] = []
+        self.portable_application_records: list[dict[str, Any]] = []
         self.pending_queue_root: Path | None = None
+        self.calibration: CalibrationDialog | None = None
+        self.pending_calibration: CalibrationPlan | None = None
         self.asset_selection: AssetSelection | None = None
         self.resource_request: str | None = None
         self._diagnostic_binding: tuple[Any, ...] | None = None
@@ -111,7 +140,12 @@ class DesktopWindow(QMainWindow):
         self.benchmark = BenchmarkPanel(self)
         self.benchmark.run_requested.connect(self.start_benchmark)
         self.benchmark.cancel_requested.connect(self.cancel_benchmark)
+        self.readiness = ReadinessPanel(self)
+        self.readiness.run_requested.connect(self.submit_readiness)
         self._build()
+        self.progressive = ProgressivePreviewPanel(self)
+        self.source.textChanged.connect(self.playback.navigate)
+        self.config.textChanged.connect(self.playback.navigate)
         for field in (self.source, self.output, self.first_hint, self.full_hint):
             field.textChanged.connect(self.diagnostic_editor_changed)
         self.config.textChanged.connect(self.diagnostic_editor_changed)
@@ -132,10 +166,17 @@ class DesktopWindow(QMainWindow):
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
         toolbar = QHBoxLayout()
+        self._button('Readiness / first render…', self.readiness.show, toolbar)
         self._button('Open video…', self.choose_video, toolbar)
         self._button('Open frames…', self.choose_frames, toolbar)
-        self._button('Open project…', self.choose_project, toolbar)
-        self._button('Save project…', self.save_project, toolbar)
+        projects = QPushButton('Projects…')
+        project_menu = QMenu(projects)
+        project_menu.addAction('Open desktop snapshot…', self.choose_project)
+        project_menu.addAction('Save desktop snapshot…', self.save_project)
+        project_menu.addAction('Portable projects…', self.open_portable_project)
+        project_menu.addAction('OFX upstream capture…', self.open_ofx_capture)
+        projects.setMenu(project_menu)
+        toolbar.addWidget(projects)
         self._button('Developer benchmarks…', self.benchmark.show, toolbar)
         self._button('Queue history…', self.queue_panel.show, toolbar)
         self._button('Recovery…', self.recovery.show, toolbar)
@@ -154,6 +195,8 @@ class DesktopWindow(QMainWindow):
         self.backend.setWordWrap(True)
         backend_bar = QHBoxLayout()
         backend_bar.addWidget(self.backend, 1)
+        self._button('Progressive preview…', lambda: self.progressive.show(), backend_bar)
+        self._button('Calibrate performance…', self.open_calibration, backend_bar)
         self._button('Resources…', self.resources.show, backend_bar)
         layout.addLayout(backend_bar)
         self.queue_label = QLabel('Queue: session only · choose Queue history to create/open durable storage')
@@ -232,26 +275,25 @@ class DesktopWindow(QMainWindow):
         self._button('Prepare current job for recovery…', self.prepare_recovery, controls)
         viewer_bar = QHBoxLayout()
         self.view = QComboBox()
-        self.view.addItems(['Source', 'Alpha', 'Foreground', 'Checker composite', 'Solid composite'])
+        self.view.addItems(['Source', 'Alpha', 'Foreground', 'Checker composite', 'Solid composite', 'Photo composite'])
         viewer_bar.addWidget(self.view)
         self.frame = QSpinBox()
-        self.frame.setRange(0, 1000000000)
+        self.frame.setRange(0, DESKTOP_MAX_PREVIEW_FRAME)
         self.frame_label = QLabel('Frame (zero-based)')
         viewer_bar.addWidget(self.frame_label)
         viewer_bar.addWidget(self.frame)
         self._button('Preview', self.request_preview, viewer_bar)
         self._button('Background…', self.choose_background, viewer_bar)
+        self._button('Photo…', self.open_background, viewer_bar)
         workspace.addLayout(viewer_bar)
-        self.image = QLabel('Open a video or frame directory, then select Preview.\nExport views use a selected completed queue job.')
-        self.image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.viewport_state = ViewportState(self)
+        self.image = PreviewViewport(self.viewport_state, 'Open a video or frame directory, then select Preview.\nExport views use a selected completed queue job.')
         self.image.setMinimumSize(300, 220)
         self.image.setStyleSheet('background:#15191d;color:#cbd2d9;border:1px solid #45515c')
         comparison = QHBoxLayout()
         comparison.addWidget(self.image, 1)
-        self.reference_image = QLabel('A · Pin a displayed frame for comparison')
-        self.reference_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.reference_image = PreviewViewport(self.viewport_state, 'A · Pin a displayed frame for comparison')
         self.reference_image.setMinimumSize(180, 160)
-        self.reference_image.setWordWrap(True)
         self.reference_image.setStyleSheet('background:#15191d;color:#cbd2d9;border:1px solid #45515c')
         comparison.addWidget(self.reference_image, 1)
         workspace.addLayout(comparison, 3)
@@ -259,6 +301,13 @@ class DesktopWindow(QMainWindow):
         self._button('Pin displayed frame as A', self.pin_reference, comparison_bar)
         self._button('Selected render as synchronized A', self.synchronize_reference, comparison_bar)
         self._button('Clear A', self.clear_reference, comparison_bar)
+        self._button('Zoom in', lambda: self.viewport_state.zoom_by(1.25), comparison_bar)
+        self._button('Zoom out', lambda: self.viewport_state.zoom_by(.8), comparison_bar)
+        self._button('Fit A/B', self.viewport_state.fit, comparison_bar)
+        self.zoom_label = QLabel(self.viewport_state.label)
+        self.zoom_label.setToolTip('Matched A/B wheel zoom and left-drag pan. Scale refers to the decoded preview, capped at 1280 pixels; no native-pixel inspection claim.')
+        self.viewport_state.changed.connect(lambda: self.zoom_label.setText(self.viewport_state.label))
+        comparison_bar.addWidget(self.zoom_label)
         workspace.addLayout(comparison_bar)
         self.reference_note = QLabel('A is a fixed display snapshot; compare the same frame and view for render A/B.')
         self.reference_note.setWordWrap(True)
@@ -268,6 +317,8 @@ class DesktopWindow(QMainWindow):
         self.preview_note.setWordWrap(True)
         self.preview_note.setMinimumHeight(44)
         workspace.addWidget(self.preview_note)
+        self.playback = PlaybackControls(self)
+        workspace.addWidget(self.playback)
         self.config.textChanged.connect(self.invalidate_source_preview)
         self.frame.valueChanged.connect(self.refresh_comparison)
         self.view.currentTextChanged.connect(self.refresh_comparison)
@@ -278,6 +329,7 @@ class DesktopWindow(QMainWindow):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.itemSelectionChanged.connect(self.show_record)
+        self.table.itemSelectionChanged.connect(self.playback.selection_changed)
         workspace.addWidget(self.table, 2)
         queue_bar = QHBoxLayout()
         self._button('Cancel selected', self.cancel_selected, queue_bar)
@@ -493,8 +545,32 @@ class DesktopWindow(QMainWindow):
                             self.config.toPlainText(), self.writer.toPlainText(),
                             first_hint=self.first_hint.text(), full_hint=self.full_hint.text(), profile=self.profile.isChecked())
 
-    def enqueue(self):
+    def submit_readiness(self, job):
+        self.progressive.suspend_for_export()
         try:
+            if self.readiness.prepared is None or job != self.readiness.prepared or self.readiness.submitted_id is not None:
+                raise ValueError('Prepare and review a fresh short-render snapshot before submission.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark, calibration, queue activation or shutdown before rendering.')
+            if len(self.jobs) >= 128:
+                raise ValueError('Queue history is full. Clear finished jobs before submitting more.')
+            if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
+                raise ValueError('Previous benchmark cleanup is unverified; cannot start another owner.')
+            if self.asset_selection != self.readiness.prepared_selection:
+                raise ValueError('Selected model assets changed. Prepare and review a new short-render snapshot.')
+            request_id = self.bridge.send('render', {'job': job_to_wire(job)})
+            self.jobs[request_id] = {'job': job, 'status': 'sending', 'event': None}
+            self.readiness.mark_submitted(request_id)
+            self.refresh_table()
+            self.statusBar().showMessage('Explicit short render submitted; current settings preserved')
+        except (ValueError, OSError, RuntimeError, queue.Full) as exc:
+            self.readiness.status.setText(str(exc))
+
+    def enqueue(self):
+        self.progressive.suspend_for_export()
+        try:
+            if self.calibration_processing:
+                raise ValueError('Calibration owns processing; cancel it and wait for verified worker cleanup before rendering.')
             if self.pending_queue_root is not None:
                 raise ValueError('Wait for queue workspace activation.')
             if self.benchmark.busy:
@@ -560,10 +636,14 @@ class DesktopWindow(QMainWindow):
         self.refresh_table()
 
     def show_record(self):
+        if self._updating_diagnostic_rows:
+            return
         request_id = self.selected()
         if request_id is not None:
             self.details.setPlainText(json.dumps(self.jobs[request_id].get('event'), indent=2))
-        self.refresh_comparison()
+        if not ((self.playback.engine is not None or self.playback.preparing)
+                and request_id == self.playback.selected_id):
+            self.refresh_comparison()
         self.refresh_diagnostic_context()
 
     def diagnostic_selection(self) -> tuple[str, JobRequest, dict[str, Any]] | None:
@@ -626,6 +706,7 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def preview_diagnostic_range(self, options: dict[str, Any], context: str):
+        self.playback.navigate()
         try:
             self.refresh_diagnostic_context()
             if self.closing or context != self._diagnostic_context:
@@ -689,6 +770,63 @@ class DesktopWindow(QMainWindow):
             self.cache_panel.set_workspace(self.recovery.workspace.text())
         self.cache_panel.show()
 
+    def open_ofx_capture(self):
+        if self.closing:
+            return
+        if self.ofx_capture is not None and (self.ofx_capture.isVisible() or self.ofx_capture.busy):
+            self.ofx_capture.show()
+            self.ofx_capture.raise_()
+            return
+        if self.first_hint.text().strip() or self.full_hint.text().strip() or self.profile.isChecked():
+            self.error('OFX capture jobs initially do not support hints or stage profiling. Clear them explicitly before opening the capture workflow.')
+            return
+        config, writer = self.config.toPlainText(), self.writer.toPlainText()
+        if max(len(config.encode('utf-8')), len(writer.encode('utf-8'))) > 64 * 1024:
+            self.error('Capture settings exceed the 64 KiB review limit; no settings changed.')
+            return
+        if self.ofx_capture is not None:
+            previous = self.ofx_capture
+            self.ofx_capture_publications = previous.publications[-8:]
+            self.ofx_capture = None
+            previous.deleteLater()
+        self.ofx_capture = OfxCaptureDialog(config, writer, self, publications=self.ofx_capture_publications)
+        self.ofx_capture.asset_selection = self.asset_selection
+        self.ofx_capture.render_requested.connect(self.submit_ofx_capture)
+        self.ofx_capture.cancel_requested.connect(self.cancel_ofx_capture)
+        self.ofx_capture.show()
+
+    def submit_ofx_capture(self, job):
+        panel = self.ofx_capture
+        if panel is None:
+            return
+        try:
+            if panel.prepared is None or not panel.review_ready or job is not panel.prepared.job or panel.submitted_id is not None or panel.busy or panel.closing:
+                raise ValueError('Create and review a fresh immutable capture job before submitting.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark, calibration, queue activation or shutdown before capture rendering.')
+            if self.asset_selection != panel.asset_selection:
+                raise ValueError('Selected model assets changed. Reopen the capture workflow and review a new job.')
+            if len(self.jobs) >= 128:
+                raise ValueError('Queue history is full. Clear finished jobs before submitting more.')
+            if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
+                raise ValueError('Previous benchmark cleanup is unverified; cannot start another owner.')
+            self.progressive.suspend_for_export()
+            request_id = self.bridge.send('render', {'job': job_to_wire(job)})
+            self.jobs[request_id] = {'job': job, 'status': 'sending', 'event': None}
+            panel.mark_submitted(request_id)
+            self.refresh_table()
+        except (ValueError, TypeError, OSError, RuntimeError, queue.Full) as exc:
+            panel.status.setText(str(exc)[:4096])
+
+    def cancel_ofx_capture(self, request_id):
+        panel = self.ofx_capture
+        if panel is not None and panel.rendering and request_id == panel.submitted_id:
+            try:
+                self.bridge.send('cancel', {'target': request_id, 'reason': 'OFX capture render cancelled by user'})
+                panel._cancel_sent = True
+            except (ValueError, OSError, RuntimeError, queue.Full) as exc:
+                panel.status.setText('Cancellation delivery failed; retain worker ownership: ' + str(exc)[:2048])
+
     def open_ofx_cache(self):
         try:
             if self.closing:
@@ -707,6 +845,7 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def request_preview(self):
+        self.playback.navigate()
         self._diagnostic_preview_context = None
         try:
             if self.moving_reference is not None:
@@ -738,10 +877,15 @@ class DesktopWindow(QMainWindow):
                         raise ValueError('Compositing requires both alpha and foreground exports.')
                     options['alpha_path'] = outputs['alpha']
                     options['background'] = self.background if mode == 'Solid composite' else None
+                    if mode == 'Photo composite':
+                        if self.background_image is None:
+                            raise ValueError('Prepare a matching photo background explicitly first.')
+                        options['background_image'] = self.background_image
                     if mode == 'Solid composite' and self.background is None:
                         raise ValueError('Choose a background colour first.')
             self.preview_serial = self.loader.submit(**options)
-            self.preview_description = f"{mode} · frame {self.frame.value()} · {options['path']}"
+            photo = f' · photo {self.background_image.identity[:16]}' if mode == 'Photo composite' and self.background_image is not None else ''
+            self.preview_description = f"{mode}{photo} · frame {self.frame.value()} · {options['path']}"
             self.pixmap = None
             self.image.setText('Decoding…')
             self.preview_note.setText('Decoding requested frame…')
@@ -758,11 +902,12 @@ class DesktopWindow(QMainWindow):
         return completed_view(state['job'], state['event']['payload']['record'])
 
     def synchronize_reference(self):
+        self.playback.navigate()
         try:
             if self.view.currentText() == 'Source':
                 raise ValueError('Select an export view (Alpha, Foreground or composite) for A first.')
             reference = self.selected_render_view()
-            reference.options(self.view.currentText(), reference.start, self.background)
+            reference.options(self.view.currentText(), reference.start, self.background, background_image=self.background_image)
             self.moving_reference = reference
             self.reference_mode = self.view.currentText()
             self.reference = None
@@ -775,10 +920,12 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def refresh_comparison(self, *_):
+        self.playback.navigate()
         if self.moving_reference is not None:
             self.request_preview()
 
     def request_comparison(self):
+        self.playback.navigate()
         a = self.moving_reference
         assert a is not None
         try:
@@ -794,11 +941,13 @@ class DesktopWindow(QMainWindow):
                 start, end = common_range(a, b)
                 if not start <= index < end:
                     raise ValueError(f'Choose a common source frame in [{start}, {end}).')
-                b_options = b.options(mode, index, self.background)
-            a_options = a.options(self.reference_mode, index, self.background)
+                b_options = b.options(mode, index, self.background, background_image=self.background_image)
+            a_options = a.options(self.reference_mode, index, self.background, background_image=self.background_image)
             self.preview_serial = self.loader.submit(pair={'a': a_options, 'b': b_options})
-            self.reference_description = f'{self.reference_mode} · source frame {index} · export frame {index-a.start} · {a_options["path"]}'
-            self.preview_description = f'{mode} · source frame {index} · decoded frame {b_options["index"]} · {b_options["path"]}'
+            photo_a = f' · photo {self.background_image.identity[:16]}' if self.reference_mode == 'Photo composite' and self.background_image is not None else ''
+            photo_b = f' · photo {self.background_image.identity[:16]}' if mode == 'Photo composite' and self.background_image is not None else ''
+            self.reference_description = f'{self.reference_mode}{photo_a} · source frame {index} · export frame {index-a.start} · {a_options["path"]}'
+            self.preview_description = f'{mode}{photo_b} · source frame {index} · decoded frame {b_options["index"]} · {b_options["path"]}'
             self.pixmap = self.reference = None
             self.image.setText('Decoding synchronized B…')
             self.reference_image.setText('Decoding synchronized A…')
@@ -820,19 +969,105 @@ class DesktopWindow(QMainWindow):
             self.view.setCurrentText('Solid composite')
             self.request_preview()
 
+    def open_background(self):
+        if self.closing:
+            return
+        if self.background_dialog is None:
+            panel = BackgroundDialog(self)
+            panel.prepare_requested.connect(self.prepare_background)
+            panel.changed.connect(self.invalidate_background)
+            panel.cancel_requested.connect(self.cancel_background_preparation)
+            panel.clear_requested.connect(self.clear_background)
+            self.background_dialog = panel
+        self.background_dialog.show()
+        self.background_dialog.raise_()
+
+    def invalidate_background(self):
+        self.cancel_background_preparation()
+        self.background_image = None
+        self.playback.navigate()
+        if self.playback.engine is not None:
+            self.playback.engine.background_image = None
+        self.preview_serial = -1
+        if self.view.currentText() == 'Photo composite':
+            self.pixmap = None
+            self.image.setText('Photo background changed; prepare a new matching snapshot.')
+            self.preview_note.setText('Pending photo preparation; previous composite is stale.')
+        if self.moving_reference is not None and self.reference_mode == 'Photo composite':
+            self.reference = None
+            self.reference_image.setText('Photo background changed; synchronized A is pending.')
+            self.reference_note.setText('Pending photo preparation; previous synchronized composite is stale.')
+
+    def cancel_background_preparation(self):
+        if self.background_serial is not None:
+            self.loader.cancel(self.background_serial)
+            self.background_serial = None
+            if self.background_dialog is not None:
+                self.background_dialog.set_waiting(False, 'Preparation cancelled; any native decode must retire on the existing preview worker.')
+
+    def prepare_background(self, path: str, profile: str):
+        panel = self.background_dialog
+        if panel is None or self.closing:
+            return
+        self.invalidate_background()
+        try:
+            view = self.selected_render_view()
+            if not {'fg', 'alpha'}.issubset(dict(view.outputs)):
+                raise ValueError('Select completed foreground and alpha exports before preparing a photo composite.')
+            recipe = BackgroundRecipe.capture(path, profile=profile, expected_hw=(view.height, view.width))
+            self.background_serial = self.loader.submit(prepare_background=recipe)
+            self.preview_serial = -1
+            panel.set_waiting(True, f'Preparing native {view.width}×{view.height} photo snapshot; profile {profile}. Cancellation fences late results.')
+        except (ValueError, OSError, TypeError, RuntimeError) as exc:
+            panel.set_waiting(False, str(exc))
+
+    def clear_background(self):
+        self.invalidate_background()
+        if self.background_dialog is not None:
+            self.background_dialog.set_waiting(False, 'Photo cleared; live photo composite views now use checkerboard. Static pinned A remains its captured display snapshot.')
+        if self.reference_mode == 'Photo composite' and self.moving_reference is not None:
+            self.reference_mode = 'Checker composite'
+        if self.view.currentText() == 'Photo composite':
+            blocked = self.view.blockSignals(True)
+            self.view.setCurrentText('Checker composite')
+            self.view.blockSignals(blocked)
+            self.request_preview()
+        elif self.moving_reference is not None:
+            self.request_comparison()
+
+    def accept_background(self, serial, frame, error):
+        if serial != self.background_serial:
+            return isinstance(frame, PreparedBackground)
+        self.background_serial = None
+        panel = self.background_dialog
+        if panel is None or self.closing or serial != self.loader.serial:
+            return True
+        if error is not None or not isinstance(frame, PreparedBackground):
+            panel.set_waiting(False, error or 'Photo preparation returned no valid snapshot.')
+            return True
+        self.background_image = frame
+        height, width = frame.native_hw
+        panel.set_waiting(False, f'Captured {width}×{height} · {frame.profile} · identity {frame.identity}. Re-prepare explicitly to read external changes.')
+        blocked = self.view.blockSignals(True)
+        self.view.setCurrentText('Photo composite')
+        self.view.blockSignals(blocked)
+        self.request_preview()
+        return True
+
     def pin_reference(self):
+        self.playback.navigate()
         if self.pixmap is None:
             self.error('Decode a frame successfully before pinning a comparison.')
             return
         self.moving_reference = None
         self.frame_label.setText('Frame (zero-based)')
         self.reference = self.pixmap.copy()
-        self.reference_image.setPixmap(self.reference.scaled(self.reference_image.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                                           Qt.TransformationMode.SmoothTransformation))
-        self.reference_note.setText('A · ' + self.preview_description.rsplit(' · ', 1)[0])
-        self.reference_note.setToolTip(self.preview_description)
+        self.reference_image.setPixmap(self.reference)
+        self.reference_note.setText('A · ' + self.displayed_preview_description.rsplit(' · ', 1)[0])
+        self.reference_note.setToolTip(self.displayed_preview_description)
 
     def clear_reference(self):
+        self.playback.navigate()
         self.moving_reference = None
         self.preview_serial = -1
         self.frame_label.setText('Frame (zero-based)')
@@ -851,6 +1086,83 @@ class DesktopWindow(QMainWindow):
             self.populate_job(job, frame=frame)
         except (ValueError, OSError, TypeError) as exc:
             self.error(exc)
+
+    def open_portable_project(self):
+        if self.closing:
+            return
+        if self.editor is not None and self.editor.canvas.dirty:
+            self.error('Commit or Clear the correction draft before preparing a portable project.')
+            return
+        if self.portable_project is not None:
+            if self.portable_project.isVisible() or not self.portable_project.shutdown():
+                self.portable_project.show()
+                self.portable_project.raise_()
+                return
+            self.retain_portable_application(self.portable_project)
+            self.portable_project.deleteLater()
+            self.portable_project = None
+        try:
+            job = self.job()
+        except (ValueError, OSError, TypeError):
+            job = None  # Opening a package does not require a filled source form.
+        self.portable_project = PortableProjectDialog(job, self, frame=self.frame.value(), selection=self.asset_selection)
+        self.portable_project.loaded.connect(self.apply_portable_project)
+        if self.portable_application_records:
+            lines = ['Recent committed Apply snapshots retained during this workspace session:']
+            for record in self.portable_application_records:
+                report = record['report']
+                lines.append(f"Frame {report.get('preview_frame')} · sent {report.get('emitted')} · accepted {report.get('accepted')} · correction snapshot {report.get('resolved_correction_snapshot') or 'none'}")
+            self.portable_project.details.setPlainText('\n'.join(lines))
+        self.portable_project.show()
+
+    def retain_portable_application(self, dialog: PortableProjectDialog):
+        job, report = dialog.last_resolved_job, dialog.application_report
+        if job is None or not report:
+            return
+        # UI reports are bounded at64KiB; keep detached primitive records and
+        # immutable jobs, never Qt widgets. Files remain owned in explicit scratch.
+        detached = json.loads(json.dumps(report, allow_nan=False))
+        key = (detached.get('project_identity'), detached.get('resolved_correction_snapshot'),
+               detached.get('preview_frame'), detached.get('output_override'))
+        self.portable_application_records = [record for record in self.portable_application_records
+                                             if record['key'] != key]
+        self.portable_application_records.append({'key': key, 'job': job, 'report': detached})
+        self.portable_application_records = self.portable_application_records[-8:]
+
+    def apply_portable_project(self, job, frame, output_override, model_report):
+        def acknowledge(accepted, message):
+            if self.portable_project is not None:
+                self.portable_project.acknowledge_application(accepted, message)
+        if self.closing:
+            acknowledge(False, 'Workspace is closing; project was not applied to the draft.')
+            return
+        if self.editor is not None and self.editor.canvas.dirty:
+            acknowledge(False, 'Correction draft changed; commit or clear it, then apply the verified project again.')
+            self.error('Commit or Clear the correction draft before applying another project.')
+            return
+        if (not isinstance(job, JobRequest) or type(frame) is not int or frame < 0
+                or not isinstance(output_override, str) or not output_override or not isinstance(model_report, dict)):
+            acknowledge(False, 'Project application was rejected before changing draft settings.')
+            self.error('Portable project application requires a verified job and explicit output destination.')
+            return
+        if frame > self.frame.maximum():
+            message = f'Preview frame {frame} exceeds the desktop limit {self.frame.maximum()}; the recorded frame was preserved and no draft settings changed.'
+            acknowledge(False, message)
+            self.error(message)
+            return
+        try:
+            model_description = json.dumps(model_report, indent=2, allow_nan=False)
+            if len(model_description.encode('utf-8')) > 64 * 1024:
+                raise ValueError('Portable project application summary exceeds the 64 KiB display bound.')
+            verified_job = job_from_wire(asdict(job))
+        except (ValueError, TypeError) as exc:
+            acknowledge(False, 'Project application was rejected before changing draft settings: ' + str(exc))
+            self.error(exc)
+            return
+        self.populate_job(verified_job, frame=frame, output_parent=output_override)
+        self.statusBar().showMessage('Portable project settings loaded; no job submitted. Review referenced model assets in Local assets before rendering.')
+        self.statusBar().setToolTip(model_description)
+        acknowledge(True, 'Portable project settings loaded with explicit output/scratch; no job or model switch started.')
 
     def populate_job(self, job: JobRequest, *, frame=0, output_parent: str | None = None):
         if self.moving_reference is not None:
@@ -881,9 +1193,10 @@ class DesktopWindow(QMainWindow):
         self.populate_job(job, output_parent=str(Path(job.output_dir).parent))
 
     def submit_recovery(self, payload):
+        self.progressive.suspend_for_export()
         try:
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-                raise ValueError('Wait for current benchmark/queue/shutdown before recovery submission.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for current benchmark/calibration/queue/shutdown before recovery submission.')
             if self.bridge.journal_workspace is None:
                 raise ValueError('Create/activate a durable queue workspace before submitting recovery.')
             if len(self.jobs) >= 128:
@@ -912,12 +1225,12 @@ class DesktopWindow(QMainWindow):
 
     def activate_assets(self, selection: AssetSelection):
         try:
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-                raise ValueError('Wait for benchmark/queue/shutdown before changing assets.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark/calibration/queue/shutdown before changing assets.')
             if not self.bridge.done.is_set():
                 raise ValueError('Stop worker and wait for shutdown before using different assets.')
             self.poll()
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None or not self.bridge.done.is_set():
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None or not self.bridge.done.is_set():
                 raise ValueError('Processing ownership changed; wait before changing assets.')
             if self.bridge.failure is not None:
                 raise ValueError('Previous worker cleanup failed: ' + self.bridge.failure)
@@ -952,7 +1265,7 @@ class DesktopWindow(QMainWindow):
             except (ValueError, OSError) as exc:
                 self.queue_panel.status.setText(str(exc))
                 return
-        if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
+        if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
             self.queue_panel.status.setText('Wait for current processing/shutdown before changing queue workspace.')
             return
         if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
@@ -984,6 +1297,9 @@ class DesktopWindow(QMainWindow):
             self._open_editor(Path(path))
 
     def _open_editor(self, existing: Path | None = None):
+        if self.calibration_processing:
+            self.error('Calibration owns processing; wait for verified retirement before opening the correction editor.')
+            return
         if self.closing:
             return
         if self.editor is not None and (not self.editor.service.done.is_set() or self.editor.canvas.dirty):
@@ -1022,13 +1338,15 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def stop_worker(self):
+        if self.calibration_processing and self.calibration is not None:
+            self.cancel_calibration()
         self.bridge.stop()
         self.statusBar().showMessage('Stopping worker; active work may leave partial outputs')
 
     def request_resources(self):
         try:
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-                raise ValueError('Wait for benchmark/queue/shutdown before sampling the worker.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark/calibration/queue/shutdown before sampling the worker.')
             if self.resource_request is not None:
                 raise ValueError('Wait for the outstanding worker snapshot or stop its connection explicitly.')
             self.resource_request = self.bridge.send('status', {})
@@ -1037,8 +1355,8 @@ class DesktopWindow(QMainWindow):
             self.resources.status.setText(str(exc))
 
     def new_worker(self):
-        if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-            self.error('Wait for benchmark/shutdown completion before starting another worker.')
+        if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+            self.error('Wait for benchmark/calibration/shutdown completion before starting another worker.')
             return
         if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
             self.error('Previous benchmark cleanup is unverified; another processing owner cannot start.')
@@ -1059,8 +1377,74 @@ class DesktopWindow(QMainWindow):
         self.bridge = DesktopBridge(self.bridge.factory, journal_workspace=self.bridge.journal_workspace)
         self.statusBar().showMessage('New worker connection; previous jobs will not be resubmitted')
 
+    @property
+    def calibration_processing(self):
+        panel = self.calibration
+        if self.pending_calibration is not None or (panel is not None and panel.waiting):
+            return True
+        if panel is None or panel.task is None:
+            return False
+        return not panel.task.done.is_set() or bool(panel.task.snapshot().get('cleanup_error'))
+
+    def open_calibration(self):
+        if self.closing:
+            return
+        if self.calibration is not None:
+            if self.calibration.isVisible() or self.calibration.busy or self.calibration_processing:
+                self.calibration.show()
+                self.calibration.raise_()
+                return
+            self.calibration.shutdown()
+            self.calibration.deleteLater()
+        try:
+            job = self.job(preview_only=True)
+        except (ValueError, OSError, TypeError):
+            job = None
+        self.calibration = CalibrationDialog(job, self, frame=self.frame.value(), selection=self.asset_selection)
+        self.calibration.run_requested.connect(self.start_calibration)
+        self.calibration.cancel_requested.connect(self.cancel_calibration)
+        self.calibration.show()
+
+    def start_calibration(self, plan):
+        panel = self.calibration
+        if panel is None:
+            return
+        try:
+            if not isinstance(plan, CalibrationPlan) or plan is not panel.prepared_plan:
+                raise ValueError('Verify and review the displayed immutable calibration plan before starting.')
+            effective_selection = self.asset_selection or AssetSelection(Path(__file__).resolve().parents[1])
+            if panel.captured_selection != effective_selection:
+                raise ValueError('Selected model assets changed; capture and verify a new calibration plan.')
+            if self.closing or self.pending_calibration is not None or self.pending_queue_root is not None or self.pending_benchmark is not None or self.benchmark.busy or self.benchmark.io_busy:
+                raise ValueError('Wait for benchmark, queue activation or shutdown before calibration.')
+            if any(state['status'] not in TERMINAL for state in self.jobs.values()):
+                raise ValueError('Finish or cancel queued renders/recovery before calibration.')
+            if self.editor is not None and not self.editor.service.done.is_set():
+                raise ValueError('Close the correction editor before calibration; preserve any dirty draft first.')
+            if self.readiness.io_busy or self.assets.io_busy or self.ofx_cache.io_busy or self.cache_panel.io_busy or self.queue_panel.io_busy or self.recovery.io_busy:
+                raise ValueError('Wait for existing background file/check operations before calibration.')
+            if panel.task is not None and (not panel.task.done.is_set() or panel.task.snapshot().get('cleanup_error')):
+                raise ValueError('Previous calibration worker retirement is not verified.')
+            if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
+                raise ValueError('Previous benchmark worker cleanup is not verified.')
+            if self.bridge.cleanup_error is not None or (self.bridge.done.is_set() and self.bridge.failure is not None):
+                raise ValueError('Resident worker cleanup failed: ' + str(self.bridge.cleanup_error or self.bridge.failure))
+            self.progressive.suspend_for_export()
+            self.playback.pause()
+            self.pending_calibration = plan
+            panel.waiting = True
+            panel.status.setText('Stopping the resident worker and retiring progressive previews before calibration…')
+            self.bridge.stop()
+        except (ValueError, OSError, TypeError) as exc:
+            panel.reject_start(str(exc))
+
+    def cancel_calibration(self):
+        self.pending_calibration = None
+        if self.calibration is not None:
+            self.calibration.cancel()
+
     def start_benchmark(self, manifest: Path, parent: Path):
-        if self.closing or self.benchmark.busy or self.benchmark.io_busy or self.pending_queue_root is not None:
+        if self.closing or self.benchmark.busy or self.benchmark.io_busy or self.calibration_processing or self.pending_queue_root is not None:
             self.benchmark.status.setText('Processing/shutdown is already in progress.')
             return
         if any(state['status'] not in TERMINAL for state in self.jobs.values()):
@@ -1082,6 +1466,15 @@ class DesktopWindow(QMainWindow):
         self.benchmark.status.setText('Benchmark cancellation requested; waiting for owned process cleanup.')
 
     def poll(self):
+        if self.ofx_capture is not None:
+            self.ofx_capture.poll()
+        if self.background_serial is not None and self.background_serial != self.loader.serial:
+            self.background_serial = None
+            if self.background_dialog is not None:
+                self.background_dialog.set_waiting(False, 'Photo preparation superseded by a newer preview request; any native read retires on the existing worker.')
+        if self.calibration is not None:
+            self.calibration.poll()
+        self.readiness.poll()
         self.diagnostic_ranges.poll()
         self.benchmark.refresh()
         self.assets.poll()
@@ -1092,10 +1485,15 @@ class DesktopWindow(QMainWindow):
         self.recovery.poll()
         changed = False
         for event in self.bridge.poll():
+            if self.progressive.observe(event):
+                continue
             if self.resource_request is not None and event.get('request_id') == self.resource_request:
                 self.resources.observe(event)
                 self.resource_request = None
             self.recovery.observe(event)
+            self.readiness.observe(event)
+            if self.ofx_capture is not None:
+                self.ofx_capture.observe(event)
             request_id = event.get('request_id')
             if event['kind'] == 'connected':
                 self.backend.setText(f"Worker PID {event['payload']['pid']} · CUDA required · Live GPU memory unavailable")
@@ -1131,6 +1529,12 @@ class DesktopWindow(QMainWindow):
                     state['event'] = {'kind': 'lost', 'payload': {'error': self.bridge.failure or 'Connection closed before terminal acknowledgement',
                                                                  'outputs_may_be_partial': True}}
                     changed = True
+            if self.readiness.submitted_id is not None:
+                self.readiness.observe({'request_id': self.readiness.submitted_id, 'kind': 'lost',
+                                        'payload': {'error': self.bridge.failure or 'Worker connection closed'}})
+            if self.ofx_capture is not None and self.ofx_capture.rendering:
+                self.ofx_capture.observe({'request_id': self.ofx_capture.submitted_id, 'kind': 'lost',
+                                          'payload': {'error': self.bridge.failure or 'Worker connection closed'}})
             self.backend.setText('Worker stopped · ' + (self.bridge.failure or 'Clean shutdown'))
             if self.pending_queue_root is not None:
                 root, self.pending_queue_root = self.pending_queue_root, None
@@ -1139,6 +1543,16 @@ class DesktopWindow(QMainWindow):
                     self.queue_label.setText('Opening durable queue: ' + str(root))
                 else:
                     self.queue_panel.status.setText('Queue activation refused: ' + str(self.bridge.failure or 'application closing'))
+            if self.pending_calibration is not None and not self.progressive.busy:
+                plan, self.pending_calibration = self.pending_calibration, None
+                if self.calibration is not None:
+                    if self.bridge.failure is None and self.bridge.cleanup_error is None and not self.closing:
+                        try:
+                            self.calibration.begin(plan)
+                        except (ValueError, OSError, RuntimeError, TypeError) as exc:
+                            self.calibration.reject_start('Calibration start failed; no automatic retry: ' + str(exc))
+                    else:
+                        self.calibration.reject_start('Resident worker shutdown was not verified or workspace is closing: ' + str(self.bridge.cleanup_error or self.bridge.failure or 'closing'))
             if self.pending_benchmark is not None:
                 request, self.pending_benchmark = self.pending_benchmark, None
                 self.benchmark.waiting = False
@@ -1151,11 +1565,19 @@ class DesktopWindow(QMainWindow):
         if changed:
             self.refresh_table()
             self.show_record()
+        self.playback.tick()
         try:
             serial, frame, error = self.loader.results.get_nowait()
         except queue.Empty:
             return
-        if serial != self.preview_serial:
+        playback_valid = self.playback.complete_loader(serial, error)
+        # Every terminal acknowledges old decode/preparation ownership before
+        # routing metadata. Metadata never enters the pixel publication branch.
+        if self.playback.accept_preparation(serial, frame, error) or isinstance(frame, (PreparedSequence, PreparedExportIndexes)):
+            return
+        if self.accept_background(serial, frame, error) or isinstance(frame, PreparedBackground):
+            return
+        if serial != self.preview_serial or playback_valid is False:
             return
         if error is not None:
             self.preview_note.setText(error)
@@ -1168,16 +1590,15 @@ class DesktopWindow(QMainWindow):
                 pixels = frame.a.pixels
                 image = QImage(pixels.data, pixels.shape[1], pixels.shape[0], pixels.strides[0], QImage.Format.Format_RGB888).copy()
                 self.reference = QPixmap.fromImage(image)
-                self.reference_image.setPixmap(self.reference.scaled(self.reference_image.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                                                    Qt.TransformationMode.SmoothTransformation))
+                self.reference_image.setPixmap(self.reference)
                 self.reference_note.setText('A · ' + self.reference_description.rsplit(' · ', 1)[0] + '\n' + frame.a.note)
                 self.reference_note.setToolTip(self.reference_description)
                 frame = frame.b
             pixels = frame.pixels
             image = QImage(pixels.data, pixels.shape[1], pixels.shape[0], pixels.strides[0], QImage.Format.Format_RGB888).copy()
             self.pixmap = QPixmap.fromImage(image)
-            self.image.setPixmap(self.pixmap.scaled(self.image.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                                    Qt.TransformationMode.SmoothTransformation))
+            self.displayed_preview_description = self.preview_description
+            self.image.setPixmap(self.pixmap)
             self.preview_note.setText(f'B · {self.preview_description.rsplit(" · ", 1)[0]}\n{frame.width}×{frame.height} · {frame.count} frames · {frame.note}')
             self.preview_note.setToolTip(self.preview_description)
             if comparison_pair:
@@ -1191,10 +1612,19 @@ class DesktopWindow(QMainWindow):
             event.ignore()
             return
         self.closing = True
+        self.cancel_background_preparation()
+        if self.background_dialog is not None:
+            self.background_dialog.close()
+        self.playback.pause()
         self.loader.stopping.set()
+        progressive_done = self.progressive.shutdown()
+        self.pending_calibration = None
+        calibration_done = self.calibration is None or self.calibration.shutdown()
+        capture_done = self.ofx_capture is None or self.ofx_capture.shutdown()
         self.bridge.stop()
         self.cancel_benchmark()
         self.benchmark.dossier_panel.close()
+        self.readiness.close()
         self.diagnostic_ranges.close()
         self.ofx_cache.close()
         self.cache_panel.close()
@@ -1202,8 +1632,11 @@ class DesktopWindow(QMainWindow):
         self.assets.close()
         if self.editor is not None:
             self.editor.close()
+        portable_done = self.portable_project is None or self.portable_project.shutdown()
+        if portable_done and self.portable_project is not None:
+            self.retain_portable_application(self.portable_project)
         editor_done = self.editor is None or self.editor.service.done.is_set()
-        if self.bridge.done.is_set() and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and not self.loader.thread.is_alive():
+        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and calibration_done and capture_done and not self.loader.thread.is_alive():
             self.timer.stop()
             event.accept()
         else:

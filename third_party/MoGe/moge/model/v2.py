@@ -102,7 +102,8 @@ class MoGeModel(nn.Module):
         if model_kwargs is not None:
             model_config.update(model_kwargs)
         model = cls(**model_config)
-        model.load_state_dict(checkpoint['model'], strict=False)
+        # CorridorKey integration: never admit incomplete declared model weights.
+        model.load_state_dict(checkpoint['model'], strict=True)
         
         return model
     

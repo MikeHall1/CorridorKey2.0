@@ -1,7 +1,433 @@
 {
   "schema_version": 1,
-  "objective": "Complete the fresh repository review, remediate confirmed locally resolvable defects, tidy justified artifacts/docs, verify coherent checkpoints and push to the verified fork review branch; product acceptance remains separate.",
+  "objective": "Implement and integrate the ten product improvements in docs/product-improvements-brief.md, preserving the shared engine and explicit external acceptance.",
   "tasks": [
+    {
+      "id": "PERF-A",
+      "title": "PERF-A product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-A and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-B",
+      "title": "PERF-B product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-B and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-C",
+      "title": "PERF-C product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-C and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-D",
+      "title": "PERF-D product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-D and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-E",
+      "title": "PERF-E product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-E and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-F",
+      "title": "PERF-F product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-F and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-G",
+      "title": "PERF-G product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-G and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-H",
+      "title": "PERF-H product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-H and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-I",
+      "title": "PERF-I product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-I and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-J",
+      "title": "PERF-J product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-J and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-OPT",
+      "title": "PERF-OPT product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-OPT and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch1-summary.json"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "local_increment": {
+        "status": "locally_verified",
+        "batch": 1,
+        "evidence": "benchmark-results/product-next/batch1-summary.json",
+        "full_feature_accepted": false
+      }
+    },
+    {
+      "id": "PERF-CLEAN",
+      "title": "PERF-CLEAN product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-CLEAN and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-DEPS",
+      "title": "PERF-DEPS product performance extension",
+      "status": "in_progress",
+      "acceptance": "See docs/product-performance-brief.md PERF-DEPS and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "PERF-TARGET",
+      "title": "PERF-TARGET product performance extension",
+      "status": "external",
+      "acceptance": "See docs/product-performance-brief.md PERF-TARGET and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
+      "evidence": [
+        "docs/product-performance-brief.md"
+      ],
+      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+    },
+    {
+      "id": "audit-remediation-20261024",
+      "title": "Resolve comprehensive audit findings",
+      "status": "in_progress",
+      "acceptance": "Reproduced code defects fixed with regression tests and independent review; CI tracked; static debt and hardware-dependent acceptance remain explicit until actually verified.",
+      "evidence": [
+        "docs/audits/findings-register.md",
+        "docs/audits/implementation-plan.md",
+        "benchmark-results/audit-fixes/",
+        "docs/audits/remediation-status.md",
+        "docs/audits/remediation-review.md",
+        "benchmark-results/audit-fixes/verification-summary.json"
+      ],
+      "next_action": "Continue QA-002 only through evidence-backed scoped diagnostic work; REL-001 requires actual target prerequisites. Reuse this unchanged passing baseline; no unbounded supervisor."
+    },
+    {
+      "id": "EXT-01",
+      "title": "Readiness and guided short real render",
+      "status": "in_progress",
+      "dependencies": [],
+      "acceptance": "Stage-specific cancellable checks, deliberate model/inference job, decoded/displayed output and local report; actual inference evidence separate from fixtures.",
+      "evidence": [
+        "corridorkey/readiness.py",
+        "corridorkey/desktop_readiness.py",
+        "tests/test_readiness.py",
+        "tests/test_desktop_readiness.py",
+        "benchmark-results/ext01-ext05-final-fixed/verification.json",
+        "docs/readiness.md",
+        "corridorkey/readiness_capabilities.py",
+        "tests/test_desktop_first_run.py",
+        "tests/test_failure_checkpoints.py",
+        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
+      ],
+      "next_action": "Remaining inspection roles and actual CUDA/pretrained/localfootage/fullclip/display/encoding acceptance; contextual failed/cancelled records locally verified."
+    },
+    {
+      "id": "EXT-05",
+      "title": "Synchronized playable previews",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-01"
+      ],
+      "acceptance": "Source-time aligned playback/seek/loops, bounded owners/caches, custom composites, zoom/pan, speeds and dropped/buffering diagnostics; VFR explicitly handled.",
+      "evidence": [
+        "corridorkey/playback.py",
+        "corridorkey/desktop_playback.py",
+        "tests/test_playback.py",
+        "tests/test_desktop_playback.py",
+        "docs/product-improvements.md",
+        "benchmark-results/ext01-ext05-final-fixed/verification.json",
+        "corridorkey/desktop_viewport.py",
+        "tests/test_desktop_viewport.py",
+        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json",
+        "corridorkey/preview_sequence.py",
+        "tests/test_desktop_source_playback.py",
+        "corridorkey/preview_background.py",
+        "corridorkey/desktop_background.py",
+        "tests/test_preview_background.py",
+        "tests/test_photo_preview_pipeline.py",
+        "tests/test_desktop_photo_background.py",
+        "docs/photo-backgrounds.md",
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json",
+        "corridorkey/preview_exports.py",
+        "tests/test_preview_exports.py",
+        "tests/test_export_playback_pipeline.py",
+        "tests/test_desktop_export_playback.py",
+        "docs/export-playback-indexes.md",
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "next_action": "Bounded playback-only source/foreground/alpha indexes locally verified with explicit Refresh and native4K decoder compatibility. Video/VFR, persistent codec readers and actual native/display/performance acceptance remain pending."
+    },
+    {
+      "id": "EXT-02",
+      "title": "Tracked manual corrections",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-05"
+      ],
+      "acceptance": "Motion-following masks with cut/reliability policies, immutable authored anchors, preview/commit/history/persistence and dependent invalidation.",
+      "evidence": [
+        "docs/tracked-corrections.md",
+        "corridorkey/correction_tracking.py",
+        "corridorkey/corrections.py",
+        "corridorkey/correction_tracking_editor.py",
+        "tests/test_tracking_runtime.py",
+        "tests/test_desktop_tracking.py",
+        "benchmark-results/ext02-runtime-integration.txt"
+      ],
+      "next_action": "Finish reviewed sequence tracking integration checkpoint; video and representative motion/occlusion/pretrained/native-target acceptance stay unverified."
+    },
+    {
+      "id": "EXT-03",
+      "title": "Clean-plate assistance",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-02"
+      ],
+      "acceptance": "Reference identity/alignment/exposure diagnostics, reversible inspectable spatial guidance integrated with correction/refinement; no new neural channels.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "corridorkey/clean_plate.py",
+        "tests/test_clean_plate.py",
+        "corridorkey/clean_plate_editor.py",
+        "corridorkey/desktop_corrections.py",
+        "corridorkey/native_image_admission.py",
+        "tests/test_desktop_clean_plate.py",
+        "docs/clean-plate-guidance.md",
+        "benchmark-results/ext03-connected-final/source-verification.json",
+        "docs/clean-plate-review.md"
+      ],
+      "next_action": "Extend one-frame sequence workflow only with justified real acceptance; video/moving plate/occlusion/pretrained quality acceptance NOT VERIFIED. Continue EXT04 native click workflow locally."
+    },
+    {
+      "id": "EXT-04",
+      "title": "Click-to-select subject guidance",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-02"
+      ],
+      "acceptance": "Optional provider and positive/negative iterative clicks, cancellable coarse-mask preview, saved provenance/correction conversion and optional tracked range.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "docs/subject-guidance-provider.md",
+        "corridorkey/subject_guidance.py",
+        "tests/test_subject_guidance.py",
+        "corridorkey/guidance_provenance.py",
+        "benchmark-results/ext03-connected-final/source-verification.json",
+        "docs/clean-plate-review.md",
+        "corridorkey/subject_guidance_process.py",
+        "corridorkey/subject_guidance_editor.py",
+        "tests/test_subject_guidance_editor.py",
+        "benchmark-results/ext04-editor-first.txt",
+        "corridorkey/desktop_corrections.py",
+        "corridorkey/correction_canvas.py",
+        "tests/test_desktop_subject_guidance.py",
+        "docs/subject-clicks.md",
+        "docs/subject-clicks-review.md",
+        "benchmark-results/ext04-connected-final/source-verification.json"
+      ],
+      "next_action": "Connected CPU sequence click/Keep/tracking workflow locally verified; actualSAM2model/checkpoint/dependencies/quality/cost and frozen/nativeWindows/GPUhandoff acceptance NOT VERIFIED. Continue independent EXT09 portability implementation."
+    },
+    {
+      "id": "EXT-06",
+      "title": "Progressive preview refinement",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-05"
+      ],
+      "acceptance": "Explicit budgeted priority scheduling, draft/refined/final/stale states, newest-request fences and provenance-compatible reuse; exports preserve requested quality.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "corridorkey/progressive_preview.py",
+        "corridorkey/preview_execution.py",
+        "corridorkey/desktop_progressive.py",
+        "corridorkey/worker_core.py",
+        "tests/test_progressive_preview.py",
+        "tests/test_preview_execution.py",
+        "tests/test_worker_preview.py",
+        "tests/test_desktop_progressive.py",
+        "docs/progressive-previews.md",
+        "docs/progressive-previews-review.md",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "next_action": "Initial explicit image-sequence progressive workflow locally verified through same engine owner. Video/QuickKey/hints/corrections/context-preserving range support and actualGPUlatency/VRAM/quality acceptance remain unsupported/unverified. Continue spatial tracking overlays EXT07."
+    },
+    {
+      "id": "EXT-07",
+      "title": "Visual problem overlays",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-02",
+        "EXT-05"
+      ],
+      "acceptance": "Source-aligned diagnostic maps with provenance/legend/limits and correction/rerender actions; heuristics distinct from measured observations.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "corridorkey/tracking_overlays.py",
+        "corridorkey/correction_tracking_editor.py",
+        "corridorkey/desktop_corrections.py",
+        "tests/test_tracking_overlays.py",
+        "tests/test_tracking_overlay_editor.py",
+        "tests/test_desktop_tracking_overlays.py",
+        "docs/tracking-overlays.md",
+        "docs/tracking-overlays-review.md",
+        "benchmark-results/ext07-connected-final/source-verification.json"
+      ],
+      "next_action": "Initial explicit tracking-derived overlays locally verified; savedtrackspatialmaps/motion-alignedmatte-change/boundarydiagnostics and representativefalsepositive/misseddefect/nativeGPUacceptance remain pending. Continue machine-specific calibration EXT08."
+    },
+    {
+      "id": "EXT-08",
+      "title": "Machine-specific calibration",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-01"
+      ],
+      "acceptance": "Explicit cancellable cold/warm configuration measurements, identity/expiry, failures and recommendations/duration uncertainty with no implicit job changes.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "corridorkey/calibration.py",
+        "corridorkey/calibration_task.py",
+        "corridorkey/desktop_calibration.py",
+        "corridorkey/desktop_window.py",
+        "tests/test_calibration.py",
+        "tests/test_calibration_task.py",
+        "tests/test_desktop_calibration.py",
+        "tests/test_desktop_window_calibration.py",
+        "docs/calibration.md",
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "next_action": "Initial sequence calibration locally verified; actual CUDA repeated cold/warm reports, representative quality and external target acceptance NOT VERIFIED. Video/hints/corrections and live physical/environment expiry binding unsupported. Continue native-safe foreign portable packages."
+    },
+    {
+      "id": "EXT-09",
+      "title": "Safe project portability",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-01"
+      ],
+      "acceptance": "Versioned manifests/inventory, deliberate relink and optional budgeted selected collection, collision/traversal/source identity checks; preserve legacy projects.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "corridorkey/desktop_state.py",
+        "tests/test_desktop_state.py",
+        "benchmark-results/ext09-legacy-protection.txt",
+        "corridorkey/portable_project.py",
+        "corridorkey/project_collection.py",
+        "corridorkey/desktop_portable_project.py",
+        "tests/test_portable_project.py",
+        "tests/test_project_collection.py",
+        "tests/test_desktop_portable_project.py",
+        "tests/test_desktop_window_portable.py",
+        "docs/portable-projects.md",
+        "docs/portable-projects-review.md",
+        "benchmark-results/ext09-connected-final/source-verification.json",
+        "corridorkey/portable_paths.py",
+        "tests/test_portable_paths.py",
+        "tests/test_portable_foreign_project.py",
+        "tests/test_desktop_portable_foreign.py",
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "next_action": "Native packages plus foreign all-collected read/Apply locally verified; partial/reference-only foreign relinking, direct foreign publication and native Windows/runtime acceptance remain unsupported/NOT VERIFIED. Continue explicit photo composite previews."
+    },
+    {
+      "id": "EXT-10",
+      "title": "Resolve-assisted preparation",
+      "status": "in_progress",
+      "dependencies": [],
+      "acceptance": "Investigate real supported SDK/host interfaces, selected-range capture and shared-engine preparation/cancel/validation/refresh where supported; actual host acceptance required.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "docs/resolve-assisted-preparation.md"
+      ],
+      "next_action": "Implement explicit supported InstanceChanged upstream capture, strict13field local manifest/COMPLETE intake, FLOAT EXR bitproof, shared worker job and verified deliberate attachment receipt; count120/pixels16M/payload512MiB. Actual Resolve remains NOT VERIFIED."
+    },
     {
       "id": "fresh-repository-review",
       "title": "Fresh first-party review, confirmed-defect remediation, justified cleanup and fork checkpoints",
@@ -701,5 +1127,215 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Review scope complete with documented push-authentication exception. Authenticate Git, then publish the local branch; product acceptance remains separate."
+  "next_action": "Current audit locally complete. Remaining product tasks and external GPU/quality/Windows/Resolve acceptance remain in their existing task rows; no automatic supervisor/push.",
+  "objective_source": "docs/product-improvements-brief.md",
+  "current_checkpoint_evidence": "benchmark-results/ext05-export-connected-final-fixed/source-verification.json",
+  "active_audit": {
+    "objective": "Comprehensive current-repository audit and repair, user request2026-10-23",
+    "workflow": ".omx/ultragoal/goals.json",
+    "context": ".omx/context/repository-audit-20261023.md",
+    "baseline": "benchmark-results/audit-20261023/baseline-tests-unsandboxed.txt",
+    "baseline_tests": 1481,
+    "baseline_seconds": 123.188,
+    "status": "locally_complete",
+    "issues": [
+      "HEALTH-CAPTURE-377",
+      "HEALTH-CAPTURE-378",
+      "HEALTH-CAPTURE-379",
+      "HEALTH-CAPTURE-380",
+      "AUDIT-381",
+      "AUDIT-382",
+      "AUDIT-383",
+      "AUDIT-384",
+      "AUDIT-385",
+      "AUDIT-386",
+      "AUDIT-387"
+    ],
+    "scope_note": "Preserve prior product extension tasks; current audit does not claim full external acceptance.",
+    "no_push": true,
+    "final_batch_tests": 1497,
+    "final_batch_seconds": 125.414,
+    "review_issue": null,
+    "new_issues_resolved": 17,
+    "final_tests": 1533,
+    "final_seconds": 126.062,
+    "evidence": "benchmark-results/audit-20261023/second-batch/verification-summary.json",
+    "product_complete": false
+  },
+  "audit_remediation": {
+    "started_utc": "2026-10-23T21:42:54.612796+00:00",
+    "status": "local_code_fixes_accepted_two_findings_open",
+    "finding_ids": [
+      "ARCH-001",
+      "ARCH-002",
+      "SEC-001",
+      "SEC-002",
+      "INF-001",
+      "INF-002",
+      "INF-003",
+      "INF-004",
+      "INF-005",
+      "UI-001",
+      "UI-002",
+      "UI-003",
+      "UI-004",
+      "QA-001",
+      "QA-002",
+      "REL-001"
+    ],
+    "evidence": "benchmark-results/audit-fixes",
+    "cycles_since_checkpoint": 0,
+    "implementation_workers": [
+      "fix_models",
+      "fix_desktop"
+    ],
+    "reviewer": "review_safety",
+    "external_acceptance": "NOT VERIFIED",
+    "updated_utc": "2026-10-23T21:54:33.354932+00:00",
+    "verification": {
+      "status": "local_code_fixes_accepted_two_findings_open",
+      "tests": {
+        "count": 1568,
+        "seconds": 131.43,
+        "errors": 0,
+        "failures": 0,
+        "skips": 0,
+        "command_record": "accepted-tests.json"
+      },
+      "static": {
+        "files": 427,
+        "gate_success": true,
+        "static_clean": false,
+        "ruff_findings": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_findings": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "command_record": "accepted-static.json"
+      },
+      "source_identity": "734d804b0b07589f79e4809abc35833c5e1b47302ba87d2801db1f67388dd135",
+      "fixed_or_implemented": [
+        "ARCH-001",
+        "ARCH-002",
+        "SEC-001",
+        "SEC-002",
+        "INF-001",
+        "INF-002",
+        "INF-003",
+        "INF-004",
+        "INF-005",
+        "UI-001",
+        "UI-002",
+        "UI-003",
+        "UI-004",
+        "QA-001"
+      ],
+      "remaining": {
+        "QA-002": "Open classified legacy static debt; no suppression/baseline refresh",
+        "REL-001": "NOT VERIFIED: actual GPU/weights/FFmpeg/provider/Windows/Resolve/distribution acceptance"
+      },
+      "independent_review": {
+        "code": "APPROVE plus final three-file addendum",
+        "architecture": "CLEAR",
+        "report": "docs/audits/remediation-review.md"
+      },
+      "requested_model": "gpt-6.1-sol medium",
+      "observed_model": "gpt-6.1-sol (developer runtime metadata)",
+      "observed_leader_effort": "not exposed; not inferred",
+      "remote_publication": false,
+      "product_complete": false
+    },
+    "next_action": "Continue QA-002 only through evidence-backed scoped diagnostic work; REL-001 requires actual target prerequisites. Reuse this unchanged passing baseline; no unbounded supervisor."
+  },
+  "current_objective_source": "docs/product-performance-brief.md",
+  "active_product_extension": {
+    "started_utc": "2026-10-23T22:03:24.816301+00:00",
+    "session": "omx-1792790265529-l6n3bp",
+    "task_ids": [
+      "PERF-A",
+      "PERF-B",
+      "PERF-C",
+      "PERF-D",
+      "PERF-E",
+      "PERF-F",
+      "PERF-G",
+      "PERF-H",
+      "PERF-I",
+      "PERF-J",
+      "PERF-OPT",
+      "PERF-CLEAN",
+      "PERF-DEPS",
+      "PERF-TARGET"
+    ],
+    "baseline": "benchmark-results/audit-fixes/verification-summary.json",
+    "baseline_source_unchanged": true,
+    "standalone_supervisor": false,
+    "next_action": "Edge finishing and report acceptance gates; then connected feasibility/shot/region/incremental workflows.",
+    "current_task": "Checkpoint/push accepted G/J/I/OPT increments; continue B/H/A/D/E/F and remaining acceptance",
+    "workers": {},
+    "dependency_disposition": "Retain all declared core/optional/transitive dependencies; dynamic foundations/packaging consumers prevent deletion proof. Optional groups unchanged. Details in native dependency_cleanup result.",
+    "cleanup_disposition": "Public reader triple retained; opt-out candidate removes only unused production window allocation. No internal module deletion justified.",
+    "updated_utc": "2026-10-23T22:13:06.597525+00:00",
+    "status": "batch1_locally_accepted_publication_pending",
+    "owned_processes": [],
+    "cycles_completed": 4,
+    "verification": {
+      "status": "batch1_locally_accepted",
+      "tests": {
+        "count": 1597,
+        "seconds": 135.731,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "command_record": "batch1-tests.json"
+      },
+      "static": {
+        "files": 433,
+        "gate_pass": true,
+        "static_clean": false,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_vs_legacy": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "new_vs_actual_accepted_audit": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "command_record": "batch1-static.json"
+      },
+      "source_identity": "b8b8635f7db424eba210f67b0915abd03d5984f2ef588c51b995874ccf290602",
+      "review": {
+        "code": "APPROVE G/J/I/OPT after repaired findings",
+        "architecture": "CLEAR",
+        "architecture_scope_identity": "ed8f60de7d02c976b87fe49d35e7abd8d3bfd4eaf849d992ed35bf18fafabf1c"
+      },
+      "accepted_increments": [
+        "PERF-G native final alpha expansion/contraction/feather",
+        "PERF-J supported report-level policy screen",
+        "PERF-I recorded-report feasibility tab",
+        "PERF-OPT unused production review stack elision"
+      ],
+      "resource_measurement": {
+        "returned_stack_payload_before": 7077888,
+        "after": 10,
+        "reduction_fraction": 0.3333333333333333,
+        "stack_calls_before": 15,
+        "preprocess_calls": 24,
+        "pixels": "exact model/foundation equality",
+        "timing": "INCONCLUSIVE",
+        "png_median_candidate_over_reference": 1.0688,
+        "mjpg_median_candidate_over_reference": 1.0139,
+        "timing_speedup_accepted": false,
+        "rss_gpu_memory_inference_fps": "NOT VERIFIED",
+        "raw": "reader-experiment-results.json"
+      },
+      "product_complete": false,
+      "publication": "pending git performer checkpoint"
+    }
+  }
 }

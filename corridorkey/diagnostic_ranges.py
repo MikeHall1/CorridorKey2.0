@@ -234,7 +234,7 @@ def inspect_diagnostics(job: JobRequest, record: dict, *, check=None, progress=N
         document_path = Path(cfg.corrections_path)
         data, _ = read_object(document_path, max_bytes=MAX_SNAPSHOT_BYTES, regular_file=True)
         document = CorrectionDocument.parse(data, document_path.parent)
-        deps.extend(str(document.asset_path(entry)) for entry in data['entries'] if 'asset' in entry)
+        deps.extend(str(path) for path in document.asset_paths())
     dependencies = [_observation(path, check) for path in dict.fromkeys(str(p) for p in deps if p is not None)]
     quick = diagnostics.get('quick_key') or {}
     if not isinstance(quick, dict):

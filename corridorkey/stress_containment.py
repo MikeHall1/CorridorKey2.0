@@ -18,6 +18,8 @@ class StressContainment:
         self.root_pid = root_pid
         self.root_exited = root_exited or (lambda: False)
         self.samples = 0
+        self.complete_samples = 0
+        self.terminal_exit_races = 0
         self.observer = observer if observer is not None else ProcessTreeMemory(root_pid=root_pid)
         self.clock, self.interval = clock, interval
         self.last_sample: float | None = None
@@ -75,7 +77,17 @@ class StressContainment:
                     raise ValueError('Stress containment exceeds 256 tracked identities')
                 depth = self.observer.depths.get(pid, 0)
                 self.pins[pid] = {**row, 'depth': depth}
-            if data['status'] != 'available':
+            if data['status'] == 'available':
+                self.complete_samples += 1
+            elif (data.get('reason_code') == 'root_exited' and self.complete_samples > 0
+                  and self.root_exited()):
+                # The Popen owner confirms normal disappearance after an earlier
+                # complete discovery. RSS stays unavailable; existing/new pins
+                # above still undergo termination and final group/exit checks.
+                # Reuse, native denial/deadline and partial child discovery never
+                # enter this branch and remain permanently fail-closed.
+                self.terminal_exit_races += 1
+            else:
                 self._fail(str(data.get('reason') or 'incomplete native process discovery'))
         except (OSError, RuntimeError, ValueError, TypeError, KeyError, AttributeError) as exc:
             self._fail(f'{type(exc).__name__}: {exc}')
@@ -144,5 +156,6 @@ class StressContainment:
 
     def snapshot(self):
         return {'tracked_processes': [dict(row) for row in self.pins.values()], 'failure': self.failure,
-                'retired_process_count': self.retired_count,
+                'retired_process_count': self.retired_count, 'complete_samples': self.complete_samples,
+                'terminal_exit_race_samples': self.terminal_exit_races,
                 'scope': 'Birth-pinned observed descendants only; unobserved short-lived forks and native query latency remain outside guarantees.'}

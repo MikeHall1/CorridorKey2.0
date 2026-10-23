@@ -1,58 +1,432 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T08:56:11.691012+00:00",
-  "objective_source": "docs/review-objective.md",
-  "milestone": 46,
-  "review_batches_completed": 6,
-  "review_complete": true,
-  "product_complete": false,
-  "boundary_reason": "Final local review accepted; exact Git authentication push blocker documented under objective exception.",
-  "review_branch": "review/corridorkey-audit-20261023",
-  "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743",
-  "checkpoint_commit": "Final review commit containing this checkpoint; exact identity in Git history.",
-  "verification_summary": {
-    "evidence": "benchmark-results/fresh-review-final-source-verification.json",
-    "cpu_tests": 985,
-    "cpu_seconds": 72.674,
-    "skips": 0,
-    "static_files": 327,
-    "new_findings": 0,
-    "ruff_findings": 519,
-    "pyright_errors": 684,
-    "pyright_warnings": 17,
-    "static_clean": false,
-    "sources_unchanged": true,
-    "new_vs_actual_m45": {
-      "ruff": {},
-      "pyright": {}
+  "created_utc": "2026-10-23T18:56:13.876601+00:00",
+  "cycles_completed": 76,
+  "checkpoint_interval": 5,
+  "boundary_reason": "Current confirmed audit backlog locally resolved and independently approved; final1533CPU/422file gate, external product acceptance pending.",
+  "completed": [
+    {
+      "id": "fresh-repository-review",
+      "evidence": [
+        "docs/review-objective.md",
+        "docs/review-2026-10-23.md",
+        ".ralph/issues.json",
+        "benchmark-results/fresh-review-final-source-verification.json",
+        "docs/checkpoint.md"
+      ]
     },
-    "new_vs_checkpoint": {
-      "ruff": {},
-      "pyright": {}
+    {
+      "id": "code-health",
+      "evidence": [
+        "scripts/code_health.py",
+        "requirements-dev.txt",
+        ".ralph/static-baseline.json",
+        ".ralph/issues.json",
+        "docs/code-health.md",
+        "docs/environments/cpu-macos-py312.txt",
+        "tests/test_code_health.py",
+        "benchmark-results/health-m9-metrics/health.json"
+      ]
+    },
+    {
+      "id": "serializer-types",
+      "evidence": [
+        "corridorkey/diagnostics.py",
+        "tests/test_diagnostics.py",
+        ".ralph/issues.json",
+        "benchmark-results/health-m9-serializer-tests.txt"
+      ]
+    },
+    {
+      "id": "baseline",
+      "evidence": [
+        "docs/baseline.md",
+        "docs/options.md"
+      ]
+    },
+    {
+      "id": "session-cache",
+      "evidence": [
+        "benchmark-results/cpu-adapters-milestone3.json",
+        "docs/feature-cache.md"
+      ]
+    },
+    {
+      "id": "loop",
+      "evidence": [
+        "scripts/ralph_loop.py",
+        "tests/test_ralph.py",
+        "docs/ralph-loop.md"
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "evidence": [
+        "corridorkey/control.py",
+        "tests/test_control.py",
+        "tests/test_io.py",
+        "tests/test_session.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "mapping-cleanup",
+      "evidence": [
+        "corridorkey/resources.py",
+        "tests/test_resources.py",
+        "tests/test_foundation_cache.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "quick-key-adaptive",
+      "evidence": [
+        "corridorkey/quick_key.py",
+        "corridorkey/draft.py",
+        "corridorkey/motion.py",
+        "tests/test_draft.py",
+        "tests/test_quick_runtime.py",
+        "corridorkey/shot_analysis.py",
+        "tests/test_shot_analysis.py",
+        "tests/test_past_draft.py",
+        "tests/test_quick_key.py",
+        "tests/test_motion.py",
+        "docs/quick-key.md",
+        "benchmark-results/cpu-adapters-milestone6.json",
+        "benchmark-results/cpu-stdlib-milestone6.json",
+        "benchmarks/suites/quick-key-matrix.example.json"
+      ]
+    },
+    {
+      "id": "corrections",
+      "evidence": [
+        "corridorkey/corrections.py",
+        "corridorkey/identities.py",
+        "tests/test_corrections.py",
+        "corridorkey/correction_rasters.py",
+        "tests/test_correction_rasters.py",
+        "tests/test_correction_runtime.py",
+        "tests/test_session.py",
+        "tests/test_benchmark.py",
+        "benchmark-results/cpu-adapters-milestone7.json",
+        "benchmark-results/cpu-stdlib-milestone7.json",
+        "docs/corrections.md",
+        "docs/checkpoint.md",
+        "corridorkey/correction_editor.py",
+        "corridorkey/correction_editor_service.py",
+        "corridorkey/correction_canvas.py",
+        "corridorkey/desktop_corrections.py",
+        "tests/test_correction_editor.py",
+        "tests/test_editor_service.py",
+        "tests/test_correction_canvas.py",
+        "tests/test_desktop_corrections.py",
+        "docs/correction-editor.md",
+        "benchmark-results/m20-final-verification.txt",
+        "benchmark-results/correction-m20-generated/summary.json"
+      ]
+    },
+    {
+      "id": "engine-worker",
+      "evidence": [
+        "corridorkey/worker_protocol.py",
+        "corridorkey/worker_core.py",
+        "corridorkey/worker_transport.py",
+        "corridorkey/worker_client.py",
+        "corridorkey/worker.py",
+        "tests/test_worker_protocol.py",
+        "tests/test_worker_core.py",
+        "tests/test_worker_process.py",
+        "tests/test_worker_faults.py",
+        "tests/test_worker_transport.py",
+        "tests/worker_fixture.py",
+        "docs/worker.md",
+        "benchmark-results/m17-worker-generated-summary.json",
+        "benchmark-results/m17-final-verification.txt"
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "EXT-01",
+      "status": "in_progress",
+      "acceptance": "Stage-specific cancellable checks, deliberate model/inference job, decoded/displayed output and local report; actual inference evidence separate from fixtures."
+    },
+    {
+      "id": "EXT-05",
+      "status": "in_progress",
+      "acceptance": "Source-time aligned playback/seek/loops, bounded owners/caches, custom composites, zoom/pan, speeds and dropped/buffering diagnostics; VFR explicitly handled."
+    },
+    {
+      "id": "EXT-02",
+      "status": "in_progress",
+      "acceptance": "Motion-following masks with cut/reliability policies, immutable authored anchors, preview/commit/history/persistence and dependent invalidation."
+    },
+    {
+      "id": "EXT-03",
+      "status": "in_progress",
+      "acceptance": "Reference identity/alignment/exposure diagnostics, reversible inspectable spatial guidance integrated with correction/refinement; no new neural channels."
+    },
+    {
+      "id": "EXT-04",
+      "status": "in_progress",
+      "acceptance": "Optional provider and positive/negative iterative clicks, cancellable coarse-mask preview, saved provenance/correction conversion and optional tracked range."
+    },
+    {
+      "id": "EXT-06",
+      "status": "in_progress",
+      "acceptance": "Explicit budgeted priority scheduling, draft/refined/final/stale states, newest-request fences and provenance-compatible reuse; exports preserve requested quality."
+    },
+    {
+      "id": "EXT-07",
+      "status": "in_progress",
+      "acceptance": "Source-aligned diagnostic maps with provenance/legend/limits and correction/rerender actions; heuristics distinct from measured observations."
+    },
+    {
+      "id": "EXT-08",
+      "status": "in_progress",
+      "acceptance": "Explicit cancellable cold/warm configuration measurements, identity/expiry, failures and recommendations/duration uncertainty with no implicit job changes."
+    },
+    {
+      "id": "EXT-09",
+      "status": "in_progress",
+      "acceptance": "Versioned manifests/inventory, deliberate relink and optional budgeted selected collection, collision/traversal/source identity checks; preserve legacy projects."
+    },
+    {
+      "id": "EXT-10",
+      "status": "in_progress",
+      "acceptance": "Investigate real supported SDK/host interfaces, selected-range capture and shared-engine preparation/cancel/validation/refresh where supported; actual host acceptance required."
+    },
+    {
+      "id": "quick-key",
+      "status": "external",
+      "acceptance": "Full-rate interval 1; regular/final/cut/correction anchors; native context inference strategy; current source RGB; full output timing preserved."
+    },
+    {
+      "id": "desktop",
+      "status": "in_progress",
+      "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI."
+    },
+    {
+      "id": "recovery",
+      "status": "in_progress",
+      "acceptance": "Checksums, completion records, safe bounded reuse, cancellation/failure/stale cache tests."
+    },
+    {
+      "id": "evaluation",
+      "status": "in_progress",
+      "acceptance": "Defined normalized metrics/masks, missing references unavailable, baseline/candidate comparisons, stress fixtures and honest reports."
+    },
+    {
+      "id": "colour-precision",
+      "status": "in_progress",
+      "acceptance": "High-bit inputs, HDR/association/invalid-value fixtures; no ineffective controls or silent precision changes."
+    },
+    {
+      "id": "packaging",
+      "status": "in_progress",
+      "acceptance": "Maintainable desktop bundle recipe, asset validation/download UX, retained notices; no unauthorized distribution."
+    },
+    {
+      "id": "resolve-design",
+      "status": "in_progress",
+      "acceptance": "Host capabilities verified from primary SDK docs; deterministic shot/cache/checkpoint design with isolation and protocol tests."
+    },
+    {
+      "id": "gpu-acceptance",
+      "status": "external",
+      "acceptance": "CUDA machine, weights and licensed local held-out footage; numerical tolerances, >=3 alternating measurements, memory and quality regression checks."
+    },
+    {
+      "id": "release-acceptance",
+      "status": "external",
+      "acceptance": "Target platform bundle smoke test, asset/legal distribution requirements reviewed, no invented macOS CUDA support."
+    },
+    {
+      "id": "resolve-acceptance",
+      "status": "external",
+      "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
+    }
+  ],
+  "next_action": "No confirmed new local audit defect remains. Future work: targetGPU/quality/Windows/Resolve acceptance, deliberate typedebt triage and captured recovery manifest protocol; retain externalcriteria unverified.",
+  "last_verification_logs": "benchmark-results/audit-20261023/second-batch",
+  "product_complete": false,
+  "reviewed_source_identity": "f8f2b3cb83b5b503e4fbf2e5d625bcbcc86150ae1a5fd6048fbd8bccb94ceb12",
+  "local_increment": "Playback-only source/foreground/alpha frozen indexes; explicit refresh; unchanged native colour/geometry and single-loader ownership; full external acceptance remains pending",
+  "audit": {
+    "status": "locally_complete_external_acceptance_pending",
+    "goal_ids": [
+      "G001-audit-and-repair-the-current-corrido",
+      "G002-repair-independently-discovered-capt"
+    ],
+    "baseline_tests": 1481,
+    "batch_tests": 1497,
+    "batch_seconds": 125.414,
+    "python_files": 418,
+    "static_new": 0,
+    "open_review_issue": null,
+    "no_push": true,
+    "postgate_delta": "Onlycapture dialog+test;14Qt7.181s/0newstatic;independentAPPROVE+CLEAR",
+    "pending_issues": [],
+    "second_batch_in_review": [],
+    "active_owners": {},
+    "final_verification": "benchmark-results/audit-20261023/second-batch/verification-summary.json",
+    "goal_status": "Codex aggregate complete; OMX G001/G002/G003 all complete with strict quality gate",
+    "goal_evidence": "benchmark-results/audit-20261023/second-batch/goal-status.json"
+  },
+  "audit_remediation": {
+    "updated_utc": "2026-10-23T21:54:33.354932+00:00",
+    "status": "local_code_fixes_accepted_two_findings_open",
+    "completed_safe_branches": [
+      "ARCH-001",
+      "ARCH-002",
+      "SEC-001",
+      "SEC-002",
+      "INF-001",
+      "INF-002",
+      "INF-003",
+      "INF-004",
+      "INF-005",
+      "UI-001",
+      "UI-002",
+      "UI-003",
+      "UI-004",
+      "QA-001"
+    ],
+    "pending": {
+      "QA-002": "Open classified legacy static debt; no suppression/baseline refresh",
+      "REL-001": "NOT VERIFIED: actual GPU/weights/FFmpeg/provider/Windows/Resolve/distribution acceptance"
+    },
+    "evidence": "benchmark-results/audit-fixes",
+    "next_action": "Static debt stays open; run target acceptance only with actual prerequisites. Local code batch accepted; no product-complete claim.",
+    "verification": {
+      "status": "local_code_fixes_accepted_two_findings_open",
+      "tests": {
+        "count": 1568,
+        "seconds": 131.43,
+        "errors": 0,
+        "failures": 0,
+        "skips": 0,
+        "command_record": "accepted-tests.json"
+      },
+      "static": {
+        "files": 427,
+        "gate_success": true,
+        "static_clean": false,
+        "ruff_findings": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_findings": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "command_record": "accepted-static.json"
+      },
+      "source_identity": "734d804b0b07589f79e4809abc35833c5e1b47302ba87d2801db1f67388dd135",
+      "fixed_or_implemented": [
+        "ARCH-001",
+        "ARCH-002",
+        "SEC-001",
+        "SEC-002",
+        "INF-001",
+        "INF-002",
+        "INF-003",
+        "INF-004",
+        "INF-005",
+        "UI-001",
+        "UI-002",
+        "UI-003",
+        "UI-004",
+        "QA-001"
+      ],
+      "remaining": {
+        "QA-002": "Open classified legacy static debt; no suppression/baseline refresh",
+        "REL-001": "NOT VERIFIED: actual GPU/weights/FFmpeg/provider/Windows/Resolve/distribution acceptance"
+      },
+      "independent_review": {
+        "code": "APPROVE plus final three-file addendum",
+        "architecture": "CLEAR",
+        "report": "docs/audits/remediation-review.md"
+      },
+      "requested_model": "gpt-6.1-sol medium",
+      "observed_model": "gpt-6.1-sol (developer runtime metadata)",
+      "observed_leader_effort": "not exposed; not inferred",
+      "remote_publication": false,
+      "product_complete": false
     }
   },
-  "completed_review_issues": "239\u2013254 confirmed locally resolvable review issues; all resolved with focused/integrated/independent evidence.",
-  "remaining_dispositions": {
-    "HEALTH-STATIC-005": "Existing backlog; per-diagnostic risk triage retained; not static-clean.",
-    "HEALTH-FORMS-126": "Native mechanism unproven; LLDB target launch unavailable; interactive target acceptance NOT VERIFIED."
-  },
-  "external_product_acceptance": [
-    "CUDA/real pretrained weights and representative permitted held-out footage",
-    "Windows clean package and native target execution",
-    "Resolve host/SDK build, managed colour and viewer/export scenarios"
-  ],
-  "active_agents": {},
-  "running_processes": [],
-  "push": {
-    "status": "blocked_authentication",
-    "destination": "MikeHall1/CorridorKey2.0",
+  "product_performance_extension": {
+    "updated_utc": "2026-10-23T22:25:02.298714+00:00",
+    "session": "omx-1792790265529-l6n3bp",
+    "goal": "G004-execute-current-product-performance",
     "branch": "review/corridorkey-audit-20261023",
-    "approval": "User explicitly approved exact56c067f push after initial auto-review rejection.",
-    "evidence": "HTTPS could not read Username; gh absent; existing SSH agent has no identities. No remote branch created or alternative commit published."
-  },
-  "next_action": "Review scope complete with documented push-authentication exception. Authenticate Git, then publish the local branch; product acceptance remains separate.",
-  "acceptance_matrix": "docs/acceptance.md",
-  "report": "docs/review-2026-10-23.md",
-  "checkpoint_interval": 5,
-  "cycles_completed": 19
+    "base_commit": "7d808e61d8a42d77e30792ded6911aabca96a08f",
+    "cycles_completed": 4,
+    "completed_increments": [
+      "PERF-G native final alpha expansion/contraction/feather",
+      "PERF-J supported report-level policy screen",
+      "PERF-I recorded-report feasibility tab",
+      "PERF-OPT unused production review stack elision"
+    ],
+    "verification": {
+      "status": "batch1_locally_accepted",
+      "tests": {
+        "count": 1597,
+        "seconds": 135.731,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "command_record": "batch1-tests.json"
+      },
+      "static": {
+        "files": 433,
+        "gate_pass": true,
+        "static_clean": false,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_vs_legacy": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "new_vs_actual_accepted_audit": {
+          "ruff": 0,
+          "pyright": 0
+        },
+        "command_record": "batch1-static.json"
+      },
+      "source_identity": "b8b8635f7db424eba210f67b0915abd03d5984f2ef588c51b995874ccf290602",
+      "review": {
+        "code": "APPROVE G/J/I/OPT after repaired findings",
+        "architecture": "CLEAR",
+        "architecture_scope_identity": "ed8f60de7d02c976b87fe49d35e7abd8d3bfd4eaf849d992ed35bf18fafabf1c"
+      },
+      "accepted_increments": [
+        "PERF-G native final alpha expansion/contraction/feather",
+        "PERF-J supported report-level policy screen",
+        "PERF-I recorded-report feasibility tab",
+        "PERF-OPT unused production review stack elision"
+      ],
+      "resource_measurement": {
+        "returned_stack_payload_before": 7077888,
+        "after": 10,
+        "reduction_fraction": 0.3333333333333333,
+        "stack_calls_before": 15,
+        "preprocess_calls": 24,
+        "pixels": "exact model/foundation equality",
+        "timing": "INCONCLUSIVE",
+        "png_median_candidate_over_reference": 1.0688,
+        "mjpg_median_candidate_over_reference": 1.0139,
+        "timing_speedup_accepted": false,
+        "rss_gpu_memory_inference_fps": "NOT VERIFIED",
+        "raw": "reader-experiment-results.json"
+      },
+      "product_complete": false,
+      "publication": "pending git performer checkpoint"
+    },
+    "cleanup": "No module/dependency deletion justified; obsolete production-only review stack work removed via compatible optout. Public triple remains.",
+    "dependencies": "All current declarations retained with runtime/dynamic/packaging/transitive consumer evidence; optional groups unchanged.",
+    "publication": "pending git performer",
+    "external": "CUDA/weights/local representative footage/FFmpeg/SAM2/Windows/Resolve/distribution NOT VERIFIED",
+    "next_action": "Commit/push accepted coherent product state, then B range scheduler and H constrained recommendation integration; A/D/E/F remain local work. No competing supervisor."
+  }
 }

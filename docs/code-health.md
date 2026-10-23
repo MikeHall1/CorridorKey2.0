@@ -1,6 +1,6 @@
 # Continuous code health — milestone 9
 
-The current objective is [the repository review](review-objective.md). Read the task and issue ledgers at each resume. Keep pre-existing static findings distinct from runtime defects and new regressions; CPU checks do not establish GPU, quality or Resolve acceptance.
+The current audit and [product extension](product-improvements-brief.md) use the task and issue ledgers; the milestone review notes below are historical evidence. Read the current ledgers and checkpoint at each resume. Keep pre-existing static findings distinct from runtime defects and new regressions; CPU checks do not establish GPU, quality or Resolve acceptance.
 
 ## Reproducible local environment
 
@@ -27,6 +27,10 @@ Initial post-fix comparison: **523 Ruff findings, 826 Pyright errors/17 warnings
 
 Pylance editor diagnostics are **NOT VERIFIED**; CLI Pyright was actually run. At milestone9 JS/TS/native diagnostics were NOT APPLICABLE because no owned source/build manifest was found. Milestone27 adds native C++ OFX code with actual strict Clang compile/ABI/host-suite/address/undefined checks; CMake/MSVC/Windows/Resolve remain NOT VERIFIED. Real CUDA, model/foundation weights, permitted reference footage and Resolve SDK/host acceptance remain external.
 
+## Explicit setup and discovery failures
+
+MoGe native-SDPA setup errors propagate as model-load failures; the loader no longer silently continues with potentially partially modified attention blocks. Interactive clip/sequence enumeration likewise propagates scan errors instead of accepting a partial inventory. These are failure-reporting changes, not a new backend, precision mode or measured inference improvement. Real pretrained/GPU and target-platform validation remain required.
+
 ## Serialization contract
 
 `json_value` copies finite JSON primitives, dataclass **instances**, dict/list/tuple/set/frozenset and pathlib `Path` recursively. Unsupported objects/classes raise TypeError; nonfinite values/keys and stringified-key collisions raise ValueError. Supported dictionary keys remain stringified scalar/Path values; unsupported custom keys are rejected. Containers must be acyclic; cycles are unsupported and are not converted into references.
@@ -35,7 +39,7 @@ Homogeneous numeric/string sets keep natural ordering. Other supported sets use 
 
 ## Resume
 
-Establish actual baseline again at the next run start; do not assume retained tools or environment. Continue reference evaluation integration (streaming image sequences, source/reference provenance, inference exports), then remaining colour/recovery/desktop/packaging work. Keep the five-cycle cap. Milestone-8 historical baseline remains in the archived checkpoint and ignored reports; current results supersede its unavailable-tool status.
+At each run start inspect changed scope, the environment and applicable verification evidence. Reuse trustworthy passing baselines for unchanged state; establish a fresh full baseline when missing or invalidated. Select the next actionable task from the current ledger and checkpoint. Five implementation/verification cycles form a checkpoint interval, not a stopping limit; continue safe actionable work while execution resources permit. Milestone-8 historical baseline remains in the archived checkpoint and ignored reports; current results supersede its unavailable-tool status.
 
 
 Milestone10 continuation begins from a freshly executed184-test/105-file baseline with the same compatible environment, tools and reviewed static baseline. Streaming/media/benchmark adapter tests and strict no-new-diagnostic comparison continue each cycle; no baseline refresh, ignores, dependency changes or checker weakening were introduced. New findings are classified before fixes as HEALTH-STREAM-009 through HEALTH-MEDIA-016, including manifest typing/numeric bounds, test fixture canonical paths/writer API, actual FPS field binding, stable reference identities/status separation and native decoder errors. Exact final counts/logs are in the current checkpoint and `.ralph/runs/manual-check/`.
@@ -152,3 +156,72 @@ remain open with explicit dispositions, not suppressed. Exact source identities
 and raw results: benchmark-results/fresh-review-final-source-verification.json
 and fresh-review-final/. Final checkpoint publication is blocked by missing Git
 authentication. No model/GPU/quality/Windows/Resolve acceptance is inferred.
+
+
+Ten-feature extension first checkpoint: final1028CPU/no skips73.166s and335file
+compilation/import/requirements/VCS/dependency/whitespace gate PASS.519Ruff and
+684Pyright errors17warnings remain,0new fingerprints vs unchanged historical
+baseline AND actual final repository-review evidence. Initial1021/1022passing
+integration runs retained; later concrete report-growth/resume/stale-error
+findings256–258 were fixed before final acceptance. Independent review and
+main self-review identify final source hashes in
+benchmark-results/ext01-ext05-accepted/source-verification.json. Existing static005
+and nativeQt126 remain open. No checker, baseline, interpreter or dependency
+changes; no GPU/quality/host claims.
+
+
+Second readiness checkpoint:1047CPU/no skips77.537s;338Pythonfiles and full
+compile/import/requirements/VCS/dependency/whitespace/static gate PASS.519Ruff,
+684Pyright errors17warnings remain;0new vs unchangedbaseline AND actual previous
+acceptedcheckpoint. Independent review accepted259–264 and main self-review
+recorded final source identity in benchmark-results/ext01-guided-accepted/source-verification.json.
+No checker/baseline/dependency/environment changes or GPU/encoding/Windows/host
+claims. ScopedQSettings fixtures preserve user preferences; subprocess lifecycle
+fixtures include real cancel/overflow/deadline/kill/reap.
+
+
+Extension integration findings275–280 were classified before acceptance: source
+metadata union narrowing, confirmed-root-exit process sampling race, sandbox-only
+localhost benchmark failures, correction-report envelope overflow, failure cleanup
+warning visibility and nested preview snapshot aliasing. Root-exit handling keeps
+RSS unavailable and final birth-pinned descendant/process-group verification;
+PID reuse/denial/unknown discovery remain failures. Passing narrow tests do not
+establish native Windows or the unresolved native Qt mechanism126. No checker,
+baseline or dependency changes. Final evidence is recorded in the current
+checkpoint after complete applicable verification.
+
+Seventh extension checkpoint:1273CPU tests PASS83.370s/no skips;379Python files,
+full compilation/import/requirements/VCS/dependency/whitespace checks PASS.
+Static0new vs unchanged baseline AND actual prior6746f7c; existing519Ruff and
+684Pyright errors17warnings remain, not static-clean. Independent final review
+rehashes all379files against frozen mapping2c083cea9dd36d7d4718bca9c700873c0d8c82dd710e3ee3898ddf44e8ab377c.
+Findings297–305 resolved; existing005/nativeQt126 stayopen. Explicit dataclass
+instance/class and heterogeneous-set contracts inspected; no checker/baseline or
+environment changes. Evidence ext09-connected-final/, portable-projects-review.md.
+
+Eighth extension checkpoint:1323CPU tests PASS91.578s/no skips;386Python files,
+full compile/import/requirements/VCS/dependency/whitespace/static regression gate
+PASS.0new fingerprints vs unchanged baseline AND actual priorf387223; retained
+519Ruff/684Pyright errors17warnings, not static-clean. Independent scheduler,
+execution and actualQt reviews + main distinct review resolve306–314. Frozen
+mapping3f5fc42e94b3b4a42775e7fdea218c0767af6db6bab17781e1b644f858d65f53,
+logs ext06-connected-final/. Initial failedQt/static evidence retained.005/nativeQt126
+remain open; no checker/baseline/environment changes or GPU/quality/host claims.
+
+Ninth extension checkpoint:1348CPU tests PASS91.069s/no skips;390Python files,
+full compile/import/requirements/VCS/dependency/whitespace/static regression gate
+PASS.0new fingerprints vs unchanged baseline AND actual prior865529e; retained
+519Ruff/684Pyright errors17warnings, not static-clean. Independent overlaycore/
+editor/actualQt reviews + main distinct review accept; fixture315 resolved.
+Frozen mappingc7ef2ce7e733edfa9b5184f2450bb50275448ee6271b77218097a5b0c690de24,
+logs ext07-connected-final/. Initial failedfixture/static evidence retained.
+005/nativeQt126 remain open; no checker/baseline/environment changes or quality/
+GPU/host acceptance inferred.
+
+
+## Audit-remediation stable gate — 2026-10-24
+
+Final427-source-file regression gate PASS: syntax/imports/dependency consistency and0new fingerprints; raw511 Ruff findings,684 Pyright errors+17warnings remain.1568 CPU/Qt/native cases pass with no skips in131.430s. Baseline/tool versions unchanged; no global suppression or environment migration. `benchmark-results/audit-fixes/verification-summary.json` binds actual source identity/commands. QA-002 remains open; bounded triage and dormant vendored helper limits recorded in [remediation status](audits/remediation-status.md). Tracked Linux/Windows CPU CI is syntax/contract-checked locally, not yet hosted-run evidence.
+
+
+Product performance batch1:433-file complete gate PASS with0new Counter fingerprints vs legacy and actual accepted audit (511 Ruff,684 Pyright errors17warnings remain).1597tests PASS135.731s/no skips. No checker/baseline/environment changes. Evidence `benchmark-results/product-next/batch1-summary.json`.

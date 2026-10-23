@@ -104,9 +104,15 @@ def crop_model_chw_to_output(x: np.ndarray, model_native_hw, pad, output_hw):
     return resize_chw_lanczos(cropped, output_hw)
 
 
-def read_image_rgb(path: str | os.PathLike, *, info=None, alpha_mode="ignore", expected_channels: int | None = None):
+def read_image_rgb(path: str | os.PathLike, *, info=None, alpha_mode="ignore", expected_channels: int | None = None,
+                   encoded_bytes: bytes | None = None):
     path = str(path)
-    img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    if encoded_bytes is None:
+        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    else:
+        if type(encoded_bytes) is not bytes or not encoded_bytes:
+            raise ValueError('Captured encoded image must be nonempty immutable bytes.')
+        img = cv2.imdecode(np.frombuffer(encoded_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
     if img is None:
         raise FileNotFoundError(path)
     if expected_channels is not None:
@@ -202,7 +208,7 @@ def probe_video_meta(video_path: str, *, num_frames: int, shape_quantum: int,
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Could not open video: {video_path}")
-    native_fps = cap.get(cv2.CAP_PROP_FPS) or 24.0
+    native_fps = cap.get(cv2.CAP_PROP_FPS)
     w_native = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h_native = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     n_total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -270,15 +276,16 @@ def probe_video_meta(video_path: str, *, num_frames: int, shape_quantum: int,
 
 
 def _read_frame_dir_views(path: str, *, exr_linear: bool, precision_log=None, alpha_mode="ignore", witness=None,
-                          source_colour_profile="legacy"):
+                          source_colour_profile="legacy", encoded_bytes: bytes | None = None):
     if source_colour_profile != "legacy":
         from .colour_contract import describe_source_colour
         describe_source_colour(source_colour_profile, scene_linear=exr_linear)
         if witness is not None:
             raise ValueError("Source witness supports only the legacy source colour profile")
     info = {}
+    decode_options = {} if encoded_bytes is None else {"encoded_bytes": encoded_bytes}
     raw = read_image_rgb(path, info=info, alpha_mode=alpha_mode,
-                         expected_channels=3 if witness is not None else None)
+                         expected_channels=3 if witness is not None else None, **decode_options)
     if precision_log is not None and info["decoded_dtype"] not in precision_log:
         precision_log.append(info["decoded_dtype"])
     if exr_linear:
@@ -381,6 +388,8 @@ def _spatial_model_views(linear, review_linear, meta, *, need_model):
 def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: bool):
     if frame_bgr.dtype != np.uint8:
         raise ValueError("legacy OpenCV video path requires uint8 decoded RGB; use a validated high-bit/linear sequence")
+    if frame_bgr.ndim != 3 or frame_bgr.shape[2] != 3 or tuple(frame_bgr.shape[:2]) != tuple(meta["native_hw"]):
+        raise ValueError("Decoded video geometry differs from the probed native RGB geometry")
     h_out, w_out = meta["shape_hw"]
     h_model, w_model = meta["model_native_hw"]
     frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
@@ -451,9 +460,10 @@ def _seek_video(capture: cv2.VideoCapture, index: int, source: str) -> None:
 
 
 class SequentialVideoWindowReader:
-    def __init__(self, video_path: str, meta: dict):
+    def __init__(self, video_path: str, meta: dict, *, include_review: bool = True):
         self.video_path = video_path
         self.meta = meta
+        self.include_review = include_review
         self.cap = cv2.VideoCapture(video_path)
         if not self.cap.isOpened():
             self.cap.release()
@@ -485,7 +495,7 @@ class SequentialVideoWindowReader:
         self._read_until(t1, retain_from=t0)
         model = torch.stack([self.cache[t][0] for t in range(t0, t1)])
         foundation = torch.stack([self.cache[t][1] for t in range(t0, t1)])
-        review = torch.stack([self.cache[t][2] for t in range(t0, t1)])
+        review = torch.stack([self.cache[t][2] for t in range(t0, t1)]) if self.include_review else None
         for old_t in [k for k in self.cache if k < t0]:
             del self.cache[old_t]
         return model, foundation, review
@@ -539,9 +549,10 @@ class DraftSourceReader:
 
 
 class SequentialFrameDirWindowReader:
-    def __init__(self, frame_dir: str, meta: dict):
+    def __init__(self, frame_dir: str, meta: dict, *, include_review: bool = True):
         self.frame_dir = frame_dir
         self.meta = meta
+        self.include_review = include_review
         self.paths = meta["frame_paths"]
         self.next_t = 0
         self.cache: dict[int, tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = {}
@@ -562,7 +573,7 @@ class SequentialFrameDirWindowReader:
         self._read_until(t1, retain_from=t0)
         model = torch.stack([self.cache[t][0] for t in range(t0, t1)])
         foundation = torch.stack([self.cache[t][1] for t in range(t0, t1)])
-        review = torch.stack([self.cache[t][2] for t in range(t0, t1)])
+        review = torch.stack([self.cache[t][2] for t in range(t0, t1)]) if self.include_review else None
         for old_t in [k for k in self.cache if k < t0]:
             del self.cache[old_t]
         return model, foundation, review

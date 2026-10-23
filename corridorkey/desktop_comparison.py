@@ -27,14 +27,14 @@ class RenderView:
     def end(self) -> int:
         return self.start + self.count
 
-    def options(self, mode: str, source_index: int, background=None) -> dict[str, Any]:
+    def options(self, mode: str, source_index: int, background=None, *, background_image=None) -> dict[str, Any]:
         if type(source_index) is not int or not self.start <= source_index < self.end:
             raise ValueError(f'Source frame must be in [{self.start}, {self.end}).')
         if mode == 'Source':
             return {'path': self.source, 'index': source_index, 'linear': self.source_linear,
                     'alpha_mode': self.source_alpha, 'source_colour_profile': self.source_colour_profile, 'expected_hw': (self.height, self.width)}
         kind = 'alpha' if mode == 'Alpha' else 'fg'
-        if mode not in {'Alpha', 'Foreground', 'Checker composite', 'Solid composite'}:
+        if mode not in {'Alpha', 'Foreground', 'Checker composite', 'Solid composite', 'Photo composite'}:
             raise ValueError('Unknown comparison view.')
         outputs = dict(self.outputs)
         if kind not in outputs:
@@ -47,6 +47,11 @@ class RenderView:
                 raise ValueError('Compositing requires both alpha and foreground exports.')
             if mode == 'Solid composite' and background is None:
                 raise ValueError('Choose a background colour first.')
+            if mode == 'Photo composite':
+                from .preview_background import PreparedBackground
+                if not isinstance(background_image, PreparedBackground):
+                    raise ValueError('Prepare an explicitly profiled background image first.')
+                options['background_image'] = background_image
             options.update(alpha_path=outputs['alpha'], background=background if mode == 'Solid composite' else None)
         return options
 

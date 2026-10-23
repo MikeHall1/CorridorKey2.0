@@ -127,47 +127,44 @@ def resolve_image_seq_dirs(dir_path):
         return None, None
     input_dir = None
     alphahint_dir = None
-    try:
-        for item in dir_path.iterdir():
-            if item.is_dir():
-                name_lower = item.name.lower()
-                if name_lower == "input":
-                    input_dir = item
-                elif name_lower == "alphahint":
-                    alphahint_dir = item
-    except Exception:
-        pass
+    for item in dir_path.iterdir():
+        if item.is_dir():
+            name_lower = item.name.lower()
+            if name_lower == "input":
+                input_dir = item
+            elif name_lower == "alphahint":
+                alphahint_dir = item
     return input_dir, alphahint_dir
 
 def check_image_sequence_dir(dir_path):
     input_dir, alphahint_dir = resolve_image_seq_dirs(dir_path)
     if input_dir:
         image_extensions = {'.png', '.jpg', '.jpeg', '.exr', '.tiff', '.tif', '.webp', '.dpx'}
-        try:
-            for file in input_dir.iterdir():
-                if file.is_file() and file.suffix.lower() in image_extensions:
-                    return input_dir, alphahint_dir
-        except Exception:
-            pass
+        has_images = False
+        for file in input_dir.iterdir():
+            if file.is_file() and file.suffix.lower() in image_extensions:
+                has_images = True
+        if has_images:
+            return input_dir, alphahint_dir
     return None, None
 
 def get_batch_clips(dir_path):
     dir_path = Path(dir_path)
+    if not dir_path.is_dir():
+        return []
     video_extensions = {'.mp4', '.mov', '.avi', '.mkv', '.webm'}
     
     clips = []
-    try:
-        # Find video files and valid image sequence folders directly in the directory
-        for item in sorted(dir_path.iterdir()):
-            if item.is_file() and item.suffix.lower() in video_extensions:
-                if "_alphahint" not in item.name.lower():
-                    clips.append(item)
-            elif item.is_dir():
-                seq_input_dir, _ = check_image_sequence_dir(item)
-                if seq_input_dir:
-                    clips.append(item)
-    except Exception as e:
-        print(f"{Colors.YELLOW}[WARNING] Error scanning directory: {e}{Colors.RESET}")
+    # Find video files and valid image sequence folders directly in the directory.
+    # An interrupted inventory must not silently omit clips or companion hints.
+    for item in sorted(dir_path.iterdir()):
+        if item.is_file() and item.suffix.lower() in video_extensions:
+            if "_alphahint" not in item.name.lower():
+                clips.append(item)
+        elif item.is_dir():
+            seq_input_dir, _ = check_image_sequence_dir(item)
+            if seq_input_dir:
+                clips.append(item)
         
     return clips
 

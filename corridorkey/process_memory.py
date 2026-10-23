@@ -24,7 +24,9 @@ MAX_STAT_BYTES = 65536
 
 
 class MeasurementError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, reason_code: str = 'measurement_unavailable'):
+        super().__init__(message)
+        self.reason_code = reason_code
 
 
 @dataclass(frozen=True)
@@ -285,17 +287,19 @@ class ProcessTreeMemory:
         self.depths = {}
         self.root_identity = None
         self.initial_error = None
+        self.initial_reason_code = 'measurement_unavailable'
         self.lock = threading.Lock()
         try:
             self.provider = _native(max_nodes) if provider is None else provider
             info = self.provider.read(root_pid)
             if info is None:
-                raise MeasurementError('Root process has exited')
+                raise MeasurementError('Root process has exited', reason_code='root_exited')
             self.root_identity = _valid(info, root_pid).birth_identity
             self.known[root_pid] = self.root_identity
             self.depths[root_pid] = 0
         except (OSError, ValueError, TypeError, AttributeError, OverflowError, MeasurementError) as exc:
             self.initial_error = f'{type(exc).__name__}: {exc}'[:256]
+            self.initial_reason_code = getattr(exc, 'reason_code', 'measurement_unavailable')
 
     def sample(self, *, check=None) -> dict[str, Any]:
         with self.lock:
@@ -305,6 +309,7 @@ class ProcessTreeMemory:
         started = self.clock()
         records = {}
         reason = None
+        reason_code = None
 
         def tick():
             if check is not None:
@@ -321,7 +326,7 @@ class ProcessTreeMemory:
         try:
             tick()
             if self.initial_error is not None:
-                raise MeasurementError(self.initial_error)
+                raise MeasurementError(self.initial_error, reason_code=self.initial_reason_code)
             self.provider.begin(tick)
             tick()
             # Known descendants remain owned across reparenting, until exit/reuse.
@@ -330,7 +335,8 @@ class ProcessTreeMemory:
                 info = read(pid)
                 if info is None or info.birth_identity != identity:
                     if pid == self.root_pid:
-                        raise MeasurementError('Root process exited or its PID was reused')
+                        raise MeasurementError('Root process exited' if info is None else 'Root process identity changed',
+                                               reason_code='root_exited' if info is None else 'root_identity_changed')
                     del self.known[pid]
                     self.depths.pop(pid, None)
                 else:
@@ -370,7 +376,8 @@ class ProcessTreeMemory:
                 latest = read(pid)
                 if latest is None or latest.birth_identity != prior.birth_identity:
                     if pid == self.root_pid:
-                        raise MeasurementError('Root identity changed before sample completion')
+                        raise MeasurementError('Root process exited before sample completion' if latest is None else 'Root identity changed before sample completion',
+                                               reason_code='root_exited' if latest is None else 'root_identity_changed')
                     records.pop(pid)
                     self.known.pop(pid, None)
                     self.depths.pop(pid, None)
@@ -381,12 +388,14 @@ class ProcessTreeMemory:
             raise
         except (OSError, ValueError, TypeError, AttributeError, OverflowError, MeasurementError) as exc:
             reason = f'{type(exc).__name__}: {exc}'[:256]
+            reason_code = getattr(exc, 'reason_code', 'measurement_unavailable')
         observed = sum(item.rss_bytes for item in records.values())
         return {'status': 'available' if reason is None else 'unavailable',
                 'current_rss_bytes': observed if reason is None else None,
                 'observed_rss_bytes': observed, 'process_count': len(records),
                 'sampled_monotonic': started, 'duration_seconds': max(0.0, self.clock() - started),
                 'provider': str(getattr(self.provider, 'name', 'injected'))[:128], 'reason': reason,
+                'reason_code': reason_code,
                 'processes': [{'pid': i.pid, 'birth_identity': i.birth_identity,
                                'parent_pid': i.parent_pid, 'rss_bytes': i.rss_bytes}
                               for i in sorted(records.values(), key=lambda i: i.pid)],

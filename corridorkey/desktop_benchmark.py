@@ -10,6 +10,7 @@ from pathlib import Path
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QDialog,
+    QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
@@ -24,6 +25,8 @@ from PySide6.QtWidgets import (
 from .benchmark_report import export_report, read_report, report_view
 from .benchmark_task import BenchmarkTask
 from .desktop_evaluation_dossier import EvaluationDossierPanel
+from .feasibility import project as project_feasibility
+from .feasibility import view as feasibility_view
 
 
 class BenchmarkPanel(QDialog):
@@ -39,8 +42,9 @@ class BenchmarkPanel(QDialog):
         self.waiting = False
         self.revision = -1
         self.report_shown = False
+        self.feasibility_pending = False
         self.inspection: threading.Thread | None = None
-        self.inspected: queue.Queue[tuple[str, str, str | None, str]] = queue.Queue(maxsize=1)
+        self.inspected: queue.Queue[tuple[str, str, str | None, str, str]] = queue.Queue(maxsize=1)
         self.dossier_panel = EvaluationDossierPanel(self)
         layout = QVBoxLayout(self)
         note = QLabel('Runs the selected benchmark protocol in an owned process. Paired manifests alternate matched baseline/candidate measurements. Render work must finish first; the resident render worker stops before benchmarking. CPU test times are not inference FPS. Profiles, quality references and cold/warm policy come from the selected manifest. Baseline inspection does not imply a controlled comparison.')
@@ -73,6 +77,31 @@ class BenchmarkPanel(QDialog):
                               (self.logs, 'Bounded process log tail'), (self.baseline, 'Baseline report (independent)')]:
             widget.setReadOnly(True)
             tabs.addTab(widget, title)
+        feasibility = QVBoxLayout()
+        target_row = QHBoxLayout()
+        self.target_fps = QDoubleSpinBox()
+        self.target_fps.setRange(0.01, 1000)
+        self.target_fps.setDecimals(2)
+        self.target_fps.setValue(24)
+        self.target_fps.setSuffix(' FPS')
+        self.target_fps.setToolTip('Analysis target only; changes no render settings.')
+        target_row.addWidget(QLabel('Target / frame budget'))
+        target_row.addWidget(self.target_fps)
+        self.frame_budget = QLabel('41.667 ms/frame')
+        target_row.addWidget(self.frame_budget)
+        self.target_fps.valueChanged.connect(lambda fps: self.frame_budget.setText(f'{1000 / fps:.3f} ms/frame'))
+        update = QPushButton('Update feasibility from selected report')
+        update.clicked.connect(self.update_feasibility)
+        target_row.addWidget(update)
+        feasibility.addLayout(target_row)
+        self.feasibility_view = QPlainTextEdit()
+        self.feasibility_view.setReadOnly(True)
+        self.feasibility_view.setPlaceholderText('Inspect an existing inference report. Missing stages, playback and instrumentation overhead remain NOT VERIFIED.')
+        feasibility.addWidget(self.feasibility_view)
+        from PySide6.QtWidgets import QWidget
+        page = QWidget()
+        page.setLayout(feasibility)
+        tabs.addTab(page, 'Feasibility')
         layout.addWidget(tabs)
         self.logs.setPlaceholderText('Actual CLI output only; no invented stage or progress values.')
         self.baseline.setPlaceholderText('Select an existing report. Raw conditions/results remain separate; no speedup is inferred.')
@@ -118,6 +147,8 @@ class BenchmarkPanel(QDialog):
         self.task = self.factory(manifest, parent)
         self.report.setText(str(self.task.report_path))
         self.report_view.clear()
+        self.feasibility_view.clear()
+        self.feasibility_pending = True
         self.logs.clear()
 
     def inspect(self, path: Path, role: str = 'report'):
@@ -128,17 +159,35 @@ class BenchmarkPanel(QDialog):
             self.status.setText('Wait for the active benchmark before replacing/exporting its report view.')
             return
         self.status.setText('Reading local report…')
-        self.inspection = threading.Thread(target=self._inspect, args=(path, role), daemon=True)
+        self.inspection = threading.Thread(target=self._inspect, args=(path, role, self.target_fps.value()), daemon=True)
         self.inspection.start()
 
-    def _inspect(self, path: Path, role: str):
+    def update_feasibility(self):
+        if not self.report.text().strip():
+            self.status.setText('Inspect or run a report first.')
+            return
+        self.inspect(Path(self.report.text()), 'feasibility')
+
+    def _inspect(self, path: Path, role: str, target_fps: float):
         try:
-            data, _ = read_report(path)
+            import hashlib
+
+            data, raw = read_report(path, regular_file=True)
             view, error = report_view(data), None
+            feasibility = ''
+            if role != 'baseline':
+                try:
+                    projection = project_feasibility(data, target_fps)
+                    projection['source'] = {'path': str(path.absolute()), 'sha256': hashlib.sha256(raw).hexdigest(), 'bytes': len(raw)}
+                    feasibility = feasibility_view(projection)
+                except Exception as exc:
+                    logging.getLogger(__name__).exception('Optional feasibility projection failed')
+                    feasibility = f'NOT VERIFIED: feasibility projection failed: {type(exc).__name__}: {exc}'
+
         except Exception as exc:
             logging.getLogger(__name__).exception('Benchmark report inspection failed')
-            view, error = '', f'{type(exc).__name__}: {exc}'
-        self.inspected.put((role, str(path), error, view))
+            view, error, feasibility = '', f'{type(exc).__name__}: {exc}', ''
+        self.inspected.put((role, str(path), error, view, feasibility))
 
     def choose_report(self):
         path, _ = QFileDialog.getOpenFileName(self, 'Inspect actual benchmark report', '', 'JSON (*.json)')
@@ -171,7 +220,7 @@ class BenchmarkPanel(QDialog):
             logging.getLogger(__name__).exception('Benchmark report export failed')
             error = f'{type(exc).__name__}: {exc}'
         finally:
-            self.inspected.put(('export', str(destination), error, ''))
+            self.inspected.put(('export', str(destination), error, '', ''))
 
     def refresh(self):
         self.dossier_panel.poll()
@@ -184,8 +233,12 @@ class BenchmarkPanel(QDialog):
                 if snapshot['report_available'] and not self.report_shown:
                     self.report_view.setPlainText(snapshot['report_view'])
                     self.report_shown = True
+        if (self.feasibility_pending and self.task is not None and self.task.done.is_set()
+                and self.report_shown and not self.io_busy):
+            self.feasibility_pending = False
+            self.update_feasibility()
         try:
-            role, path, error, view = self.inspected.get_nowait()
+            role, path, error, view, feasibility = self.inspected.get_nowait()
         except queue.Empty:
             return
         if error is not None:
@@ -193,9 +246,13 @@ class BenchmarkPanel(QDialog):
         elif role == 'baseline':
             self.baseline.setPlainText(path + '\n' + view)
             self.status.setText('Baseline loaded independently; inspect conditions before comparing.')
+        elif role == 'feasibility':
+            self.feasibility_view.setPlainText(feasibility)
+            self.status.setText('Feasibility observations loaded; sustained playback remains NOT VERIFIED.')
         elif role == 'export':
             self.status.setText('Exact report exported: ' + path)
         else:
             self.report.setText(path)
             self.report_view.setPlainText(view)
+            self.feasibility_view.setPlainText(feasibility)
             self.status.setText('Actual local report loaded: ' + path)

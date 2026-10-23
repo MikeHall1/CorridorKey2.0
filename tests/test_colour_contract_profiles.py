@@ -165,6 +165,7 @@ class ColourProfileDecodeTests(unittest.TestCase):
             window.close()
         chunks = list(iter_frame_dir_chunks(str(self.root), meta, chunk_size=1, need_model=True))
         assert model is not None
+        assert window_review is not None
         assert chunks[0][1] is not None
         self.assertTrue(torch.equal(window_model[0], model))
         self.assertTrue(torch.equal(chunks[0][1][0], model))
