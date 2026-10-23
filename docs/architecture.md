@@ -217,3 +217,18 @@ the render worker's4MiB protocol or GPU ownership. Captured source, exact native
 RGB, ordered prompts and provider provenance bind accepted schema4 Keep masks.
 The service admits one active operation, preserves cancellation until retirement
 and retains child ownership until verified shutdown. See [subject clicks](subject-clicks.md).
+
+
+Portable project schema2 is separate from legacy desktop schema1 and sealed
+queue-history transfer. Typed dependency groups retain complete source ordering
+and offsets, immutable file pins/hashes and original job wire. Authored/tracked/
+guidance asset relocation reuses the shared correction inventory and verifies
+unchanged semantic document identity. Metadata preview precedes explicit bounded
+verification/collection. Completion authority is an exclusive zero-byte marker
+created after metadata sync/final fences; loader and Apply pin both marker and
+manifest. Correction relocation publishes from a private pending file in a fresh
+owned scratch directory. A single background UI owner formats bounded paged
+summaries and retains late committed results without applying them. Main applies
+only a strictly validated acknowledged snapshot, preserving queue/model owners.
+See [portable projects](portable-projects.md); cross-path-flavour support remains
+unsupported and model runtime compatibility remains unverified.

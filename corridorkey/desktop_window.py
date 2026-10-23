@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import queue
 import uuid
+from dataclasses import asdict
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -44,18 +45,25 @@ from .desktop_diagnostic_ranges import DiagnosticRangesPanel
 from .desktop_loader import PreviewLoader
 from .desktop_ofx import OfxCachePanel
 from .desktop_playback import PlaybackControls
+from .desktop_portable_project import PortableProjectDialog
 from .desktop_preview import PreviewPair
 from .desktop_queue import QueuePanel
 from .desktop_readiness import ReadinessPanel
 from .desktop_recovery import RecoveryPanel
 from .desktop_resources import ResourcesPanel
 from .desktop_settings import SettingsPanel
-from .desktop_state import load_project, pretty_settings, save_project, settings_job
+from .desktop_state import (
+    DESKTOP_MAX_PREVIEW_FRAME,
+    load_project,
+    pretty_settings,
+    save_project,
+    settings_job,
+)
 from .desktop_viewport import PreviewViewport, ViewportState
 from .preview_sequence import PreparedSequence
 from .session import JobRequest
 from .worker_client import WorkerClient
-from .worker_protocol import decode_frame, job_to_wire, request_frame
+from .worker_protocol import decode_frame, job_from_wire, job_to_wire, request_frame
 
 TERMINAL = {'result', 'failed', 'cancelled', 'rejected', 'lost'}
 
@@ -83,6 +91,8 @@ class DesktopWindow(QMainWindow):
         self.reference_mode = ''
         self.reference_description = ''
         self.editor: CorrectionDialog | None = None
+        self.portable_project: PortableProjectDialog | None = None
+        self.portable_application_records: list[dict[str, Any]] = []
         self.pending_queue_root: Path | None = None
         self.asset_selection: AssetSelection | None = None
         self.resource_request: str | None = None
@@ -143,8 +153,13 @@ class DesktopWindow(QMainWindow):
         self._button('Readiness / first render…', self.readiness.show, toolbar)
         self._button('Open video…', self.choose_video, toolbar)
         self._button('Open frames…', self.choose_frames, toolbar)
-        self._button('Open project…', self.choose_project, toolbar)
-        self._button('Save project…', self.save_project, toolbar)
+        projects = QPushButton('Projects…')
+        project_menu = QMenu(projects)
+        project_menu.addAction('Open desktop snapshot…', self.choose_project)
+        project_menu.addAction('Save desktop snapshot…', self.save_project)
+        project_menu.addAction('Portable projects…', self.open_portable_project)
+        projects.setMenu(project_menu)
+        toolbar.addWidget(projects)
         self._button('Developer benchmarks…', self.benchmark.show, toolbar)
         self._button('Queue history…', self.queue_panel.show, toolbar)
         self._button('Recovery…', self.recovery.show, toolbar)
@@ -244,7 +259,7 @@ class DesktopWindow(QMainWindow):
         self.view.addItems(['Source', 'Alpha', 'Foreground', 'Checker composite', 'Solid composite'])
         viewer_bar.addWidget(self.view)
         self.frame = QSpinBox()
-        self.frame.setRange(0, 1000000000)
+        self.frame.setRange(0, DESKTOP_MAX_PREVIEW_FRAME)
         self.frame_label = QLabel('Frame (zero-based)')
         viewer_bar.addWidget(self.frame_label)
         viewer_bar.addWidget(self.frame)
@@ -899,6 +914,83 @@ class DesktopWindow(QMainWindow):
         except (ValueError, OSError, TypeError) as exc:
             self.error(exc)
 
+    def open_portable_project(self):
+        if self.closing:
+            return
+        if self.editor is not None and self.editor.canvas.dirty:
+            self.error('Commit or Clear the correction draft before preparing a portable project.')
+            return
+        if self.portable_project is not None:
+            if self.portable_project.isVisible() or not self.portable_project.shutdown():
+                self.portable_project.show()
+                self.portable_project.raise_()
+                return
+            self.retain_portable_application(self.portable_project)
+            self.portable_project.deleteLater()
+            self.portable_project = None
+        try:
+            job = self.job()
+        except (ValueError, OSError, TypeError):
+            job = None  # Opening a package does not require a filled source form.
+        self.portable_project = PortableProjectDialog(job, self, frame=self.frame.value(), selection=self.asset_selection)
+        self.portable_project.loaded.connect(self.apply_portable_project)
+        if self.portable_application_records:
+            lines = ['Recent committed Apply snapshots retained during this workspace session:']
+            for record in self.portable_application_records:
+                report = record['report']
+                lines.append(f"Frame {report.get('preview_frame')} · sent {report.get('emitted')} · accepted {report.get('accepted')} · correction snapshot {report.get('resolved_correction_snapshot') or 'none'}")
+            self.portable_project.details.setPlainText('\n'.join(lines))
+        self.portable_project.show()
+
+    def retain_portable_application(self, dialog: PortableProjectDialog):
+        job, report = dialog.last_resolved_job, dialog.application_report
+        if job is None or not report:
+            return
+        # UI reports are bounded at64KiB; keep detached primitive records and
+        # immutable jobs, never Qt widgets. Files remain owned in explicit scratch.
+        detached = json.loads(json.dumps(report, allow_nan=False))
+        key = (detached.get('project_identity'), detached.get('resolved_correction_snapshot'),
+               detached.get('preview_frame'), detached.get('output_override'))
+        self.portable_application_records = [record for record in self.portable_application_records
+                                             if record['key'] != key]
+        self.portable_application_records.append({'key': key, 'job': job, 'report': detached})
+        self.portable_application_records = self.portable_application_records[-8:]
+
+    def apply_portable_project(self, job, frame, output_override, model_report):
+        def acknowledge(accepted, message):
+            if self.portable_project is not None:
+                self.portable_project.acknowledge_application(accepted, message)
+        if self.closing:
+            acknowledge(False, 'Workspace is closing; project was not applied to the draft.')
+            return
+        if self.editor is not None and self.editor.canvas.dirty:
+            acknowledge(False, 'Correction draft changed; commit or clear it, then apply the verified project again.')
+            self.error('Commit or Clear the correction draft before applying another project.')
+            return
+        if (not isinstance(job, JobRequest) or type(frame) is not int or frame < 0
+                or not isinstance(output_override, str) or not output_override or not isinstance(model_report, dict)):
+            acknowledge(False, 'Project application was rejected before changing draft settings.')
+            self.error('Portable project application requires a verified job and explicit output destination.')
+            return
+        if frame > self.frame.maximum():
+            message = f'Preview frame {frame} exceeds the desktop limit {self.frame.maximum()}; the recorded frame was preserved and no draft settings changed.'
+            acknowledge(False, message)
+            self.error(message)
+            return
+        try:
+            model_description = json.dumps(model_report, indent=2, allow_nan=False)
+            if len(model_description.encode('utf-8')) > 64 * 1024:
+                raise ValueError('Portable project application summary exceeds the 64 KiB display bound.')
+            verified_job = job_from_wire(asdict(job))
+        except (ValueError, TypeError) as exc:
+            acknowledge(False, 'Project application was rejected before changing draft settings: ' + str(exc))
+            self.error(exc)
+            return
+        self.populate_job(verified_job, frame=frame, output_parent=output_override)
+        self.statusBar().showMessage('Portable project settings loaded; no job submitted. Review referenced model assets in Local assets before rendering.')
+        self.statusBar().setToolTip(model_description)
+        acknowledge(True, 'Portable project settings loaded with explicit output/scratch; no job or model switch started.')
+
     def populate_job(self, job: JobRequest, *, frame=0, output_parent: str | None = None):
         if self.moving_reference is not None:
             self.clear_reference()
@@ -1259,8 +1351,11 @@ class DesktopWindow(QMainWindow):
         self.assets.close()
         if self.editor is not None:
             self.editor.close()
+        portable_done = self.portable_project is None or self.portable_project.shutdown()
+        if portable_done and self.portable_project is not None:
+            self.retain_portable_application(self.portable_project)
         editor_done = self.editor is None or self.editor.service.done.is_set()
-        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and not self.loader.thread.is_alive():
+        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and not self.loader.thread.is_alive():
             self.timer.stop()
             event.accept()
         else:

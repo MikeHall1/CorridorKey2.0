@@ -158,15 +158,28 @@
     {
       "id": "EXT-09",
       "title": "Safe project portability",
-      "status": "ready",
+      "status": "in_progress",
       "dependencies": [
         "EXT-01"
       ],
       "acceptance": "Versioned manifests/inventory, deliberate relink and optional budgeted selected collection, collision/traversal/source identity checks; preserve legacy projects.",
       "evidence": [
-        "docs/product-improvements.md"
+        "docs/product-improvements.md",
+        "corridorkey/desktop_state.py",
+        "tests/test_desktop_state.py",
+        "benchmark-results/ext09-legacy-protection.txt",
+        "corridorkey/portable_project.py",
+        "corridorkey/project_collection.py",
+        "corridorkey/desktop_portable_project.py",
+        "tests/test_portable_project.py",
+        "tests/test_project_collection.py",
+        "tests/test_desktop_portable_project.py",
+        "tests/test_desktop_window_portable.py",
+        "docs/portable-projects.md",
+        "docs/portable-projects-review.md",
+        "benchmark-results/ext09-connected-final/source-verification.json"
       ],
-      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+      "next_action": "Native-flavour portable workflow locally verified. Foreign path-flavour loading/relinking remains unsupported and locally actionable; native Windows/model/runtime acceptance NOT VERIFIED. Continue EXT06 progressive preview scheduler integration."
     },
     {
       "id": "EXT-10",
@@ -879,7 +892,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Capture failed/cancelled engine record stage summaries; finish remaining playback controls and tracked corrections; all external acceptance stays unverified.",
+  "next_action": "Implement connected explicitly controlled progressive preview scheduling with bounded resources, captured settings and stale-result fences.",
   "objective_source": "docs/product-improvements-brief.md",
   "current_checkpoint_evidence": "benchmark-results/ext01-guided-accepted/source-verification.json"
 }

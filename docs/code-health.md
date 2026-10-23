@@ -185,3 +185,12 @@ PID reuse/denial/unknown discovery remain failures. Passing narrow tests do not
 establish native Windows or the unresolved native Qt mechanism126. No checker,
 baseline or dependency changes. Final evidence is recorded in the current
 checkpoint after complete applicable verification.
+
+Seventh extension checkpoint:1273CPU tests PASS83.370s/no skips;379Python files,
+full compilation/import/requirements/VCS/dependency/whitespace checks PASS.
+Static0new vs unchanged baseline AND actual prior6746f7c; existing519Ruff and
+684Pyright errors17warnings remain, not static-clean. Independent final review
+rehashes all379files against frozen mapping2c083cea9dd36d7d4718bca9c700873c0d8c82dd710e3ee3898ddf44e8ab377c.
+Findings297–305 resolved; existing005/nativeQt126 stayopen. Explicit dataclass
+instance/class and heterogeneous-set contracts inspected; no checker/baseline or
+environment changes. Evidence ext09-connected-final/, portable-projects-review.md.

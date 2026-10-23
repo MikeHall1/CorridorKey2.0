@@ -6270,6 +6270,204 @@
         "20process/editor tests PASS2.580s -Werror; independently20PASS2.569s; Ruff/Pyright0. Complete frozen gate pending.",
         "Final frozen1232CPU PASS83.428s/no skips;372file fullgate0new vs baseline AND actual662707d. Source mapping 91a14a89130bb237d9002551b6b085061ad464a72e11ca8fadb0681853a17a28."
       ]
+    },
+    {
+      "id": "HEALTH-PROJECT-297",
+      "component": "Legacy desktop project source protection",
+      "classification": "Independent existing-contract audit confirmed by focused preservation regression",
+      "status": "resolved",
+      "severity": "high",
+      "priority": "P1",
+      "problem": "Saving a legacy desktop project onto a correction asset path can overwrite the artist raster, tracked constraint or guidance reference.",
+      "root_cause": "Save protection included correction manifest but omitted shared asset inventory and existing hardlink aliases.",
+      "proposed_action": "Read bounded correction metadata without media decoding/hashing, protect document.asset_paths plus observed existing samefile aliases before atomic project write.",
+      "acceptance": "Saving onto artist asset or hardlink alias refuses; originalbytes unchanged; normal legacy settings roundtrip remains.",
+      "owner": "root; readiness_review",
+      "evidence": [
+        "tests/test_desktop_state.py",
+        "benchmark-results/ext09-legacy-protection.txt"
+      ],
+      "verification": [
+        "6focusedlegacyproject tests PASS; touchedfilesPyright0; localimportorderfindingfixed; finalportablebatchgatepending.",
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-298",
+      "component": "Portable project integration",
+      "classification": "Independent source review and actual admission fixture reproduction before acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Malformed embedded settings in a JobRequest instance could partially alter desktop fields before validation failed.",
+      "root_cause": "Application validated only dataclass instance and report before populate_job mutated fields.",
+      "proposed_action": "Validate original strict wire/settings and bounded finite application summary before any draft mutation; acknowledge success/refusal explicitly.",
+      "acceptance": "Original draft/data remain unchanged on invalid admission; explicit destinations and requested settings retain validated meaning.",
+      "owner": "root; feature_audit; readiness_review",
+      "evidence": [
+        "tests/test_portable_project.py",
+        "tests/test_desktop_window_portable.py"
+      ],
+      "verification": [
+        "Core21focused PASS0.462s -Werror, independently21PASS0.403s, static0; mainGUI transaction regressions authored/static0 but execution and fullbatch gate pending.",
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-299",
+      "component": "Portable project integration",
+      "classification": "Independent source review and actual admission fixture reproduction before acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Output and scratch can resolve to the same directory through dotdot spellings despite an explicit separation check.",
+      "root_cause": "Core computed normalized paths but discarded them and compared raw Path objects.",
+      "proposed_action": "Retain normalized paths, NFC/casefold/native-inode overlap admission, and use those exact paths for job/materialization.",
+      "acceptance": "Original draft/data remain unchanged on invalid admission; explicit destinations and requested settings retain validated meaning.",
+      "owner": "root; feature_audit; readiness_review",
+      "evidence": [
+        "tests/test_portable_project.py",
+        "tests/test_desktop_window_portable.py"
+      ],
+      "verification": [
+        "Core21focused PASS0.462s -Werror, independently21PASS0.403s, static0; mainGUI transaction regressions authored/static0 but execution and fullbatch gate pending.",
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-300",
+      "component": "Portable project integration",
+      "classification": "Independent source review and actual admission fixture reproduction before acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Portable inventory could silently normalize duplicate embedded config/writer keys rather than reject ambiguity.",
+      "root_cause": "job_to_wire ran before strict job_from_wire, washing duplicate JSON into last-value normalized settings.",
+      "proposed_action": "Strict job_from_wire(asdict(instance)) before normalization/scans in inventory and desktop Apply; regression config/writer duplicate cases.",
+      "acceptance": "Original draft/data remain unchanged on invalid admission; explicit destinations and requested settings retain validated meaning.",
+      "owner": "root; feature_audit; readiness_review",
+      "evidence": [
+        "tests/test_portable_project.py",
+        "tests/test_desktop_window_portable.py"
+      ],
+      "verification": [
+        "Core21focused PASS0.462s -Werror, independently21PASS0.403s, static0; mainGUI transaction regressions authored/static0 but execution and fullbatch gate pending.",
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-301",
+      "component": "Portable project bounded dependency presentation",
+      "classification": "Confirmed source control-flow review before integration acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Compact GUI reports expose only first128 dependency groups while selection/relink actions require a visible selected row; later tracked/guidance assets become unreachable.",
+      "root_cause": "Display prefix bounds were added without navigation or explicit dependency lookup.",
+      "proposed_action": "Provide bounded worker-formatted pagination or ID lookup, preserving global collection choices and verified snapshot across views; no filesystem rescans or full GUI parsing.",
+      "acceptance": "Synthetic >128-group fixture reaches final dependency and stages deliberate relink; choices persist across pages, reports stay bounded, no automatic copy.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "Source compact_project_report first128 loop and selected-row stage_relink in new desktop_portable_project.py before acceptance."
+      ],
+      "verification": [
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-302",
+      "component": "Portable package completion publication",
+      "classification": "Main independent actual local reference-only publication fault reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Completion fsync failure plus blocked cleanup reports failed publication but leaves project.json fully readable and inspect_project.ready=True.",
+      "root_cause": "Final public completion filename is written before flush/fsync succeeds, making a failed precommit package appear completed.",
+      "proposed_action": "Durably stage completion metadata privately before no-overwrite final commit; before commit retained failed artifacts stay unusable; after commit return truthful publication even if private cleanup fails. Apply analogous relocated-correction snapshot publication safeguards where relevant.",
+      "acceptance": "Injected completion write/flush/fsync and cleanup failure cannot expose usable failed package; no unrelated final file overwritten; postcommit cleanup failure never reports committed output absent.",
+      "owner": "root; feature_audit; readiness_review",
+      "evidence": [
+        "Actual root fixture: patch portable_project.os.fsync OSError + cleanup_owned OSError; publish_project raises; inspect_project on retained root returnsreadyTrue."
+      ],
+      "verification": [
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-303",
+      "component": "Portable desktop frame representation",
+      "classification": "Independent actualQt overflow and source clamp reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Portable int64 preview frames can overflow Qt loaded int signal to0 or exceed main spinbox1e9 and silently clamp, while application reports success.",
+      "root_cause": "Core permits <2^63 frames; signal uses signed32bit and targetGUI has smaller range without explicit compatibility admission.",
+      "proposed_action": "Keep coreint64format; pass Pythonobject frame safely, explicitly refuse unsupported desktop frame beforeApply/materialization and main mutation, avoid truncation/clamping.",
+      "acceptance": "Frames1e9+1 and2^40 get actionable UIunsupported state; noemittedcoercion/snapshotwrite/formchange; ordinarysavedframeoffset unchanged.",
+      "owner": "root; readiness_ui; feature_audit",
+      "evidence": [
+        "IndependentactualQt2^40\u2192loaded0+libshibokenoverflow; targetDesktopWindow.frame maximum1000000000."
+      ],
+      "verification": [
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-304",
+      "component": "Portable mainwindow integration verification",
+      "classification": "Observed failing assertion followed by nativeQt exit139; rootcause not yet established",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Newfivecase actualwindow suite fails loadedsettings case then exits139 while starting laterwidgetcase; both independentreviewers reproduced.",
+      "root_cause": "Fixture scratch expectation compared /var alias against canonical /private/var; class-level MagicMock instrumentation of QObject-derived _begin reproducibly caused nativeQt crash during signal connection. Real constructor/menu without that Mock succeeds.",
+      "proposed_action": "Keep exact canonical wire/settings assertion, resolve scratch expectation, replace QObject-class MagicMock with plain fail-fast call counter preserving no-I/O checks; no production/checker/skip changes.",
+      "acceptance": "Allnewwindowintegrationcases pass in requiredcontext and completefullgate no failures/skips; retainfailedlogs/limitations.",
+      "owner": "root; readiness_review; feature_audit",
+      "evidence": [
+        "Twoindependentactualwindow5runs exit139; invalidpayload andparentclose pass before failure; dialog7tests pass separately."
+      ],
+      "verification": [
+        "5actualnewwindowtests PASS0.772s -Werror/faulthandler andstatic0; newframe303coverageadded afterward, finalfullgatepending. ExistingnativeQt126 remainsopen; no generalnativeQt acceptanceclaim.",
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PROJECT-305",
+      "component": "Portable Apply result handoff after cancellation/close",
+      "classification": "Independent actualQt postcommit blocked-delivery reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Cancel or close after coreApply commits relocation but before UI delivery discards returnedjob and snapshotpath, leaving committed correctionartifact unreported/unretained.",
+      "root_cause": "UI treats every cancelled nonpublish result as absent; Apply may already have committed a fresh correction snapshot.",
+      "proposed_action": "Neveremit/apply latecanceledjob, but retain returned committedjob/context/path and report it for review/cleanup even whenclosing. Preservecorecommittedtruth and bounded UIownership.",
+      "acceptance": "AfteractualApplycommitblock, cancel/close yields0loaded signals/noformchange, yet committedsnapshotjob/path retained and discoverable; no deletionofpossiblyaccepteddata.",
+      "owner": "root; readiness_ui; feature_audit",
+      "evidence": [
+        "Independentactualfixture coreApply returns committedjob then blocks; cancel+release leaves scratch/portable-corrections-UUID/corrections.json withlast_emitted_jobNone andstatusclaimno lateappliedresult."
+      ],
+      "verification": [
+        "Core25focusedPASS -Werror; UI9focusedPASS; actualmainwindow6PASS1.334s; independent stable core/UI/integration reviews; full1273CPU PASS83.370s/no skips.",
+        "benchmark-results/ext09-connected-final/source-verification.json"
+      ],
+      "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
     }
   ]
 }

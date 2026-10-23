@@ -287,3 +287,15 @@ interior opaque and leaves outside unchanged; existing strength/range controls
 apply after acceptance. Limits, cancellation and pending optional-model/frozen
 platform acceptance: [subject clicks](subject-clicks.md). No render defaults,
 precision aliases, queued requests or dependencies change.
+
+
+Desktop **Projects…** groups **Open desktop snapshot…**, **Save desktop snapshot…**
+and **Portable projects…**. Existing schema1 format and CLI/API remain; Save now
+requires readable correction metadata to protect every referenced asset/alias.
+Portable collection defaults to reference-only, verification budget256MiB and
+copy budget0; dialog limits0–65536MiB are explicit per operation/pass. Explicit
+Verify/Publish/Inspect/Relink/Apply never enqueue or change the active model owner.
+Apply requires separate output/scratch; desktop preview frame maximum stays1e9
+and larger portable frame values refuse rather than clamp. Native path flavour
+only initially; no model/cache/environment collection or compatibility claim.
+See [bounds, provenance and validation](portable-projects.md).

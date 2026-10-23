@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T14:01:27.820407+00:00",
-  "cycles_completed": 30,
+  "created_utc": "2026-10-23T15:00:52.777534+00:00",
+  "cycles_completed": 35,
   "checkpoint_interval": 5,
-  "boundary_reason": "Sixth coherent extension checkpoint: connected subject clicks/CPU child/Keep provenance and native UI locally verified; continue portability and remaining workflows.",
+  "boundary_reason": "Seventh coherent extension checkpoint: connected native-flavour portable projects, selected collection, relinking and explicit draft application locally verified.",
   "completed": [
     {
       "id": "fresh-repository-review",
@@ -188,7 +188,7 @@
     },
     {
       "id": "EXT-09",
-      "status": "ready",
+      "status": "in_progress",
       "acceptance": "Versioned manifests/inventory, deliberate relink and optional budgeted selected collection, collision/traversal/source identity checks; preserve legacy projects."
     },
     {
@@ -247,9 +247,9 @@
       "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
     }
   ],
-  "next_action": "Implement portable project inventory/selected collection/relinking with explicit preview and safe publication; preserve all settings/correction provenance.",
-  "last_verification_logs": "benchmark-results/ext04-connected-final",
+  "next_action": "Implement connected explicitly controlled progressive preview scheduling with bounded resources, captured settings and stale-result fences.",
+  "last_verification_logs": "benchmark-results/ext09-connected-final",
   "product_complete": false,
-  "reviewed_source_identity": "91a14a89130bb237d9002551b6b085061ad464a72e11ca8fadb0681853a17a28",
-  "local_increment": "Connected optional CPUfloat32 subject click/inspect/Keep and tracking workflow; actualSAM2 NOT VERIFIED"
+  "reviewed_source_identity": "2c083cea9dd36d7d4718bca9c700873c0d8c82dd710e3ee3898ddf44e8ab377c",
+  "local_increment": "Connected portable project workflow locally verified; foreign path flavours unsupported; external acceptance pending"
 }

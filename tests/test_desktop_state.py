@@ -1,4 +1,6 @@
+import hashlib
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +17,30 @@ from corridorkey.worker_protocol import job_to_wire
 
 
 class DesktopStateTests(unittest.TestCase):
+    def test_project_cannot_overwrite_correction_assets_or_hardlink_aliases(self):
+        from corridorkey.corrections import CorrectionDocument, save_corrections
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            asset = root / 'authored.bin'
+            raw = b'original artist raster; parser-only fixture'
+            asset.write_bytes(raw)
+            document = CorrectionDocument.parse({'schema_version': 1, 'revision': 0,
+                'source': {'sha256': 'a' * 64, 'start_frame': 0, 'frame_count': 1, 'fps': 24., 'width': 2, 'height': 2},
+                'shots': [[0, 1]], 'entries': [{'id': 'artist', 'revision': 0, 'frame': 0, 'kind': 'keep',
+                    'asset': {'path': asset.name, 'sha256': hashlib.sha256(raw).hexdigest()}, 'strength': 1.,
+                    'direction': 'both', 'range': [0, 1]}]}, root)
+            manifest = root / 'corrections.json'
+            save_corrections(manifest, document)
+            job = JobRequest.create(root / 'source', root / 'out', InferenceConfig(corrections_path=manifest))
+            with self.assertRaisesRegex(ValueError, 'separately'):
+                save_project(asset, job)
+            alias = root / 'project.json'
+            os.link(asset, alias)
+            with self.assertRaisesRegex(ValueError, 'aliases'):
+                save_project(alias, job)
+            self.assertEqual(asset.read_bytes(), raw)
+            self.assertEqual(alias.read_bytes(), raw)
+
     def test_roundtrip_preserves_all_settings_without_running_a_job(self):
         with tempfile.TemporaryDirectory() as root:
             source = Path(root) / 'source.png'

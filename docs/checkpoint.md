@@ -1,42 +1,42 @@
-# Current checkpoint — optional subject clicks, 2026-10-23
+# Current checkpoint — portable projects, 2026-10-23
 
-Sixth connected increment locally accepted. All ten workflows/full product
+Seventh connected increment locally accepted. All ten workflows/full product
 acceptance remain incomplete; [extension brief](product-improvements-brief.md).
 
-The correction editor now supports explicit native positive/negative subject
-clicks, Prepare/Predict/Inspect/Accept as Keep, iterative prompts/embedding reuse,
-Clear/Discard and ordinary tracked Keep guidance. An isolated persistent CPU
-float32 child owns optional inference; source offsets, exact native RGB/proxy
-conversion and fixture/provider provenance persist in schema4. Accepted masks
-reopen/render without provider files. Ordinary Keep strength1 forces selected
-pixels opaque, outside unchanged; no hair/blur/transparency quality promise.
+Desktop Projects now provides explicit portable dependency inventory, verified
+reference-only or selected collection, moved-package inspection, exact-content
+relinking and Apply to draft with separate chosen output/scratch. Settings,
+source timing/names and authored/tracked/guided correction identity are preserved.
+No automatic model/media copying, model switch or render submission occurs.
+Legacy snapshot format remains; saves now protect all correction resources/aliases.
 
-Independent process/editor/service/Qt reviews accepted findings294–296: new or
-invalid prompts/cancellation cannot retain acceptable stale masks, queued
-requests cannot revoke active cancellation, and transport verifies exact typed
-prompt/format provenance. Actual malformed child, blocked writer, cancel/timeout,
-crash, cleanup uncertainty, save failure, source mutation, guided tracking and
-native click/read-only/source-restoration cases pass. Owner teardown remains
-visible until verified and cannot misreport a committed edit as absent. Main
-distinct review: [subject-clicks-review.md](subject-clicks-review.md).
+Independent and distinct main integration reviews accept findings297–305 fixes:
+strict original settings and transactional draft admission, normalized overlap
+protection, paged dependency choices, explicit package/relocation commit points,
+int64-to-desktop range refusal and retained late-cancelled committed Apply reports.
+Qt fixture instrumentation was fixed without production/checker/skip changes;
+existing nativeQt126 remains open. [Review](portable-projects-review.md).
 
-Final **1232CPU tests PASS83.428s/no skips**. Full372Python-file compilation,
+Final **1273CPU tests PASS83.370s/no skips**. Full379Python-file compilation,
 imports, dependencies, static regression and whitespace checks PASS,0new vs
-baseline AND actual prior662707d. Existing519Ruff/684Pyright errors17warnings
+baseline AND actual prior6746f7c. Existing519Ruff/684Pyright errors17warnings
 remain; static005/nativeQt126 stay open. Frozen source mapping:
-`91a14a89130bb237d9002551b6b085061ad464a72e11ca8fadb0681853a17a28`. Evidence `benchmark-results/ext04-connected-final/`.
-Prior unchanged-driver headless benchmark3x1137CPU is reused for applicable scope;
-no redundant benchmark repetitions or new inference-performance claim.
+`2c083cea9dd36d7d4718bca9c700873c0d8c82dd710e3ee3898ddf44e8ab377c`.
+Evidence: `benchmark-results/ext09-connected-final/`. Prior unchanged-driver
+headless benchmark3x1137CPU is reused for applicable orchestration scope;
+new source is independently full-suite verified, with no inference speed claim.
 
-Actual SAM2 was not installed/downloaded/executed; actual pretrained CUDA,
-representative quality/latency/memory footage, frozen/native Windows packaging,
-GPU resource handoff and Resolve SDK/host execution remain NOT VERIFIED. No
-checkers/baselines, dependencies, user environment or originals changed.
+Foreign Windows↔POSIX paths remain unsupported, even all-collected packages.
+Model references are metadata, not compatibility proof. Actual pretrained CUDA,
+optional SAM2, representative quality/latency/memory, frozen/native Windows and
+Resolve SDK/host acceptance remain NOT VERIFIED. No checkers/baselines,
+dependencies, user environment or originals changed. Details: [portable workflow](portable-projects.md).
 
-Prior662707d54373df11ae026474c85099d7052cb336 pushed/confirmed to
+Prior6746f7c48e870b7d64aecd371a72648afa6f9516 pushed/confirmed to
 MikeHall1/CorridorKey2.0 review/corridorkey-audit-20261023. This publication's
-identity follows in ignored `benchmark-results/ext04-connected-publication.json`.
+identity follows in ignored `benchmark-results/ext09-connected-publication.json`.
 
-Next: portable project inventory/selected collection/relinking; continue remaining
-progressive previews, overlays, calibration and host work. Five cycles is an
-interval; no milestone signoff or competing supervisor.
+Next: connected progressive preview scheduling with explicit stages/settings,
+priority/resource budgets and stale-result fences; then remaining overlays,
+calibration, portability compatibility and host work. Five cycles is an interval;
+continue without milestone signoff or a competing supervisor.
