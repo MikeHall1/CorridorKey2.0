@@ -1,0 +1,31 @@
+{
+  "repository": "https://github.com/AcademySoftwareFoundation/openfx",
+  "commit": "c3f1c2dcf4f51762b794c4fc21181b4a501be1bf",
+  "files": {
+    "include/ofxCore.h": {
+      "git_blob_sha": "7447dbb6a45e01aefe204d1dc01555c3a2499f13"
+    },
+    "include/ofxImageEffect.h": {
+      "git_blob_sha": "d1f69feda428ea6e3af62d6dfbbda73d1134784b"
+    },
+    "include/ofxParam.h": {
+      "git_blob_sha": "ac917f75bd8e5295913ba27bb7da66cdd7a11edb"
+    },
+    "include/ofxInteract.h": {
+      "git_blob_sha": "c0b4c980a9cc272e15497a6f5e53c1cc7b6d42ab"
+    },
+    "include/ofxMessage.h": {
+      "git_blob_sha": "ff61a62238e3d6ab0d0e8362d8ea2380f4d3582a"
+    },
+    "include/ofxMemory.h": {
+      "git_blob_sha": "88e3ae8ac8cd3fb1be5ff1e5ee5c8ffd7d39f3ea"
+    },
+    "include/ofxMultiThread.h": {
+      "git_blob_sha": "e58fcc41af7cb0eab84030fd6bdd4dd0f01b6d8d"
+    },
+    "include/ofxProperty.h": {
+      "git_blob_sha": "bc5c55fd7722bd3859df8049cb76b08ce701d047"
+    }
+  },
+  "license_blob": "8fcd2ea13b5edd8865013ac0b7b91c52728c684f"
+}

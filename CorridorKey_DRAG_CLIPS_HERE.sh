@@ -10,6 +10,9 @@ else
 fi
 
 "$PYTHON" run_interactive.py "$@"
+CORRIDORKEY_EXIT_CODE=$?
 
 echo
 read -r -p "Press Enter to close."
+
+exit "$CORRIDORKEY_EXIT_CODE"

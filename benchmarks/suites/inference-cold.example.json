@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "kind": "inference",
+  "batch_manifest": "inference-batch.example.json",
+  "model_state": "cold_process",
+  "repetitions": 3,
+  "description": "A new Python process per measured repetition. Jobs within each repetition reuse one model. Includes startup and shutdown."
+}

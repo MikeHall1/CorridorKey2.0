@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "kind": "inference",
+  "batch_manifest": "quick-key-matrix.example.json",
+  "model_state": "warm_session",
+  "repetitions": 3,
+  "description": "Local cases, not alternating A/B or quality automation. Edit the local input/weights. Compare alpha and source-vs-reconstructed foreground separately; record all prepass/fallback work."
+}

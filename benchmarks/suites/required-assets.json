@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "kind": "asset_inventory",
+  "status": "missing_real_assets",
+  "targets": [
+    {"width": 1920, "height": 1080, "fps": 24},
+    {"width": 1920, "height": 1080, "fps": 30},
+    {"width": 1920, "height": 1080, "fps": 60},
+    {"width": 2560, "height": 1440, "fps": 24},
+    {"width": 3840, "height": 2160, "fps": 24},
+    {"width": 3840, "height": 2160, "fps": 30}
+  ],
+  "suites": {
+    "development": {"clips": 6, "seconds_each": 5, "held_out": false, "assets": []},
+    "quality": {
+      "clips": 24, "seconds_each": [5, 10], "held_out": true, "assets": [],
+      "categories": ["hair", "fur", "blur", "glass", "smoke", "reflections", "poor_light", "shadows", "spill", "matching_colours", "occlusion", "camera_motion", "cuts", "green", "blue", "sdr", "image_sequence", "linear_hdr"]
+    },
+    "stress": {"long_clip_seconds": 600, "batch_clips": 50, "assets": [], "cases": ["repeated", "concurrent_isolated", "cancel", "disk_full", "encoder_failure", "interruption_recovery", "memory_growth"]},
+    "resolve": {"implemented": false, "assets": [], "cases": ["sequential", "random", "reverse", "multiple_instances", "trims_retimes", "proxies", "resolution_changes", "colour_management", "viewer_export", "cancel", "worker_failure"]}
+  },
+  "asset_fields_required_before_use": ["id", "local_path", "sha256", "split", "provenance", "permitted_usage", "timing", "colour_assumptions", "reference_or_null"]
+}

@@ -1,0 +1,604 @@
+{
+  "schema_version": 1,
+  "kind": "inference_batch",
+  "jobs": [
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n1-offline-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 1,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": false,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": null
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n2-offline-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 2,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n2-offline-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 2,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n2-hold-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 2,
+        "quick_context_radius": 2,
+        "quick_approach": "hold",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n2-causal-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 2,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n2-causal-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 2,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n3-offline-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 3,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n3-offline-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 3,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n3-hold-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 3,
+        "quick_context_radius": 2,
+        "quick_approach": "hold",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n3-causal-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 3,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n3-causal-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 3,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n5-offline-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 5,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n5-offline-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 5,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n5-hold-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 5,
+        "quick_context_radius": 2,
+        "quick_approach": "hold",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n5-causal-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 5,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n5-causal-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 5,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n8-offline-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 8,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n8-offline-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 8,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n8-hold-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 8,
+        "quick_context_radius": 2,
+        "quick_approach": "hold",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n8-causal-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 8,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n8-causal-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 8,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n10-offline-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 10,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n10-offline-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 10,
+        "quick_context_radius": 2,
+        "quick_approach": "offline",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n10-hold-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 10,
+        "quick_context_radius": 2,
+        "quick_approach": "hold",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n10-causal-adaptive0",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 10,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": false,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/quick-matrix/n10-causal-adaptive1",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": [
+          "alpha",
+          "fg"
+        ],
+        "output_format": "exr",
+        "exr_dtype": "float",
+        "quick_key": true,
+        "quick_interval": 10,
+        "quick_context_radius": 2,
+        "quick_approach": "causal",
+        "quick_auto_cuts": true,
+        "quick_adaptive": true,
+        "quick_fallback": "neural",
+        "quick_max_gap": 5
+      }
+    }
+  ]
+}

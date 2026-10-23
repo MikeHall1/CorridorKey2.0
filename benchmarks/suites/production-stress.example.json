@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "production_stress",
+  "limits": {"deadline_seconds": 7200, "max_artifact_bytes": 1073741824},
+  "cases": [
+    {"id": "long", "scenario": "long_clip", "batch_manifest": "local/long-10min.batch.json"},
+    {"id": "batch50", "scenario": "batch50", "batch_manifest": "local/distinct-50.batch.json"},
+    {"id": "repeat", "scenario": "repeated", "batch_manifest": "local/representative.batch.json", "repetitions": 3},
+    {"id": "concurrent", "scenario": "concurrent_isolated", "batch_manifest": "local/representative.batch.json"},
+    {"id": "cancel", "scenario": "cancel", "batch_manifest": "local/representative-exr.batch.json", "cancel_after_readable_frames": 2},
+    {"id": "resume", "scenario": "interruption_recovery", "batch_manifest": "local/representative-exr.batch.json", "cancel_after_readable_frames": 2,
+      "recovery": {"max_cache_bytes": 268435456, "durable_stage2": true}},
+    {"id": "memory", "scenario": "memory_growth", "batch_manifest": "local/representative.batch.json", "warmup_jobs": 1, "repetitions": 10},
+    {"id": "encoder", "scenario": "encoder_failure", "batch_manifest": "local/expected-encoder-failure.batch.json"},
+    {"id": "disk", "scenario": "disk_full", "batch_manifest": "local/representative-exr.batch.json", "fault_volume": "local/operator-prepared-full-disposable-volume"}
+  ]
+}

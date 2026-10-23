@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "kind": "inference",
+  "batch_manifest": "inference-batch.example.json",
+  "model_state": "warm_session",
+  "repetitions": 3,
+  "quality_manifests": ["temporal-sequence.example.json", "temporal-sequence.example.json"],
+  "description": "Populate real permitted references and candidate-independent native flow/visibility provenance. Selected frame IDs are output-relative; known cuts/resets must be explicitly excluded. No media or weights bundled."
+}

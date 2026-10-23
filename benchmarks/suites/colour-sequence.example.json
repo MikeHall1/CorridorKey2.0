@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "colour_sequence_evaluation",
+  "colour_space": "linear_srgb_bt709",
+  "candidate_output": "fg",
+  "associations": {"candidate": "straight", "reference": "straight", "baseline": "straight"},
+  "fps": 24,
+  "unpremultiply_epsilon": 0.000001,
+  "source": "/local/dev/clip.mp4",
+  "background": [0.18, 0.18, 0.18],
+  "reference_provenance": {
+    "author": "REPLACE with actual reference author",
+    "origin": "REPLACE with reference origin and alignment evidence",
+    "permitted_use": "REPLACE with actual permission/licence evidence",
+    "split": "development"
+  },
+  "frames": [
+    {"frame": 0, "candidate_rgb": "/local/candidate/fg_000000.exr", "candidate_alpha": "/local/candidate/alpha_000000.exr", "reference_rgb": "/local/reference/fg_000000.exr", "reference_alpha": "/local/reference/alpha_000000.png", "baseline_rgb": "/local/baseline/fg_000000.exr", "baseline_alpha": "/local/baseline/alpha_000000.exr", "foreground_mask": "/local/reference/valid_fg_000000.png"},
+    {"frame": 1, "candidate_rgb": "/local/candidate/fg_000001.exr", "candidate_alpha": "/local/candidate/alpha_000001.exr", "reference_rgb": "/local/reference/fg_000001.exr", "reference_alpha": "/local/reference/alpha_000001.png", "baseline_rgb": "/local/baseline/fg_000001.exr", "baseline_alpha": "/local/baseline/alpha_000001.exr", "foreground_mask": "/local/reference/valid_fg_000001.png"}
+  ]
+}

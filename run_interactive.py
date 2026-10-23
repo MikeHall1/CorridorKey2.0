@@ -3,7 +3,6 @@ import argparse
 import json
 import os
 import sys
-import subprocess
 import tempfile
 import shutil
 from pathlib import Path
@@ -235,7 +234,7 @@ def prompt_hann_window():
     hann_stride = int(prompt_input("Enter Hann Stride (integer):", default="24"))
     return hann_chunk, hann_stride
 
-def main():
+def _interactive_main(session):
     if os.name == "nt":
         os.system("")  # enables ANSI colors in the Windows console
     print_header("CorridorKey v2 Interactive Runner")
@@ -375,6 +374,7 @@ def main():
 
         # Incoming Image Color Space Configuration
         frame_dir_linear = True
+        source_colour_profile = "legacy"
         has_image_seq = any(clip.is_dir() for clip in batch_clips)
         if has_image_seq:
             print_subheader("Incoming Image Color Space")
@@ -382,11 +382,14 @@ def main():
                 "Select incoming image color space / input gamma:",
                 [
                     "Linear gamma (Default for linear EXR sequence)",
-                    "sRGB input gamma (default for PNG sequences)"
+                    "sRGB input gamma (default for PNG sequences)",
+                    "Scene-linear BT.709/D65 primaries (explicit declaration)",
+                    "Scene-linear BT.2020/D65 primaries (convert to working BT.709/D65)"
                 ],
                 default=1
             )
-            frame_dir_linear = (gamma_choice == 1)
+            frame_dir_linear = (gamma_choice != 2)
+            source_colour_profile = {3: "linear_bt709_d65", 4: "linear_bt2020_d65"}.get(gamma_choice, "legacy")
 
         # VRAM profile
         vram_choice = prompt_choices(
@@ -527,6 +530,8 @@ def main():
             cmd.extend(["--despill_strength", str(despill_strength)])
             if clip.is_dir() and frame_dir_linear:
                 cmd.append("--frame_dir_linear")
+                if source_colour_profile != "legacy":
+                    cmd.extend(["--source_colour_profile", source_colour_profile])
             
             if low_vram:
                 cmd.append("--low_vram")
@@ -543,20 +548,12 @@ def main():
 
             print(f"Running command: {' '.join(cmd)}\n")
             try:
-                # Pre-set offline mode variables
-                env = os.environ.copy()
-                env["HF_HUB_OFFLINE"] = "1"
-                env["TRANSFORMERS_OFFLINE"] = "1"
-                
-                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env)
-                for line in process.stdout:
-                    print(line, end="")
-                process.wait()
-                
-                if process.returncode == 0:
+                returncode = execute_inference(cmd, session)
+
+                if returncode == 0:
                     print(f"\n{Colors.BOLD}{Colors.GREEN}[SUCCESS] Finished {clip.name} successfully!{Colors.RESET}")
                 else:
-                    print(f"\n{Colors.BOLD}{Colors.YELLOW}[ERROR] Failed {clip.name} with exit code {process.returncode}{Colors.RESET}")
+                    print(f"\n{Colors.BOLD}{Colors.YELLOW}[ERROR] Failed {clip.name} with exit code {returncode}{Colors.RESET}")
             except KeyboardInterrupt:
                 print(f"\n{Colors.YELLOW}[INTERRUPTED] Batch paused by user.{Colors.RESET}")
                 confirm_continue = prompt_confirm("Do you want to continue to the next clip in the batch?", default=True)
@@ -720,17 +717,21 @@ def main():
 
         # Incoming Image Color Space Configuration
         frame_dir_linear = True
+        source_colour_profile = "legacy"
         if is_image_seq_dir:
             print_subheader("Incoming Image Color Space")
             gamma_choice = prompt_choices(
                 "Select incoming image color space / input gamma:",
                 [
                     "Linear gamma (Default for linear EXR sequence)",
-                    "sRGB input gamma (default for PNG sequences)"
+                    "sRGB input gamma (default for PNG sequences)",
+                    "Scene-linear BT.709/D65 primaries (explicit declaration)",
+                    "Scene-linear BT.2020/D65 primaries (convert to working BT.709/D65)"
                 ],
                 default=1
             )
-            frame_dir_linear = (gamma_choice == 1)
+            frame_dir_linear = (gamma_choice != 2)
+            source_colour_profile = {3: "linear_bt709_d65", 4: "linear_bt2020_d65"}.get(gamma_choice, "legacy")
 
         # 6. VRAM profile
         vram_choice = prompt_choices(
@@ -893,6 +894,8 @@ def main():
             cmd.extend(["--despill_strength", str(despill_strength)])
             if is_image_seq_dir and frame_dir_linear:
                 cmd.append("--frame_dir_linear")
+                if source_colour_profile != "legacy":
+                    cmd.extend(["--source_colour_profile", source_colour_profile])
             
             if low_vram:
                 cmd.append("--low_vram")
@@ -917,23 +920,34 @@ def main():
                 continue
                 
             try:
-                # Pre-set offline mode variables
-                env = os.environ.copy()
-                env["HF_HUB_OFFLINE"] = "1"
-                env["TRANSFORMERS_OFFLINE"] = "1"
-                
-                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env)
-                for line in process.stdout:
-                    print(line, end="")
-                process.wait()
-                
-                if process.returncode == 0:
+                returncode = execute_inference(cmd, session)
+
+                if returncode == 0:
                     print(f"\n{Colors.BOLD}{Colors.GREEN}[SUCCESS] CorridorKey v2 inference completed successfully!{Colors.RESET}")
                     print(f"Outputs written to: {Colors.CYAN}{output_dir}{Colors.RESET}\n")
                 else:
-                    print(f"\n{Colors.BOLD}{Colors.YELLOW}[ERROR] Inference failed with exit code {process.returncode}{Colors.RESET}\n")
+                    print(f"\n{Colors.BOLD}{Colors.YELLOW}[ERROR] Inference failed with exit code {returncode}{Colors.RESET}\n")
             except KeyboardInterrupt:
                 print(f"\n{Colors.YELLOW}[INTERRUPTED] Inference run canceled by user.{Colors.RESET}\n")
+
+def execute_inference(cmd, session):
+    """Use the same CLI parser and processing core while retaining model weights."""
+    import infer
+    try:
+        infer.main(cmd[2:], session=session)
+        return 0
+    except SystemExit as exc:
+        return exc.code or 0
+    except Exception as exc:
+        print(f"[ERROR] {type(exc).__name__}: {exc}")
+        return 1
+
+
+def main():
+    from corridorkey.session import InferenceSession
+    with InferenceSession() as session:
+        _interactive_main(session)
+
 
 if __name__ == "__main__":
     main()

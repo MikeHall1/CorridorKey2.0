@@ -1,0 +1,2 @@
+# Optional native Qt Widgets frontend; keep separate from headless runtime.
+PySide6-Essentials==6.10.2

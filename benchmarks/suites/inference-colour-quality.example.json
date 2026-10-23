@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "kind": "inference",
+  "batch_manifest": "inference-batch.example.json",
+  "model_state": "warm_session",
+  "repetitions": 3,
+  "quality_manifests": ["colour-sequence.example.json", "colour-sequence.example.json"],
+  "description": "Populate actual permitted linear RGB/alpha references and provenance first. Each template binds actual foreground and alpha EXR exports after timed repetitions. No media or model weights are bundled."
+}

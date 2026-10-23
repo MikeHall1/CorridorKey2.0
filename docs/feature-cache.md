@@ -1,0 +1,41 @@
+# Bounded foundation reuse — opt-in
+
+`--foundation_cache_mb N` enables a job-local CPU RAM cache for normalized float32 C-RADIO/MoGe features in normal-memory mode. Units are MiB (2^20 bytes); default 0 retains the original full-window extraction batches. The CLI, headless batch and session all use the same runtime path. Batch JSON uses the `foundation_cache_mb` configuration field. No dependency, model, default precision, source colour interpretation or full-rate inference setting changes.
+
+Only IID foundation extraction is sparse on cache hits. Stage 1 still sees every frame in each original native-rate window, hints/carry behavior and baton tapers are unchanged, and Stage 2 still predicts every requested frame. RVM still runs its chronological prepass independently; its state and features never enter this cache. This is not Quick Key or cached playback.
+
+The cache owns independent contiguous CPU float32 tensors for individual frames. It never retains a view into a whole extraction batch. Hits are copied into their original positions in the current working feature tensors before any eviction. Missing frames within each window are extracted in frame order with unchanged input/normalization values; evicted IID frames may be recomputed in a later overlapping window. Only frames reachable by future windows are admitted, and obsolete frames are released. The actual next window boundary is used, including unusually large overlap in a final aligned window. Entries use byte-bounded LRU eviction; frames too large for the budget are not copied into RAM and can be recomputed later. Cache allocation/copy failures fail the job rather than returning partial predictions as success.
+
+This budget covers **retained CPU feature payload**, not Python metadata, input decoding, tensors for the current window, transfer/assembly buffers or total process RAM. It is not a GPU allocation cap. Admission evicts before allocating the replacement. CPU copies complete before borrowed cached tensors can be evicted; no asynchronous transfer overlap is claimed. GPU working tensors can temporarily exceed the uncached feature footprint during miss extraction/assembly. Start with a modest budget and profile on the target GPU.
+
+Approximate bytes per retained frame: `4 * (cradio_channels + moge_channels) * padded_height/64 * padded_width/64`. Required retention depends on actual window overlap; a final window may overlap more than `hann_chunk - hann_stride`. Small budgets are valid and trade reuse for recomputation without reducing cache precision.
+
+Ownership is one invocation of `hann_stage1_stream`, keyed by frame index inside that job. Caches are cleared on completion/failure and never shared between clips, jobs, weights or sessions. Accordingly no persistent content identity is implied. Durable/cross-job reuse, disk-cache verification, state checkpoints and resumability remain future work and require the full source/weights/preprocessing/correction identity contract.
+
+Explicit `low_vram` plus a positive RAM cache budget is rejected: low-VRAM already uses a full float32 foundation prepass on disk. If automatic selection chooses low-VRAM, effective RAM budget becomes zero and diagnostics record a warning and the disk-prepass mode. Requested settings remain intact in the job record.
+
+`--diagnostics PATH` records mode, payload budget/peak/end residency, hits/misses/hit rate, evictions, oversized admission attempts, foundation frames requested/attempted/completed, and logical payload bytes stored/reused. Requests include overlapping-window repeats. With cache off, every request is a miss. Oversized counts describe admission attempts for future-needed frames, not unique clip frames. Failed extraction attempts are separate from completed foundation evaluations. These are implementation counters, not calibrated quality metrics or measured hardware transfer traffic. Low-VRAM reports prepass completion count, with RAM hit rate unavailable. Optional synchronized `iid_foundations` stage timings include lookup, extraction and transfers.
+
+## Automatic VRAM selection budget
+
+`--auto_vram_budget_mb N` caps the budget supplied to the existing automatic profile heuristic. It requires automatic selection (omit manual Hann/low-VRAM CLI flags); batch users set `auto_vram: true`. Effective budget is the smaller of the requested cap and device free memory plus this process's reserved CUDA memory. Current process allocation exceeding the cap, or no estimated single-frame fit, raises an actionable error. With no cap, existing automatic behavior is preserved.
+
+This is a **profile-selection cap**, not a hard allocator limit, host-memory reservation or guarantee that the inherited VRAM estimates are accurate. The model may already be loaded before selection. Real allocation can exceed estimates; process-wide limits, model pre-load admission and memory coexistence with Resolve still require validation. Diagnostics report available/reserved bytes, user cap, selected budget and inherited estimate. No `torch.cuda` allocator policy is changed.
+
+```sh
+# Fixed manual settings for direct cache parity/export comparison.
+python infer.py --input /local/dev/clip.mp4 --output_dir out_cache_off --hann_chunk 8 --hann_stride 4 --num_frames 17 --stage2_batch 1 --outputs alpha fg --output_format exr --exr_dtype float --foundation_cache_mb 0 --diagnostics out_cache_off/job.json
+python infer.py --input /local/dev/clip.mp4 --output_dir out_cache_on --hann_chunk 8 --hann_stride 4 --num_frames 17 --stage2_batch 1 --outputs alpha fg --output_format exr --exr_dtype float --foundation_cache_mb 256 --diagnostics out_cache_on/job.json
+
+# Separate automatic-selection case, not a fixed-settings comparison.
+python infer.py --input /local/dev/clip.mp4 --output_dir out_budget --auto_vram_budget_mb 8192 --foundation_cache_mb 256 --diagnostics out_budget/job.json
+```
+
+## Validation status and remaining acceptance
+
+CPU tests use deterministic foundation/Stage 1 substitutes with the real temporal scheduler, carried hints, RVM memmap reads, taper blending and cache/transfer code. Short clips, final windows, disabled/tiny budgets, independent storage, eviction-before-allocation, failed copies/extraction, cleanup, new-job isolation, optional C-RADIO and precomputed mode are tested. In the 15-frame fixture with 8/4 windows, uncached foundations evaluate 24 frame instances; sufficient cache evaluates 15 with nine hits, and blended batons match exactly. This is a correctness fixture, not a speedup or real-model quality result.
+
+GPU parity and throughput are **unmeasured**. Missing-only extraction changes foundation batch shapes and may select different numerical kernels even though caches remain float32. Keep this opt-in until GPU reference repeatability establishes numerical tolerances. Run baseline/candidate on identical hardware, weights, local assets, fixed windows/batches/hints/output/precision and cache state, >=3 alternating repetitions; compare alpha/foreground EXR arrays and visual edges/transparency against tolerances chosen before judging. Measure `processing_seconds` including transfers/output, not just evaluation counts. Use the cold/warm benchmark modes with otherwise identical single-job manifests; inspect the recorded cache counters. Profile separately, and test normal/low-VRAM switching, repeated jobs, peak process RAM/VRAM and long-clip memory growth. Do not equate removed evaluations with an FPS multiplier. No frames, weights or datasets were downloaded for this milestone.
+
+
+Milestone14 adds an explicit persistent IID adapter under the recovery controller (`--durable-foundations`), shared by normal Hann windows and low-VRAM prepass. This does not enable persistence for ordinary inference commands. Exact normalized float32 frames use conservative content/model/proxy/geometry identities, safe sealed storage and a shared disk budget. RAM counters describe the job-local cache; `diagnostics.durable_foundations` reports disk reuse separately. RVM remains chronological, and full jobs restart after failure. See `recovery.md` for commands, invalidation, ownership, transient budget exclusions and unverified GPU batch-roundoff/parity. Earlier job-local-only scope describes the default path.
