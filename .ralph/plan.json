@@ -41,9 +41,17 @@
         "tests/test_desktop_viewport.py",
         "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json",
         "corridorkey/preview_sequence.py",
-        "tests/test_desktop_source_playback.py"
+        "tests/test_desktop_source_playback.py",
+        "corridorkey/preview_background.py",
+        "corridorkey/desktop_background.py",
+        "tests/test_preview_background.py",
+        "tests/test_photo_preview_pipeline.py",
+        "tests/test_desktop_photo_background.py",
+        "docs/photo-backgrounds.md",
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
       ],
-      "next_action": "Photographic custom backgrounds and persistent bounded export readers/cache; video/VFR actual timing acceptance remains pending."
+      "next_action": "Initial session-only RGB photo composite workflow locally verified; nativeexact geometry/profile/work limits explicit and native4Kphoto unsupported. Continue bounded reusable foreground/alpha export sequence indexes; video/VFR/native-target/display quality acceptance remains pending."
     },
     {
       "id": "EXT-02",
@@ -929,7 +937,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Implement explicit bounded photo composite preview backgrounds through the existing loader and synchronized A/B/playback paths, with source/render pixels preserved, clear colour/geometry policy and stale-result fences; continue remaining feature contexts and supported Resolve preparation.",
+  "next_action": "Implement bounded reusable foreground/alpha sequence indexes for export playback on the existing loader, preserving source-offset A/B, native geometry/colour and explicit refresh/stale ownership; continue remaining feature contexts and supported Resolve preparation.",
   "objective_source": "docs/product-improvements-brief.md",
-  "current_checkpoint_evidence": "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+  "current_checkpoint_evidence": "benchmark-results/ext05-photo-connected-final/source-verification.json"
 }

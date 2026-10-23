@@ -145,3 +145,11 @@ Verify → Start, exclusive worker transition, cold/warm sample measurements, ra
 reports, failures/exclusions and measured-only recommendations. Final frozen
 1385CPU/397file gate passes,0newstatic; actual CUDA/quality/Windows/Resolve remain NOT VERIFIED.
 See [workflow and evidence limits](calibration.md).
+
+
+EXT-05 explicit session-only RGB photo backgrounds now support native-exact still,
+A/B and sequence playback through one existing preview loader, with cached photo
+identity and metadata committed with visible pixels. 1434CPU/406file frozen
+fullgate passes,0new diagnostics. Limits/unsupported colour and4K contexts remain
+explicit; no render changes or native/GPU/quality acceptance claim.
+See [workflow](photo-backgrounds.md) and [review](photo-backgrounds-review.md).

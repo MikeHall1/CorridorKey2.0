@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
 from .asset_inventory import AssetSelection
 from .calibration import CalibrationPlan
 from .desktop_assets import AssetsPanel
+from .desktop_background import BackgroundDialog
 from .desktop_benchmark import BenchmarkPanel
 from .desktop_bridge import DesktopBridge
 from .desktop_cache import CacheMaintenancePanel
@@ -63,6 +64,7 @@ from .desktop_state import (
     settings_job,
 )
 from .desktop_viewport import PreviewViewport, ViewportState
+from .preview_background import BackgroundRecipe, PreparedBackground
 from .preview_sequence import PreparedSequence
 from .session import JobRequest
 from .worker_client import WorkerClient
@@ -87,9 +89,13 @@ class DesktopWindow(QMainWindow):
         self._comparison_error: tuple[str, int, int] | None = None
         self.statusBar().messageChanged.connect(self._status_changed)
         self.background: tuple[float, float, float] | None = None
+        self.background_image: PreparedBackground | None = None
+        self.background_dialog: BackgroundDialog | None = None
+        self.background_serial: int | None = None
         self.pixmap: QPixmap | None = None
         self.reference: QPixmap | None = None
         self.preview_description = ''
+        self.displayed_preview_description = ''
         self.moving_reference: RenderView | None = None
         self.reference_mode = ''
         self.reference_description = ''
@@ -264,7 +270,7 @@ class DesktopWindow(QMainWindow):
         self._button('Prepare current job for recovery…', self.prepare_recovery, controls)
         viewer_bar = QHBoxLayout()
         self.view = QComboBox()
-        self.view.addItems(['Source', 'Alpha', 'Foreground', 'Checker composite', 'Solid composite'])
+        self.view.addItems(['Source', 'Alpha', 'Foreground', 'Checker composite', 'Solid composite', 'Photo composite'])
         viewer_bar.addWidget(self.view)
         self.frame = QSpinBox()
         self.frame.setRange(0, DESKTOP_MAX_PREVIEW_FRAME)
@@ -273,6 +279,7 @@ class DesktopWindow(QMainWindow):
         viewer_bar.addWidget(self.frame)
         self._button('Preview', self.request_preview, viewer_bar)
         self._button('Background…', self.choose_background, viewer_bar)
+        self._button('Photo…', self.open_background, viewer_bar)
         workspace.addLayout(viewer_bar)
         self.viewport_state = ViewportState(self)
         self.image = PreviewViewport(self.viewport_state, 'Open a video or frame directory, then select Preview.\nExport views use a selected completed queue job.')
@@ -808,10 +815,15 @@ class DesktopWindow(QMainWindow):
                         raise ValueError('Compositing requires both alpha and foreground exports.')
                     options['alpha_path'] = outputs['alpha']
                     options['background'] = self.background if mode == 'Solid composite' else None
+                    if mode == 'Photo composite':
+                        if self.background_image is None:
+                            raise ValueError('Prepare a matching photo background explicitly first.')
+                        options['background_image'] = self.background_image
                     if mode == 'Solid composite' and self.background is None:
                         raise ValueError('Choose a background colour first.')
             self.preview_serial = self.loader.submit(**options)
-            self.preview_description = f"{mode} · frame {self.frame.value()} · {options['path']}"
+            photo = f' · photo {self.background_image.identity[:16]}' if mode == 'Photo composite' and self.background_image is not None else ''
+            self.preview_description = f"{mode}{photo} · frame {self.frame.value()} · {options['path']}"
             self.pixmap = None
             self.image.setText('Decoding…')
             self.preview_note.setText('Decoding requested frame…')
@@ -833,7 +845,7 @@ class DesktopWindow(QMainWindow):
             if self.view.currentText() == 'Source':
                 raise ValueError('Select an export view (Alpha, Foreground or composite) for A first.')
             reference = self.selected_render_view()
-            reference.options(self.view.currentText(), reference.start, self.background)
+            reference.options(self.view.currentText(), reference.start, self.background, background_image=self.background_image)
             self.moving_reference = reference
             self.reference_mode = self.view.currentText()
             self.reference = None
@@ -867,11 +879,13 @@ class DesktopWindow(QMainWindow):
                 start, end = common_range(a, b)
                 if not start <= index < end:
                     raise ValueError(f'Choose a common source frame in [{start}, {end}).')
-                b_options = b.options(mode, index, self.background)
-            a_options = a.options(self.reference_mode, index, self.background)
+                b_options = b.options(mode, index, self.background, background_image=self.background_image)
+            a_options = a.options(self.reference_mode, index, self.background, background_image=self.background_image)
             self.preview_serial = self.loader.submit(pair={'a': a_options, 'b': b_options})
-            self.reference_description = f'{self.reference_mode} · source frame {index} · export frame {index-a.start} · {a_options["path"]}'
-            self.preview_description = f'{mode} · source frame {index} · decoded frame {b_options["index"]} · {b_options["path"]}'
+            photo_a = f' · photo {self.background_image.identity[:16]}' if self.reference_mode == 'Photo composite' and self.background_image is not None else ''
+            photo_b = f' · photo {self.background_image.identity[:16]}' if mode == 'Photo composite' and self.background_image is not None else ''
+            self.reference_description = f'{self.reference_mode}{photo_a} · source frame {index} · export frame {index-a.start} · {a_options["path"]}'
+            self.preview_description = f'{mode}{photo_b} · source frame {index} · decoded frame {b_options["index"]} · {b_options["path"]}'
             self.pixmap = self.reference = None
             self.image.setText('Decoding synchronized B…')
             self.reference_image.setText('Decoding synchronized A…')
@@ -893,6 +907,91 @@ class DesktopWindow(QMainWindow):
             self.view.setCurrentText('Solid composite')
             self.request_preview()
 
+    def open_background(self):
+        if self.closing:
+            return
+        if self.background_dialog is None:
+            panel = BackgroundDialog(self)
+            panel.prepare_requested.connect(self.prepare_background)
+            panel.changed.connect(self.invalidate_background)
+            panel.cancel_requested.connect(self.cancel_background_preparation)
+            panel.clear_requested.connect(self.clear_background)
+            self.background_dialog = panel
+        self.background_dialog.show()
+        self.background_dialog.raise_()
+
+    def invalidate_background(self):
+        self.cancel_background_preparation()
+        self.background_image = None
+        self.playback.navigate()
+        if self.playback.engine is not None:
+            self.playback.engine.background_image = None
+        self.preview_serial = -1
+        if self.view.currentText() == 'Photo composite':
+            self.pixmap = None
+            self.image.setText('Photo background changed; prepare a new matching snapshot.')
+            self.preview_note.setText('Pending photo preparation; previous composite is stale.')
+        if self.moving_reference is not None and self.reference_mode == 'Photo composite':
+            self.reference = None
+            self.reference_image.setText('Photo background changed; synchronized A is pending.')
+            self.reference_note.setText('Pending photo preparation; previous synchronized composite is stale.')
+
+    def cancel_background_preparation(self):
+        if self.background_serial is not None:
+            self.loader.cancel(self.background_serial)
+            self.background_serial = None
+            if self.background_dialog is not None:
+                self.background_dialog.set_waiting(False, 'Preparation cancelled; any native decode must retire on the existing preview worker.')
+
+    def prepare_background(self, path: str, profile: str):
+        panel = self.background_dialog
+        if panel is None or self.closing:
+            return
+        self.invalidate_background()
+        try:
+            view = self.selected_render_view()
+            if not {'fg', 'alpha'}.issubset(dict(view.outputs)):
+                raise ValueError('Select completed foreground and alpha exports before preparing a photo composite.')
+            recipe = BackgroundRecipe.capture(path, profile=profile, expected_hw=(view.height, view.width))
+            self.background_serial = self.loader.submit(prepare_background=recipe)
+            self.preview_serial = -1
+            panel.set_waiting(True, f'Preparing native {view.width}×{view.height} photo snapshot; profile {profile}. Cancellation fences late results.')
+        except (ValueError, OSError, TypeError, RuntimeError) as exc:
+            panel.set_waiting(False, str(exc))
+
+    def clear_background(self):
+        self.invalidate_background()
+        if self.background_dialog is not None:
+            self.background_dialog.set_waiting(False, 'Photo cleared; live photo composite views now use checkerboard. Static pinned A remains its captured display snapshot.')
+        if self.reference_mode == 'Photo composite' and self.moving_reference is not None:
+            self.reference_mode = 'Checker composite'
+        if self.view.currentText() == 'Photo composite':
+            blocked = self.view.blockSignals(True)
+            self.view.setCurrentText('Checker composite')
+            self.view.blockSignals(blocked)
+            self.request_preview()
+        elif self.moving_reference is not None:
+            self.request_comparison()
+
+    def accept_background(self, serial, frame, error):
+        if serial != self.background_serial:
+            return isinstance(frame, PreparedBackground)
+        self.background_serial = None
+        panel = self.background_dialog
+        if panel is None or self.closing or serial != self.loader.serial:
+            return True
+        if error is not None or not isinstance(frame, PreparedBackground):
+            panel.set_waiting(False, error or 'Photo preparation returned no valid snapshot.')
+            return True
+        self.background_image = frame
+        height, width = frame.native_hw
+        panel.set_waiting(False, f'Captured {width}×{height} · {frame.profile} · identity {frame.identity}. Re-prepare explicitly to read external changes.')
+        blocked = self.view.blockSignals(True)
+        self.view.setCurrentText('Photo composite')
+        self.view.blockSignals(blocked)
+        self.request_preview()
+        return True
+
     def pin_reference(self):
         self.playback.navigate()
         if self.pixmap is None:
@@ -902,8 +1001,8 @@ class DesktopWindow(QMainWindow):
         self.frame_label.setText('Frame (zero-based)')
         self.reference = self.pixmap.copy()
         self.reference_image.setPixmap(self.reference)
-        self.reference_note.setText('A · ' + self.preview_description.rsplit(' · ', 1)[0])
-        self.reference_note.setToolTip(self.preview_description)
+        self.reference_note.setText('A · ' + self.displayed_preview_description.rsplit(' · ', 1)[0])
+        self.reference_note.setToolTip(self.displayed_preview_description)
 
     def clear_reference(self):
         self.playback.navigate()
@@ -1305,6 +1404,10 @@ class DesktopWindow(QMainWindow):
         self.benchmark.status.setText('Benchmark cancellation requested; waiting for owned process cleanup.')
 
     def poll(self):
+        if self.background_serial is not None and self.background_serial != self.loader.serial:
+            self.background_serial = None
+            if self.background_dialog is not None:
+                self.background_dialog.set_waiting(False, 'Photo preparation superseded by a newer preview request; any native read retires on the existing worker.')
         if self.calibration is not None:
             self.calibration.poll()
         self.readiness.poll()
@@ -1399,6 +1502,8 @@ class DesktopWindow(QMainWindow):
         except queue.Empty:
             return
         playback_valid = self.playback.complete_loader(serial, error)
+        if self.accept_background(serial, frame, error) or isinstance(frame, PreparedBackground):
+            return
         # Preparation metadata, including retired generations, never contains pixels.
         if self.playback.accept_preparation(serial, frame, error) or isinstance(frame, PreparedSequence):
             return
@@ -1422,6 +1527,7 @@ class DesktopWindow(QMainWindow):
             pixels = frame.pixels
             image = QImage(pixels.data, pixels.shape[1], pixels.shape[0], pixels.strides[0], QImage.Format.Format_RGB888).copy()
             self.pixmap = QPixmap.fromImage(image)
+            self.displayed_preview_description = self.preview_description
             self.image.setPixmap(self.pixmap)
             self.preview_note.setText(f'B · {self.preview_description.rsplit(" · ", 1)[0]}\n{frame.width}×{frame.height} · {frame.count} frames · {frame.note}')
             self.preview_note.setToolTip(self.preview_description)
@@ -1436,6 +1542,9 @@ class DesktopWindow(QMainWindow):
             event.ignore()
             return
         self.closing = True
+        self.cancel_background_preparation()
+        if self.background_dialog is not None:
+            self.background_dialog.close()
         self.playback.pause()
         self.loader.stopping.set()
         progressive_done = self.progressive.shutdown()

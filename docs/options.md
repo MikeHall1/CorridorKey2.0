@@ -340,3 +340,14 @@ absolute output/scratch destinations for foreign Apply; native package destinati
 behavior is unchanged. Partial/reference-only foreign packages and direct foreign
 publication refuse. EXR retains unused encoder references; foreign absolute video
 encoders refuse without replacement. See [scope and review](portable-foreign-review.md).
+
+
+## Photo composite previews
+
+Photo… explicitly prepares a session-only RGB photo through the existing preview
+worker; Photo composite supports still and synchronized sequence playback. Choose
+assumed sRGB PNG/JPEG or scene-linear BT.709/D65 EXR and exact native geometry.
+Use checkerboard clears live photo selection. No render defaults, precision,
+writer options or queued jobs change. Combined work limits admit1080p but not
+native4K; no ICC/OCIO/EXIF automation or implicit resize/profile fallback. See
+[workflow/limits](photo-backgrounds.md) and [review](photo-backgrounds-review.md).

@@ -8,13 +8,14 @@ from typing import Any
 
 from .control import CancelledError
 from .desktop_preview import PreviewFrame, PreviewPair, preview, preview_pair
+from .preview_background import PreparedBackground, prepare_background
 from .preview_sequence import PreparedSequence, prepare_sequence
 
 
 class PreviewLoader:
     def __init__(self):
         self.requests: queue.Queue[tuple[int, dict[str, Any]]] = queue.Queue(maxsize=1)
-        self.results: queue.Queue[tuple[int, PreviewFrame | PreviewPair | PreparedSequence | None, str | None]] = queue.Queue(maxsize=1)
+        self.results: queue.Queue[tuple[int, PreviewFrame | PreviewPair | PreparedSequence | PreparedBackground | None, str | None]] = queue.Queue(maxsize=1)
         self.stopping = threading.Event()
         self.serial = 0
         self.thread = threading.Thread(target=self._run, name='desktop-preview', daemon=True)
@@ -45,7 +46,10 @@ class PreviewLoader:
             except queue.Empty:
                 continue
             try:
-                if 'prepare_sequence' in settings:
+                if 'prepare_background' in settings:
+                    frame = prepare_background(settings['prepare_background'], check=lambda serial=serial: self._check_request(serial))
+                    self._check_request(serial)
+                elif 'prepare_sequence' in settings:
                     frame = prepare_sequence(settings['prepare_sequence'], check=lambda serial=serial: self._check_request(serial))
                 else:
                     frame = preview_pair(**settings['pair']) if 'pair' in settings else preview(**settings)

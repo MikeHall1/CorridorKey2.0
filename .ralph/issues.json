@@ -7187,6 +7187,271 @@
         "benchmark-results/ext09-foreign-connected-final/source-verification.json"
       ],
       "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-339",
+      "component": "Photo pipeline newfixture static imports",
+      "classification": "Authorfocusedstatic/source selfreview beforefix except340authorautofixbeforeledgertranscription",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "FirstRuff2 newtestfindings I001 importformat/C408 unnecessarydictkeyword beforefix.",
+      "root_cause": "Newfixture imports/options draftedbeforefocusedlint.",
+      "proposed_action": "Fixonlyownedtest import/literalformat; unchangedproduction behavior.",
+      "acceptance": "Focusedpipeline/testsRuff/Pyright andruntime pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "FirstRuff2 newtestfindings I001 importformat/C408 unnecessarydictkeyword beforefix."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-340",
+      "component": "Photo core first static import verification",
+      "classification": "Authorfocusedstatic/source selfreview beforefix except340authorautofixbeforeledgertranscription",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "AuthorunusedmathF401 fixedbyfocused--fix beforecoordinatortranscription.",
+      "root_cause": "Newmodule initialunusedimport.",
+      "proposed_action": "Retaintransparentauthorclassification; no checkerchange orbehaviorfix.",
+      "acceptance": "Focusedcorestatic/runtime pass.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "AuthorunusedmathF401 fixedbyfocused--fix beforecoordinatortranscription."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-341",
+      "component": "Photo snapshot final identity fence ordering",
+      "classification": "Authorfocusedstatic/source selfreview beforefix except340authorautofixbeforeledgertranscription",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Sourceconfirmed beforefix finalcheck callback followsassert_pin; callbackmutation can changefile afteridentityfence beforepublish.",
+      "root_cause": "Cancellationcallback orderedafterlastsourcepinidentitycheck.",
+      "proposed_action": "Runfinalcheck beforelastassert_pin, nofalliblecallback afteridentityfence; regression mutationinlastcallback refuses.",
+      "acceptance": "Latecallbacksourcechange cannotpublishsnapshot, cancellationremainsoperative.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Sourceconfirmed beforefix finalcheck callback followsassert_pin; callbackmutation can changefile afteridentityfence beforepublish."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-342",
+      "component": "Public prepared photo admission consistency",
+      "classification": "Authorfocusedstatic/source selfreview beforefix except340authorautofixbeforeledgertranscription",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Sourceconfirmed beforefix publicPreparedBackground hashesbytes/provenance butdoesnot validate declaredwork/geometry metadata equivalence; caller canforgeworkbudget bypass.",
+      "root_cause": "Publicimmutableconstructor lackscomplete pureadmission contract validation.",
+      "proposed_action": "Requireexactprovenancefields andpureBackgroundRecipe admission consistency forgeometry/pixels/encoded/work/profile/bytes; noFS inconstructor.",
+      "acceptance": "Forgedbound/geometry/profile metadata refuses beforeimageuse; validpreparedsnapshots unchanged.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Sourceconfirmed beforefix publicPreparedBackground hashesbytes/provenance butdoesnot validate declaredwork/geometry metadata equivalence; caller canforgeworkbudget bypass."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-343",
+      "component": "Photo metadata terminal retires prior playback decode ownership",
+      "classification": "Main concrete source/lifecycle contract review beforefix andruntime tests",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Mainpoll initialphoto branch consumes PreparedBackground beforePlaybackControls.complete_loader, so a higher-loader-serial preparation terminal cannot retire earlier pausedplayback.pending_serial/FrameRequest.",
+      "root_cause": "Newmetadata result routing precededexisting commonterminal owner-acknowledgement usedbysequencepreparation.",
+      "proposed_action": "Call commoncomplete_loader first for everyloaderterminal then route photometadata beforepixelaccess; regression activeplaybackdecode supersededbyphoto preparation.",
+      "acceptance": "Priorplaybackpending owner clears aftersame/laterterminal, stalepixelsrefused andphotoUIworks; no extra decoder.",
+      "owner": "root",
+      "evidence": [
+        "desktop_window.poll sourceinsert vs desktop_playback.complete_loader later-terminal contract; no runtimeexecutedyet."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-344",
+      "component": "Photo negative dataclass/set fixture static contract",
+      "classification": "AuthorfirstPyright2 newfixture invalidargument diagnostics beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Deliberate class/heterogeneous-set invalidargument tests inferredasunion passedto typedcapture/prepare APIs produce2staticerrors.",
+      "root_cause": "Negativefixture needs explicitAny boundary torepresent intentionalinvalidcallerinputs while assertingruntimeTypeError.",
+      "proposed_action": "Annotateinvalidfixturevalue Any innegativecase loop, retainsproductiontypedAPI andruntimeclass/set refusal; no ignore/suppression.",
+      "acceptance": "Focusedphoto coretests andRuff/Pyright pass; actualinvalidinputsremainrefused.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "AuthorPyright2 test_preview_background.py:71/:73 class/set inputs beforefix; productionstatic0."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-345",
+      "component": "Photo desktop newfixture import grouping",
+      "classification": "FirstfocusedRuff1 I001 beforefix; runtime/typechecks pendingcorefreeze",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Newexpectedpixel helper lacks thirdparty/localimportseparator.",
+      "root_cause": "InitialnewQtfixture importblock beforefocusedlint.",
+      "proposed_action": "Fixfocusedseparator; verifyactualQt andstatic withoutweakening assertions.",
+      "acceptance": "NewQtfixtureRuff/Pyright/runtime pass.",
+      "owner": "root",
+      "evidence": [
+        "RuffI001 tests/test_desktop_photo_background.py:60."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-346",
+      "component": "Readonly and strided photo foreground inputs",
+      "classification": "AuthoractualtinyPNG+readonly/negative-stride float32 reproduction beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "compose_photo nonlinearsRGB foreground uses torch.from_numpy oncallerreadonlybuffer (UserWarning under-Werror) ornegative strides (ValueError), despiteadvertisedfloat32RGB inputs.",
+      "root_cause": "Sharedtransfer bridge assumed writableCorder numpy storage; no ownedcopy atoptionalcompositeboundary.",
+      "proposed_action": "Copyonly nonlinearforeground intoownedCorderfloat32 storage beforetransfer, within declared conservativeworkestimate; preservecallerflags/bytes andnegative strides.",
+      "acceptance": "Readonly/negativestride sRGB foreground composites correctly under-Werror withoutmutation; source/coverage arraysunchanged.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Authorfirst12fixturetestsPASS0.612s; subsequentactualreadonly/strided inputprobes fail asdescribed beforefix."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-347",
+      "component": "Photo loader result narrowing before pixel access",
+      "classification": "Mainactual6QtPASS1.676s plus5Pyright findings beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "PreparedBackground metadata branch returns viahelper butchecker cannot infer frame exclusion andflags pixels/width/height/count/note access.",
+      "root_cause": "Interprocedural booleanhandler doesnot narrow taggedresultunion atcaller.",
+      "proposed_action": "ExplicitPreparedBackground isinstance return guard alongside handlerbeforepixelbranch, preserve commonterminalack.",
+      "acceptance": "6actualQt andtouchedstatic pass; stalephotometadata neverreachespixelaccess.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext05-photo-focused/main-qt-initial.txt6PASS1.676s; focusedPyright5 attributeerrorsdesktop_window.py1526/1530."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-348",
+      "component": "Photo pipeline fixture physical root and early cleanup",
+      "classification": "Author25focusedrun19existingPASS/6newsetUpERROR beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Newpipelinefixture usesmacOS/varTemporaryDirectory alias rejected bycorrectcoreadmission, andcleanup registeredtoo late forfailedsetUp.",
+      "root_cause": "Newtest didnot normalizephysicaltemp rootor registercleanupimmediately.",
+      "proposed_action": "Resolve onlynewfixture root; registerownedtemp cleanupimmediately. Preserve productionaliasrefusal.",
+      "acceptance": "6new+19existingpipeline casespass-Werror/static0, failedsetupdoesnot leaktemp artifact.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "/private/tmp/photo-pipeline-first.log; ownedproductionstatic0."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-349",
+      "component": "Playback photo identity in static pin provenance",
+      "classification": "Main concrete description source trace beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Photo still descriptions includecapturedhash butPlaybackControls.tick replaces preview/reference descriptionswithoutphotoidentity; pinning pausedplayback loseswhichphotowasused.",
+      "root_cause": "Newcapturedphoto provenance addedtostillpath butnot playbackdescription path reusedbystaticpin.",
+      "proposed_action": "Append boundedpreparedidentity toPhoto playback A/Bdescriptions usingcachedfieldonly; extend actualQt playbackpause\u2192pin regression.",
+      "acceptance": "Staticpin afterphotoplayback retainsphotoidentity whilefuturephotochangespreserveoldpinpixels; nofullbytehash onGUI.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "desktop_playback.py tick description assignment omits background_image.identity, mainpin_reference copiesdescription intoA caption.",
+        "Independentfinal6Qt349fix replay5PASS1FAIL1.853s: controllerSHA appendedasfinaldescriptioncomponent but pin_reference/poll rsplit removeslastpathcomponent, discardingSHA. Fixincomplete confirmedbeforefollowupremediation."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PHOTO-350",
+      "component": "Pinned visible-frame provenance during pending playback",
+      "classification": "Independentactualboundedphoto/playback reproduction beforefix; preexisting submission-caption coupling",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Visibleacceptedframe2 pixels remainwhileframe3 decodepending; pause+pin keepsframe2 pixels butlabelsreference sourceframe3 fromlatestsubmissiondescription.",
+      "root_cause": "Staticpin copiescurrentdisplaypixels togetherwith latestrequestedcaption ratherthanmetadata committedwithacceptedpixels.",
+      "proposed_action": "Commitdisplayedpreviewdescription alongsideacceptedQPixmap; pin usescommitteddisplaycaption/tooltip only. Submitteddescriptions remainrequestmetadata. Regression actualpendingframe withnoGUIterminalpoll thenpause/pin.",
+      "acceptance": "Pinnedpixel/captionsourceframe agree afterpendingseek/pause; photoidentity andsourceoffset/staticpair behaviorpreserved; errors/stalecompletionscannotchangecommittedmetadata.",
+      "owner": "root; readiness_review",
+      "evidence": [
+        "Independentactualvisible_frame2/pending_frame3/pinned_pixels_sameTrue butcaption sourceframe3 oncontroller17e30f source; no edits/nohardwareclaim."
+      ],
+      "verification": [
+        "docs/photo-backgrounds-review.md",
+        "benchmark-results/ext05-photo-focused/",
+        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
     }
   ]
 }

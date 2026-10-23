@@ -39,7 +39,7 @@ class Playback:
 
     def __init__(self, view: RenderView, *, source_identity: str, timebase: str,
                  timing_evidence: str, reference: RenderView | None = None,
-                 mode: str = 'Source', reference_mode: str | None = None, background=None,
+                 mode: str = 'Source', reference_mode: str | None = None, background=None, background_image=None,
                  clock: Callable[[], float] = time.monotonic):
         self.clock = clock
         self.generation = 0
@@ -54,7 +54,7 @@ class Playback:
         self._last_clock: float | None = None
         self.bind(view, source_identity=source_identity, timebase=timebase,
                   timing_evidence=timing_evidence, reference=reference,
-                  mode=mode, reference_mode=reference_mode, background=background)
+                  mode=mode, reference_mode=reference_mode, background=background, background_image=background_image)
 
     def _now(self) -> float:
         now = self.clock()
@@ -67,7 +67,7 @@ class Playback:
 
     def bind(self, view: RenderView, *, source_identity: str, timebase: str,
              timing_evidence: str, reference: RenderView | None = None,
-             mode: str = 'Source', reference_mode: str | None = None, background=None) -> None:
+             mode: str = 'Source', reference_mode: str | None = None, background=None, background_image=None) -> None:
         if timebase not in {'cfr_verified', 'sequence_declared'} or not isinstance(timing_evidence, str) or not timing_evidence.strip():
             raise ValueError('Playback requires explicit CFR evidence or a declared sequence rate; VFR/unknown timing is unsupported.')
         if not isinstance(source_identity, str) or not source_identity.strip():
@@ -78,14 +78,15 @@ class Playback:
         if start < 0 or end <= start:
             raise ValueError('Playback range must be nonempty.')
         # Validate display modes before changing the current configuration.
-        view.options(mode, start, background)
+        view.options(mode, start, background, background_image=background_image)
         if reference is not None:
-            reference.options(reference_mode or mode, start, background)
+            reference.options(reference_mode or mode, start, background, background_image=background_image)
         now = self._now()
         self.view, self.reference = view, reference
         self.source_identity, self.timebase = source_identity, timebase
         self.timing_evidence = timing_evidence
         self.mode, self.background = mode, background
+        self.background_image = background_image
         self.reference_mode = reference_mode or mode
         self.start, self.end = start, end
         self.frame = start
@@ -167,9 +168,9 @@ class Playback:
             self.dropped_opportunities += advanced
             return None
         self.dropped_opportunities += max(0, advanced - 1)
-        options = self.view.options(self.mode, self.frame, self.background)
+        options = self.view.options(self.mode, self.frame, self.background, background_image=self.background_image)
         if self.reference is not None:
-            options = {'pair': {'a': self.reference.options(self.reference_mode, self.frame, self.background), 'b': options}}
+            options = {'pair': {'a': self.reference.options(self.reference_mode, self.frame, self.background, background_image=self.background_image), 'b': options}}
         self.serial += 1
         request = FrameRequest(self.serial, self.generation, self.source_identity,
                                self.frame, self.frame / self.view.fps, options)

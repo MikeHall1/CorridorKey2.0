@@ -282,3 +282,18 @@ destination and correction-resource rebinding. Desktop report projection reads
 archival settings without constructing an operational native job. Public
 plan/inspection/pin association checks precede path-derived filesystem work.
 See [review and remaining acceptance](portable-foreign-review.md).
+
+
+## Immutable photo preview snapshots
+
+`preview_background.py` admits a Qt-free explicit recipe, validates bounded local
+header/encoded/decode identity and produces immutable linear709 bytes with cached
+identity/profile/geometry/provenance. Compositing creates fresh linear pixels;
+`desktop_preview.py` applies the existing display conversion once. The existing
+PreviewLoader handles background preparation, ordinary decoding and atomic A/B
+on one owner, with capacity1 pending/result queues. Playback carries the same
+snapshot and binds by its cached identity. Desktop controls perform no image I/O
+on open, fence superseded selection/late results, and wait for loader close.
+Displayed metadata commits with accepted pixels so static pins retain the visible
+frame/photo identity even while a later frame is pending. No engine/export path
+or saved job format changes. [Workflow/limits](photo-backgrounds.md).

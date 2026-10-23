@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 from numpy.typing import NDArray
 
+from .preview_background import PreparedBackground, compose_photo
 from .preview_sequence import SequenceIndex
 from .scheduling import frame_paths
 
@@ -69,11 +70,14 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
             alpha_mode: str = 'ignore', alpha_path: str | None = None,
             background: tuple[float, float, float] | None = None, max_side: int = 1280,
             expected_count: int | None = None, expected_hw: tuple[int, int] | None = None,
-            source_colour_profile: str = 'legacy', sequence: SequenceIndex | None = None) -> PreviewFrame:
+            source_colour_profile: str = 'legacy', sequence: SequenceIndex | None = None,
+            background_image: PreparedBackground | None = None) -> PreviewFrame:
     from .color_utils import linear_to_srgb, srgb_to_linear
 
     if type(max_side) is not int or max_side < 1:
         raise ValueError('Preview maximum side must be positive.')
+    if background_image is not None and (coverage or alpha_path is None or background is not None):
+        raise ValueError('Photo compositing requires straight foreground and alpha exports, with no solid background.')
     if not coverage:
         from .colour_contract import describe_source_colour
         describe_source_colour(source_colour_profile, scene_linear=linear)
@@ -101,17 +105,20 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
         alpha = alpha_rgb[:, :, :1]
         if np.any((alpha < 0) | (alpha > 1)):
             raise ValueError('Export alpha must be coverage in [0,1].')
-        if background is None:
-            y, x = np.indices((height, width))
-            checker = np.where(((x // 32 + y // 32) % 2)[:, :, None], 0.65, 0.35).astype(np.float32)
-            backdrop = np.repeat(checker, 3, axis=2)
+        if background_image is not None:
+            rgb = linear_to_srgb(compose_photo(rgb, alpha, background_image, foreground_linear=linear))
         else:
-            if len(background) != 3 or not all(np.isfinite(v) and 0 <= v <= 1 for v in background):
-                raise ValueError('Background must be three finite sRGB values in [0,1].')
-            backdrop = np.broadcast_to(np.array(background, dtype=np.float32), rgb.shape).copy()
-        # Explicitly composite straight foreground and coverage in linear light.
-        foreground = rgb if linear else srgb_to_linear(rgb)
-        rgb = linear_to_srgb(foreground * alpha + srgb_to_linear(backdrop) * (1 - alpha))
+            if background is None:
+                y, x = np.indices((height, width))
+                checker = np.where(((x // 32 + y // 32) % 2)[:, :, None], 0.65, 0.35).astype(np.float32)
+                backdrop = np.repeat(checker, 3, axis=2)
+            else:
+                if len(background) != 3 or not all(np.isfinite(v) and 0 <= v <= 1 for v in background):
+                    raise ValueError('Background must be three finite sRGB values in [0,1].')
+                backdrop = np.broadcast_to(np.array(background, dtype=np.float32), rgb.shape).copy()
+            # Explicitly composite straight foreground and coverage in linear light.
+            foreground = rgb if linear else srgb_to_linear(rgb)
+            rgb = linear_to_srgb(foreground * alpha + srgb_to_linear(backdrop) * (1 - alpha))
     elif linear:
         rgb = linear_to_srgb(rgb)
     rgb = np.asarray(rgb, dtype=np.float32)
@@ -125,6 +132,8 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
     note = ('Coverage display' if coverage else 'sRGB display; HDR/negative values clip only in this viewer')
     if not coverage and source_colour_profile != 'legacy':
         note += f'; source {source_colour_profile} → working BT.709 D65'
+    if background_image is not None:
+        note += '; photographic background, native exact geometry; display only'
     if sequence is not None:
         note += '; frozen path/stat sequence index; source content is not authenticated'
     if fps is not None:
@@ -140,6 +149,9 @@ class PreviewPair:
 
 def preview_pair(a: dict, b: dict) -> PreviewPair:
     """Publish both thumbnails together or fail the entire comparison."""
+    photo_a, photo_b = a.get('background_image'), b.get('background_image')
+    if photo_a is not None and photo_b is not None and photo_a is not photo_b:
+        raise ValueError('Photo comparison must use the same immutable prepared background snapshot.')
     first, second = preview(**a), preview(**b)
     if (first.width, first.height) != (second.width, second.height):
         raise ValueError('Comparison frames have different native geometry.')

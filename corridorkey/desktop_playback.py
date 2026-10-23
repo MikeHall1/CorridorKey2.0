@@ -102,19 +102,20 @@ class PlaybackControls(QWidget):
             if reference is not None and (not reference.linear or not Path(reference.source).is_dir()):
                 raise ValueError('Synchronized playback A also requires recorded sequence/EXR timing.')
             mode = owner.view.currentText()
+            background_image = getattr(owner, 'background_image', None)
             if mode == 'Source' and owner.source.text().strip() != view.source:
                 raise ValueError('Source playback must match the selected completed render source.')
             for current, current_mode in ((view, mode), (reference, owner.reference_mode or mode)):
                 if current is None:
                     continue
-                options = current.options(current_mode, current.start, owner.background)
+                options = current.options(current_mode, current.start, owner.background, background_image=background_image)
                 if any(not Path(options[key]).is_dir() for key in ('path', 'alpha_path') if key in options):
                     raise ValueError('Playback supports image-sequence directories only; video/VFR exports are unsupported.')
             start, end = common_range(view, reference) if reference is not None else (view.start, view.end)
             lower = int(self.in_frame.text()) if self.in_frame.text().strip() else start
             upper = int(self.out_frame.text()) if self.out_frame.text().strip() else end
             binding = (request_id, state['job'], view, reference, mode, owner.reference_mode,
-                       owner.background, lower, upper, owner.frame.value(), owner.source.text(),
+                       owner.background, None if background_image is None else background_image.identity, lower, upper, owner.frame.value(), owner.source.text(),
                        owner.config.toPlainText())
             if self.engine is not None and self.binding == binding:
                 if self.engine.playing:
@@ -125,11 +126,13 @@ class PlaybackControls(QWidget):
                 if self.engine is None:
                     self.engine = Playback(view, source_identity=view.source, timebase='sequence_declared',
                                            timing_evidence=timing_evidence, reference=reference, mode=mode,
-                                           reference_mode=owner.reference_mode or mode, background=owner.background)
+                                           reference_mode=owner.reference_mode or mode, background=owner.background,
+                                           background_image=background_image)
                 else:
                     self.engine.bind(view, source_identity=view.source, timebase='sequence_declared',
                                      timing_evidence=timing_evidence, reference=reference, mode=mode,
-                                     reference_mode=owner.reference_mode or mode, background=owner.background)
+                                     reference_mode=owner.reference_mode or mode, background=owner.background,
+                                     background_image=background_image)
                 self.engine.set_range(lower, upper)
                 self.engine.set_speed(self.speed.currentData())
                 self.engine.set_loop(self.loop.isChecked())
@@ -299,9 +302,12 @@ class PlaybackControls(QWidget):
             return
         self.pending_serial, self.pending_request = serial, request
         self.workspace.preview_serial = serial
-        self.workspace.preview_description = f'{self.engine.mode} · source frame {request.source_frame} · {request.source_seconds:.6f}s · {self.engine.view.source}'
+        photo_identity = None if self.engine.background_image is None else self.engine.background_image.identity[:16]
+        photo_b = f' · photo {photo_identity}' if self.engine.mode == 'Photo composite' and photo_identity is not None else ''
+        self.workspace.preview_description = f'{self.engine.mode}{photo_b} · source frame {request.source_frame} · {request.source_seconds:.6f}s · {self.engine.view.source}'
         if self.engine.reference is not None:
-            self.workspace.reference_description = f'{self.engine.reference_mode} · source frame {request.source_frame} · {request.source_seconds:.6f}s · synchronized A'
+            photo_a = f' · photo {photo_identity}' if self.engine.reference_mode == 'Photo composite' and photo_identity is not None else ''
+            self.workspace.reference_description = f'{self.engine.reference_mode}{photo_a} · source frame {request.source_frame} · {request.source_seconds:.6f}s · synchronized A'
         self._status('Buffering')
 
     def complete_loader(self, serial: int, error: str | None) -> bool | None:
