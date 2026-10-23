@@ -51,6 +51,7 @@ from .desktop_recovery import RecoveryPanel
 from .desktop_resources import ResourcesPanel
 from .desktop_settings import SettingsPanel
 from .desktop_state import load_project, pretty_settings, save_project, settings_job
+from .desktop_viewport import PreviewViewport, ViewportState
 from .session import JobRequest
 from .worker_client import WorkerClient
 from .worker_protocol import decode_frame, job_to_wire, request_frame
@@ -249,16 +250,14 @@ class DesktopWindow(QMainWindow):
         self._button('Preview', self.request_preview, viewer_bar)
         self._button('Background…', self.choose_background, viewer_bar)
         workspace.addLayout(viewer_bar)
-        self.image = QLabel('Open a video or frame directory, then select Preview.\nExport views use a selected completed queue job.')
-        self.image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.viewport_state = ViewportState(self)
+        self.image = PreviewViewport(self.viewport_state, 'Open a video or frame directory, then select Preview.\nExport views use a selected completed queue job.')
         self.image.setMinimumSize(300, 220)
         self.image.setStyleSheet('background:#15191d;color:#cbd2d9;border:1px solid #45515c')
         comparison = QHBoxLayout()
         comparison.addWidget(self.image, 1)
-        self.reference_image = QLabel('A · Pin a displayed frame for comparison')
-        self.reference_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.reference_image = PreviewViewport(self.viewport_state, 'A · Pin a displayed frame for comparison')
         self.reference_image.setMinimumSize(180, 160)
-        self.reference_image.setWordWrap(True)
         self.reference_image.setStyleSheet('background:#15191d;color:#cbd2d9;border:1px solid #45515c')
         comparison.addWidget(self.reference_image, 1)
         workspace.addLayout(comparison, 3)
@@ -266,6 +265,13 @@ class DesktopWindow(QMainWindow):
         self._button('Pin displayed frame as A', self.pin_reference, comparison_bar)
         self._button('Selected render as synchronized A', self.synchronize_reference, comparison_bar)
         self._button('Clear A', self.clear_reference, comparison_bar)
+        self._button('Zoom in', lambda: self.viewport_state.zoom_by(1.25), comparison_bar)
+        self._button('Zoom out', lambda: self.viewport_state.zoom_by(.8), comparison_bar)
+        self._button('Fit A/B', self.viewport_state.fit, comparison_bar)
+        self.zoom_label = QLabel(self.viewport_state.label)
+        self.zoom_label.setToolTip('Matched A/B wheel zoom and left-drag pan. Scale refers to the decoded preview, capped at 1280 pixels; no native-pixel inspection claim.')
+        self.viewport_state.changed.connect(lambda: self.zoom_label.setText(self.viewport_state.label))
+        comparison_bar.addWidget(self.zoom_label)
         workspace.addLayout(comparison_bar)
         self.reference_note = QLabel('A is a fixed display snapshot; compare the same frame and view for render A/B.')
         self.reference_note.setWordWrap(True)
@@ -866,8 +872,7 @@ class DesktopWindow(QMainWindow):
         self.moving_reference = None
         self.frame_label.setText('Frame (zero-based)')
         self.reference = self.pixmap.copy()
-        self.reference_image.setPixmap(self.reference.scaled(self.reference_image.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                                           Qt.TransformationMode.SmoothTransformation))
+        self.reference_image.setPixmap(self.reference)
         self.reference_note.setText('A · ' + self.preview_description.rsplit(' · ', 1)[0])
         self.reference_note.setToolTip(self.preview_description)
 
@@ -1215,16 +1220,14 @@ class DesktopWindow(QMainWindow):
                 pixels = frame.a.pixels
                 image = QImage(pixels.data, pixels.shape[1], pixels.shape[0], pixels.strides[0], QImage.Format.Format_RGB888).copy()
                 self.reference = QPixmap.fromImage(image)
-                self.reference_image.setPixmap(self.reference.scaled(self.reference_image.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                                                    Qt.TransformationMode.SmoothTransformation))
+                self.reference_image.setPixmap(self.reference)
                 self.reference_note.setText('A · ' + self.reference_description.rsplit(' · ', 1)[0] + '\n' + frame.a.note)
                 self.reference_note.setToolTip(self.reference_description)
                 frame = frame.b
             pixels = frame.pixels
             image = QImage(pixels.data, pixels.shape[1], pixels.shape[0], pixels.strides[0], QImage.Format.Format_RGB888).copy()
             self.pixmap = QPixmap.fromImage(image)
-            self.image.setPixmap(self.pixmap.scaled(self.image.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                                    Qt.TransformationMode.SmoothTransformation))
+            self.image.setPixmap(self.pixmap)
             self.preview_note.setText(f'B · {self.preview_description.rsplit(" · ", 1)[0]}\n{frame.width}×{frame.height} · {frame.count} frames · {frame.note}')
             self.preview_note.setToolTip(self.preview_description)
             if comparison_pair:

@@ -42,6 +42,17 @@ independent of subsequent form edits and limited by the4MiB worker-frame bound.
 Requested and observed frame counts are separate. If fewer frames are reported,
 the cause/source-end truncation remains NOT VERIFIED without supporting metadata.
 
+Failed and cancelled terminal events retain the matching engine record without
+requiring a coalesced progress event. Reports preserve errors/notes, requested and
+effective observations and the **last attempted engine checkpoint**. That boundary
+is execution context, not proof of the exact native operation that failed. The
+failure boundary is copied before cleanup; later cleanup checkpoints remain
+separate. Reused-model jobs start a new processing boundary. Early validation or
+queued cancellation can lack settings or a record: those fields remain NOT
+VERIFIED. Contradictory records are refused. Partial reported CUDA work does not
+establish successful inference, throughput or completed-output inspection. The
+submitted snapshot follows the existing worker wire path normalization.
+
 **Inspect completed frame** explicitly decodes one selected source-coordinate
 frame off-thread into a thumbnail capped at512pixels per side. Alpha, Foreground
 and checker composite use existing render view/colour adapters. Cutout-only or

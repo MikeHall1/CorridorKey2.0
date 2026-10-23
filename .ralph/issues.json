@@ -5590,6 +5590,53 @@
       "requirement": "EXT-01 reviewable explicitrender and exactfailingstage evidence",
       "resolution": "Focused correction verified with independent stable review; no remaining blocking finding in this increment. Exact fix and acceptance retained above.",
       "relevant_commit": "Second readiness checkpoint containing these records; publication identity in benchmark-results/ext01-guided-publication.json."
+    },
+    {
+      "id": "HEALTH-TEST-265",
+      "component": "focused failure-context fixture selection/tests",
+      "classification": "pre-acceptance test invocation and static finding",
+      "severity": "low",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Focused module selection doesnotadd tests tosys.path for existing absolute helperimports; new readonlymutation assertion tripsRuffB010.",
+      "evidence": [
+        "benchmark-results/ext01-failure-checkpoints-focused.txt:41tests,1importerror(test_corrections helper),otherspass.",
+        "Initial newfixture RuffB0101/Pyright6OptionalMemberAccess diagnostics; rawtool output retained."
+      ],
+      "root_cause": "Existing unittestdiscovery imports are assumed by one selectedmodule; constantsetattr spelling in intentionally invalidmutation test.",
+      "proposed_action": "Use command-local PYTHONPATH=tests for focused selection, variableattributename for intentionalreadonlymutation and explicit non-None result assertion; preserve runtime/checkerpolicy.",
+      "acceptance": "Focused session/control/worker fixtures and newstaticchecks pass; full discovery remains unchanged.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext01-failure-checkpoints-fixed.txt",
+        "Independent stable review:20 checkpoint/viewport/serializer cases PASS0.201s; no blocking finding.",
+        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
+      ],
+      "requirement": "Proportionate trustworthy verification",
+      "resolution": "Correct command-local helper path and typed fixture assertions; no runtime/checker weakening."
+    },
+    {
+      "id": "HEALTH-READINESS-266",
+      "component": "Readiness submitted snapshot wire binding",
+      "classification": "pre-acceptance compatibility fixture and binding finding",
+      "severity": "low",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Direct JobRequest config temp paths can use /var aliases while submitted wire transport canonicalizes to /private/var; raw pre-wire comparison can reject matching terminal metadata.",
+      "root_cause": "Readiness retained the pre-wire prepared object rather than the immutable transport-normalized snapshot.",
+      "proposed_action": "Capture job_from_wire(job_to_wire(prepared)) at submission; normalize fixtures using the same existing contract.",
+      "acceptance": "Matching records accepted across path aliases; settings and provenance unchanged; mismatched records remain refused.",
+      "evidence": [
+        "Readiness agent focused terminal-record fixtures exposed existing wire temp-path normalization."
+      ],
+      "verification": [
+        "/private/tmp/corridorkey-readiness-failure-tests.txt:25 readiness cases PASS3.951s, Ruff/Pyright0; independent review pending.",
+        "Independent44Qt cases PASS5.844s; wire binding accepted with stable hashes.",
+        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
+      ],
+      "owner": "root; readiness_ui",
+      "requirement": "EXT-01 reports bind to actual submitted immutable job",
+      "resolution": "Existing transport canonicalization preserves actual submitted snapshot; independent final review accepts."
     }
   ]
 }

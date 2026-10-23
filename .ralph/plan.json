@@ -16,9 +16,11 @@
         "benchmark-results/ext01-ext05-final-fixed/verification.json",
         "docs/readiness.md",
         "corridorkey/readiness_capabilities.py",
-        "tests/test_desktop_first_run.py"
+        "tests/test_desktop_first_run.py",
+        "tests/test_failure_checkpoints.py",
+        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
       ],
-      "next_action": "Capture failed/cancelled engine record stage summaries; remaining inspection-role coverage and actual CUDA/weights/localfootage acceptance stay pending."
+      "next_action": "Remaining inspection roles and actual CUDA/pretrained/localfootage/fullclip/display/encoding acceptance; contextual failed/cancelled records locally verified."
     },
     {
       "id": "EXT-05",
@@ -34,9 +36,12 @@
         "tests/test_playback.py",
         "tests/test_desktop_playback.py",
         "docs/product-improvements.md",
-        "benchmark-results/ext01-ext05-final-fixed/verification.json"
+        "benchmark-results/ext01-ext05-final-fixed/verification.json",
+        "corridorkey/desktop_viewport.py",
+        "tests/test_desktop_viewport.py",
+        "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
       ],
-      "next_action": "Add persistent bounded readers/cache and matched zoom/pan; source-only playback/video timestamp proof remains pending."
+      "next_action": "Source-only playback, photo backgrounds and persistent bounded reader/cache; video/VFR runtime acceptance pending."
     },
     {
       "id": "EXT-02",

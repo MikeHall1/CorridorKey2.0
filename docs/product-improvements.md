@@ -49,7 +49,8 @@ downloads, installation or environment changes are introduced.
 
 EXT-01 now has first-run introduction, explicit backend/encoder metadata probes,
 matching engine-reported execution and selected output decoding/Qt presentation.
-Failed/cancelled engine stage summaries, remaining inspection roles and actual
+Matching failed/cancelled engine records now preserve contextual checkpoints and
+partial work separately from success. Remaining inspection roles and actual
 CUDA/local-footage acceptance remain pending. See [readiness](readiness.md). The other workflows remain incomplete; initial sequence playback is described below.
 Required external evidence remains CUDA/pretrained weights/permitted footage,
 optional segmentation provider/hardware, Windows packaging and actual Resolve
@@ -73,8 +74,15 @@ sole owner, with one pending playback token; no new decode thread or cache.
 The existing50ms poll admits at most20poll opportunities/second, so playback may
 drop opportunities even for24fps sources. Counters describe scheduling/buffering,
 not calibrated decoder performance. Readers reopen for each frame. Video/VFR,
-persistent readers/cache, matching zoom/pan and photographic backgrounds remain
+persistent readers/cache and photographic backgrounds remain
 pending; existing checker and solid colour backgrounds work. No real-time claim.
+A/B surfaces share decoded-pixel zoom and normalized source centre. Wheel zoom,
+left-drag pan and visible Zoom in/out/Fit controls alter display only. The label
+explicitly states decoded-preview scale (normal cap1280pixels), not native-pixel
+inspection. Different-sized views fit using the smaller available scale; each
+retains only its bounded pixmap. Six Qt tests cover transforms, source mapping,
+fit, native child destruction and immutable image snapshots.
+
 Thirteen actual PNG/nativeEXR offscreen tests exercise playback, pause/manual seek,
 loops, speed, A/Bsource3→Aexport2/Bexport1, stale native decode retirement and
 source preservation. The headless planner has12deterministic tests.

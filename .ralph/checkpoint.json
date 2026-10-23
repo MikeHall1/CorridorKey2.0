@@ -1,24 +1,22 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T12:02:52.420074+00:00",
+  "created_utc": "2026-10-23T12:19:47.267373+00:00",
   "objective_source": "docs/product-improvements-brief.md",
-  "base_commit": "3c7d4f4230ce29365451fdf481b5d1c760248fcf",
+  "base_commit": "058da5e1478be15eb88ad5199a53dd1106dac00d",
   "product_complete": false,
   "local_implementation_complete": false,
-  "run_state": "Second readiness increment locally accepted; all ten-feature implementation remains incomplete",
+  "run_state": "Third connected readiness/playback increment locally accepted; all ten workflows incomplete",
   "checkpoint_interval": 5,
-  "cycles_completed": 10,
+  "cycles_completed": 15,
   "completed_work": [
-    "First-run introduction and explicitforce/suppressflags with scopedQSettings fixtures.",
-    "Explicitboundedbackend/encoderhelp probes,candidatealias semantics, directprocesscancel/kill/reap.",
-    "Captured matchingcompletedjob and explicit512px outputinspection with separateengine/decode/Qt/humanquality evidence.",
-    "Requestcontext/cancel/Escape/hiddenpreparedsnapshot fencing and accurate shortcount/Qt error reports.",
-    "SAM2/Cutie officialsource evaluation, no install/model execution.",
-    "Independentreview +1047CPU/338filefullgate;0newstatic."
+    "Immutable last attempted checkpoint retained before failed checks/progress and copied before cleanup.",
+    "Matching bounded failed/cancelled engine records preserve errors/settings/work separately from successful inference.",
+    "Shared decoded-pixel A/B zoom/pan/Fit with bounded pixmaps and native-child lifetime handling.",
+    "Independent stable source review and1064CPU/341file gate;0newstatic."
   ],
   "verification": [
-    "benchmark-results/ext01-guided-accepted/verification.json",
-    "benchmark-results/ext01-guided-accepted/source-verification.json"
+    "benchmark-results/ext01-failures-ext05-viewport-accepted/verification.json",
+    "benchmark-results/ext01-failures-ext05-viewport-accepted/source-verification.json"
   ],
   "previous_review_evidence": {
     "evidence": "benchmark-results/fresh-review-final-source-verification.json",
@@ -54,17 +52,17 @@
     "status": "See publication receipt after normal push acknowledgment",
     "destination": "MikeHall1/CorridorKey2.0",
     "branch": "review/corridorkey-audit-20261023",
-    "previous_published_commit": "3c7d4f4230ce29365451fdf481b5d1c760248fcf",
-    "confirmation_file": "benchmark-results/ext01-guided-publication.json"
+    "previous_published_commit": "058da5e1478be15eb88ad5199a53dd1106dac00d",
+    "confirmation_file": "benchmark-results/ext01-failures-ext05-viewport-publication.json"
   },
-  "next_action": "Capture failed/cancelled engine record stage summaries; finish remaining playback controls and tracked corrections; all external acceptance stays unverified.",
-  "checkpoint_commit": "Commit containing this record; exact publication identity in benchmark-results/ext01-guided-publication.json",
+  "next_action": "Continue tracked corrections kernel/persistence; source-only playback/photo backgrounds. External product acceptance stays unverified.",
+  "checkpoint_commit": "Commit containing this record; exact identity in benchmark-results/ext01-failures-ext05-viewport-publication.json",
   "verification_summary": {
-    "cpu_tests": 1047,
-    "cpu_seconds": 77.537,
+    "cpu_tests": 1064,
+    "cpu_seconds": 74.442,
     "skips": 0,
-    "source_files": 338,
-    "reviewed_source_identity": "3018655e0f09fa8fbb60b56640a80877f925f35039bf47f1322cd21d21faeb0c",
+    "source_files": 341,
+    "reviewed_source_identity": "0d6af0ddce79f57b69a859f089c02fb822653ae2c6221287548479fbff8482c0",
     "new_vs_actual_previous_checkpoint": {
       "ruff": {},
       "pyright": {}
@@ -75,11 +73,7 @@
     "static_clean": false
   },
   "resolved_review_issues": [
-    "HEALTH-READINESS-259",
-    "HEALTH-READINESS-260",
-    "HEALTH-READINESS-261",
-    "HEALTH-READINESS-262",
-    "HEALTH-READINESS-263",
-    "HEALTH-READINESS-264"
+    "HEALTH-TEST-265",
+    "HEALTH-READINESS-266"
   ]
 }

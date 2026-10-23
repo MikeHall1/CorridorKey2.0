@@ -30,10 +30,22 @@ from .output_paths import output_layout
 from .readiness import check_readiness, export_report, prepare_short_render
 from .readiness_capabilities import check_capabilities
 from .session import JobRequest
-from .worker_protocol import MAX_FRAME_BYTES, job_to_wire
+from .worker_protocol import MAX_FRAME_BYTES, job_from_wire, job_to_wire
 
 if TYPE_CHECKING:
     from .desktop_window import DesktopWindow
+
+
+def _cuda_work_reported(execution):
+    def positive(value):
+        return type(value) is int and value > 0
+    return (execution.get('backend') == 'pytorch' and execution.get('requested_device') == 'cuda'
+            and isinstance(execution.get('gpu'), str) and bool(execution['gpu'].strip())
+            and type(execution.get('device_index')) is int and execution['device_index'] >= 0
+            and isinstance(execution.get('cuda_version'), str) and bool(execution['cuda_version'].strip())
+            and positive(execution.get('stage2_calls'))
+            and positive(execution.get('stage2_frame_evaluations'))
+            and positive(execution.get('completed_prediction_frames')))
 
 
 class ReadinessPanel(QDialog):
@@ -58,6 +70,7 @@ class ReadinessPanel(QDialog):
         self.latest_job: JobRequest | None = None
         self.latest_request_id: str | None = None
         self.completed_record: dict | None = None
+        self.failed_record: dict | None = None
         self.completed_output: RenderView | None = None
         self.render_revision = 0
         self.inspection_revision = 0
@@ -242,8 +255,9 @@ class ReadinessPanel(QDialog):
         assert self.prepared is not None
         self.render_revision += 1
         self.inspection_revision += 1
-        self.latest_job, self.latest_request_id = self.prepared, request_id
+        self.latest_job, self.latest_request_id = job_from_wire(job_to_wire(self.prepared)), request_id
         self.completed_record, self.completed_output = None, None
+        self.failed_record = None
         self.inspection_mode.clear()
         self.thumbnail_pixmap = None
         self.thumbnail.setText('Waiting for this guided job to complete. No output decoded.')
@@ -304,17 +318,115 @@ class ReadinessPanel(QDialog):
                     if self.render_observation is not None:
                         self.render_observation['record_validation'] = {'status': 'FAIL', 'error': str(exc)[:4096]}
                     self.status.setText('Completed-output inspection unavailable: ' + str(exc))
+            elif kind in {'failed', 'cancelled'}:
+                self._capture_failure(kind, payload)
             else:
                 self.status.setText(f'Guided job {kind} · {payload.get("error", "")}. Inspection requires this job to complete successfully.')
             self._buttons()
 
+    @staticmethod
+    def _bounded_record(record):
+        if not isinstance(record, dict):
+            raise TypeError('No engine record is available; queued cancellation/transport failure may have no attempted engine checkpoint.')
+        raw = json.dumps(record, allow_nan=False, separators=(',', ':')).encode('utf-8')
+        if len(raw) > MAX_FRAME_BYTES:
+            raise ValueError('Worker record exceeds the 4 MiB worker protocol limit.')
+        return json.loads(raw)
+
+    @staticmethod
+    def _reported_error(error):
+        if not isinstance(error, dict):
+            return {'type': 'NOT VERIFIED', 'message': str(error)[:4096], 'notes': []}
+        notes = error.get('notes', [])
+        if not isinstance(notes, list) or any(not isinstance(note, str) for note in notes):
+            notes = ['Malformed engine error notes; NOT VERIFIED']
+        return {'type': str(error.get('type', 'NOT VERIFIED'))[:4096],
+                'message': str(error.get('message', ''))[:4096],
+                'notes': notes}
+
+    def _capture_failure(self, kind, payload):
+        assert self.render_observation is not None and self.latest_job is not None
+        observation = self.render_observation
+        observation.update({'terminal_kind': kind, 'terminal_error': self._reported_error(payload.get('error')),
+                            'actual_inference': 'NOT VERIFIED', 'output_decode': 'NOT VERIFIED', 'display': 'NOT VERIFIED',
+                            'failure_checkpoint': None,
+                            'failure_checkpoint_scope': 'Last attempted engine checkpoint; not proof of the exact native suboperation that failed.',
+                            'engine_reported_partial_cuda_work': 'NOT VERIFIED'})
+        try:
+            captured = self._bounded_record(payload.get('record'))
+            job = self.latest_job
+            if captured.get('status') != kind:
+                raise ValueError('Engine record status differs from the matching failed/cancelled terminal event.')
+            if captured.get('input') != job.input_path or captured.get('output_dir') != job.output_dir:
+                raise ValueError('Failed/cancelled record source or output destination differs from the submitted snapshot.')
+            for key, expected in (('requested_settings', json.loads(job.config_json)), ('writer_settings', json.loads(job.writer_json)),
+                                  ('hints', {'first_frame': job.initial_hint_path, 'full': job.hint_video_path})):
+                if captured.get(key) is not None and captured[key] != expected:
+                    raise ValueError(f'Failed/cancelled record {key} differs from the submitted snapshot.')
+            diagnostics = captured.get('diagnostics')
+            if diagnostics is None:
+                diagnostics = {}
+            if not isinstance(diagnostics, dict):
+                raise TypeError('Failed/cancelled diagnostics must be an object or absent before validation.')
+            config, _ = job.configurations()
+            source = diagnostics.get('source')
+            if source is not None:
+                if not isinstance(source, dict):
+                    raise TypeError('Failed/cancelled source metadata must be an object when present.')
+                if source.get('start_frame') is not None and (type(source['start_frame']) is not int or source['start_frame'] != (config.start_frame or 0)):
+                    raise ValueError('Failed/cancelled source In differs from the submitted snapshot.')
+                if source.get('num_frames') is not None and (type(source['num_frames']) is not int or not 1 <= source['num_frames'] <= config.num_frames):
+                    raise ValueError('Failed/cancelled source count exceeds the requested guided range.')
+            frames = diagnostics.get('frames_submitted')
+            if frames is not None and (type(frames) is not int or not 0 <= frames <= config.num_frames):
+                raise ValueError('Failed/cancelled submitted-frame count contradicts the requested guided range.')
+            planned = {role: str(Path(job.output_dir) / item['path']) for role, item in output_layout(job.input_path, config)['outputs'].items()}
+            outputs = diagnostics.get('outputs')
+            if outputs is not None and (not isinstance(outputs, dict) or any(role not in planned or path != planned[role] for role, path in outputs.items())):
+                raise ValueError('Failed/cancelled output paths differ from the submitted job layout.')
+            checkpoint = captured.get('failure_checkpoint')
+            if checkpoint is None:
+                checkpoint = diagnostics.get('last_checkpoint')
+            if checkpoint is not None:
+                if (not isinstance(checkpoint, dict) or not isinstance(checkpoint.get('stage'), str) or not 1 <= len(checkpoint['stage']) <= 1024
+                        or type(checkpoint.get('completed')) is not int or checkpoint['completed'] < 0
+                        or (checkpoint.get('total') is not None and (type(checkpoint['total']) is not int or checkpoint['total'] < 0))):
+                    raise ValueError('Malformed last attempted engine checkpoint; failure stage NOT VERIFIED.')
+                checkpoint = {key: checkpoint.get(key) for key in ('stage', 'completed', 'total')}
+            execution = diagnostics.get('execution')
+            execution = execution if isinstance(execution, dict) else {}
+            self.failed_record = captured
+            observation.update({
+                'record_validation': 'PASS: matching failed/cancelled engine metadata; absent early-validation settings are not inferred',
+                'failure_checkpoint': checkpoint,
+                'engine_reported_partial_cuda_work': 'ENGINE REPORTED CUDA WORK BEFORE FAILURE/CANCELLATION' if _cuda_work_reported(execution) else 'NOT VERIFIED',
+                'engine_reported': {'status': captured['status'], 'requested_settings': captured.get('requested_settings'),
+                                    'effective_settings': diagnostics.get('effective_settings'), 'writer_settings': captured.get('writer_settings'),
+                                    'source': diagnostics.get('source'), 'execution': execution,
+                                    'frames_submitted': diagnostics.get('frames_submitted'), 'outputs': outputs,
+                                    'model_reused': captured.get('model_reused'), 'model_load_seconds': captured.get('model_load_seconds'),
+                                    'model_initialization_seconds': captured.get('model_initialization_seconds'),
+                                    'model_load_status': 'NOT VERIFIED: failed/cancelled job; raw load/reuse observations retained',
+                                    'weights': captured.get('weights'), 'asset_paths': captured.get('asset_paths'),
+                                    'provenance_note': captured.get('provenance_note'),
+                                    'error': self._reported_error(captured.get('error')),
+                                    'last_checkpoint': diagnostics.get('last_checkpoint'),
+                                    'failure_checkpoint': checkpoint, 'end_to_end_fps': None,
+                                    'throughput_scope': 'No successful throughput claim for a failed/cancelled job.'},
+                'pretrained_model_authenticity_and_quality': 'NOT VERIFIED: partial worker metadata is not successful inference or quality acceptance',
+            })
+            stage = (f'{checkpoint["stage"]} {checkpoint["completed"]}/{checkpoint["total"]}' if checkpoint is not None else 'NOT VERIFIED: no engine checkpoint recorded')
+            self.status.setText(f'Guided job {kind} · last attempted checkpoint {stage} · {observation["terminal_error"]["message"]}. Outputs are not available for completed inspection; checkpoint is not proof of the exact failure cause.')
+        except (ValueError, TypeError, OSError) as exc:
+            observation['record_validation'] = {'status': 'NOT VERIFIED', 'error': str(exc)[:4096]}
+            self.status.setText(f'Guided job {kind} · {observation["terminal_error"]["message"]}. Engine record/stage NOT VERIFIED: {exc}')
+        self.invalidate_prepared()  # Failure details replace the reviewed snapshot.
+        self.details.setPlainText(json.dumps(observation, indent=2))
+
     def _capture_completed(self, record):
         if self.latest_job is None or not isinstance(record, dict):
             raise ValueError('The matching terminal event has no completed job record.')
-        raw = json.dumps(record, allow_nan=False, separators=(',', ':')).encode('utf-8')
-        if len(raw) > MAX_FRAME_BYTES:
-            raise ValueError('Completed record exceeds the 4 MiB worker protocol limit.')
-        captured = json.loads(raw)
+        captured = self._bounded_record(record)
         job = self.latest_job
         config, _ = job.configurations()
         view = completed_view(job, captured)
@@ -344,14 +456,7 @@ class ReadinessPanel(QDialog):
         diagnostics = captured['diagnostics']
         execution = diagnostics.get('execution')
         execution = execution if isinstance(execution, dict) else {}
-        positive = lambda value: type(value) is int and value > 0
-        observed_cuda = (execution.get('backend') == 'pytorch' and execution.get('requested_device') == 'cuda'
-                         and isinstance(execution.get('gpu'), str) and bool(execution['gpu'].strip())
-                         and type(execution.get('device_index')) is int and execution['device_index'] >= 0
-                         and isinstance(execution.get('cuda_version'), str) and bool(execution['cuda_version'].strip())
-                         and positive(execution.get('stage2_calls'))
-                         and positive(execution.get('stage2_frame_evaluations'))
-                         and positive(execution.get('completed_prediction_frames')))
+        observed_cuda = _cuda_work_reported(execution)
         self.render_observation.update({
             'record_validation': 'PASS: matching completed metadata; source/output bytes are not authenticated',
             'engine_reported': {'status': captured['status'], 'requested_settings': captured['requested_settings'],

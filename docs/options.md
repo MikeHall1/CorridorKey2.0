@@ -246,3 +246,12 @@ completed Alpha/Foreground/composite frame, at most512px thumbnail, with separat
 decode/display evidence. It invalidates any newly prepared render whose displayed
 details it replaces. No inference defaults/aliases or queued settings change.
 See [workflow, bounds and unverified acceptance](readiness.md).
+
+
+The readiness report retains matching failed/cancelled worker metadata and the
+last attempted checkpoint, copied before cleanup. Missing/contradictory metadata
+remains NOT VERIFIED; partial CUDA work never implies success. A/B preview
+surfaces share decoded-pixel zoom and normalized pan with wheel/drag and explicit
+Zoom/Fit controls. Display transformations preserve render settings and pixels;
+scale refers to bounded decoded previews, not native source resolution. No
+inference default, precision, dependency or saved-format change is introduced.

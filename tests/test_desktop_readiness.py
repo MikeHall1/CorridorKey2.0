@@ -230,7 +230,8 @@ class DesktopReadinessTests(unittest.TestCase):
         for index in range(4):
             self.assertTrue(cv2.imwrite(str(source / f'{index:03}.png'), np.full((2, 3, 3), 30 + index * 20, np.uint8)))
         config = InferenceConfig(output_format='exr', outputs={'alpha', 'fg'}, start_frame=1, num_frames=requested_count)
-        job = JobRequest.create(source, self.root / f'{request_id}-output', config)
+        from corridorkey.worker_protocol import job_from_wire, job_to_wire
+        job = job_from_wire(job_to_wire(JobRequest.create(source, self.root / f'{request_id}-output', config)))
         outputs = {}
         for role, item in output_layout(job.input_path, config)['outputs'].items():
             path = Path(job.output_dir) / item['path']
@@ -505,3 +506,132 @@ class DesktopReadinessTests(unittest.TestCase):
         assert self.panel.capability_observation is not None
         self.assertEqual(self.panel.capability_observation['result']['status'], 'cancelled')
         self.assertEqual(self.panel.capability_observation['result']['interrupted_stage'], 'backend')
+
+    def fail_fixture(self, record, *, kind='failed', error=None):
+        self.panel.observe({'request_id': self.panel.latest_request_id, 'kind': kind,
+                            'payload': {'record': record, 'error': error or {'type': 'FixtureFailure', 'message': 'fixture failure'}}})
+
+    def test_failed_model_load_uses_terminal_checkpoint_without_coalesced_progress(self):
+        job, record = self.completed_fixture()
+        original = {path: path.read_bytes() for path in Path(job.input_path).iterdir()}
+        record.update({'status': 'failed', 'failure_checkpoint': {'stage': 'model_load', 'completed': 0, 'total': 1},
+                       'error': {'type': 'RuntimeError', 'message': 'local checkpoint incompatible',
+                                 'notes': ['fixture note before cleanup', 'fixture cleanup note']},
+                       'end_to_end_fps': 9999})
+        record['diagnostics'].update({'source': None, 'outputs': {}, 'effective_settings': None, 'frames_submitted': 0,
+                                      'last_checkpoint': record['failure_checkpoint']})
+        self.fail_fixture(record)
+        observation = self.panel.render_observation
+        assert observation is not None
+        self.assertEqual(observation['failure_checkpoint'], {'stage': 'model_load', 'completed': 0, 'total': 1})
+        self.assertIn('not proof', observation['failure_checkpoint_scope'])
+        self.assertEqual(observation['engine_reported']['error']['notes'], ['fixture note before cleanup', 'fixture cleanup note'])
+        self.assertEqual(observation['engine_reported']['requested_settings'], json.loads(job.config_json))
+        self.assertIsNone(observation['engine_reported']['effective_settings'])
+        self.assertIsNone(observation['engine_reported']['end_to_end_fps'])
+        self.assertIn('NOT VERIFIED', observation['engine_reported']['model_load_status'])
+        self.assertEqual(observation['actual_inference'], 'NOT VERIFIED')
+        self.assertIsNone(self.panel.completed_record)
+        self.assertFalse(self.panel.inspect_button.isEnabled())
+        self.assertIsNone(self.panel.io_thread)
+        self.assertIn('model_load 0/1', self.panel.status.text())
+        record['error']['notes'].append('outside mutation')
+        self.assertEqual(len(observation['engine_reported']['error']['notes']), 2)
+        self.assertEqual({path: path.read_bytes() for path in Path(job.input_path).iterdir()}, original)
+
+    def test_early_validation_cancel_and_no_record_have_precise_unverified_state(self):
+        job, record = self.completed_fixture()
+        record.update({'status': 'cancelled', 'requested_settings': None, 'writer_settings': None,
+                       'failure_checkpoint': {'stage': 'validate', 'completed': 0, 'total': 1},
+                       'error': {'type': 'CancelledError', 'message': 'fixture cancelled before validation', 'notes': []}})
+        record['diagnostics'] = {'last_checkpoint': record['failure_checkpoint'], 'frames_submitted': 0,
+                                 'effective_settings': None, 'source': None, 'execution': None, 'outputs': {}}
+        self.fail_fixture(record, kind='cancelled')
+        observation = self.panel.render_observation
+        assert observation is not None
+        self.assertEqual(observation['terminal_kind'], 'cancelled')
+        self.assertEqual(observation['failure_checkpoint']['stage'], 'validate')
+        self.assertIsNone(observation['engine_reported']['requested_settings'])
+        self.assertEqual(observation['requested_job']['config_json'], job.config_json)
+        self.assertFalse(self.panel.inspect_button.isEnabled())
+        self.panel.prepared = job
+        self.panel.mark_submitted('cancelled-before-start')
+        self.fail_fixture(None, kind='cancelled')
+        observation = self.panel.render_observation
+        assert observation is not None
+        self.assertEqual(observation['record_validation']['status'], 'NOT VERIFIED')
+        self.assertIn('No engine record', observation['record_validation']['error'])
+        self.assertIsNone(observation['failure_checkpoint'])
+        self.assertNotIn('engine_reported', observation)
+        self.assertEqual(observation['actual_inference'], 'NOT VERIFIED')
+
+    def test_partial_cuda_failure_is_reported_without_success_or_fps_and_exports(self):
+        _, record = self.completed_fixture()
+        record.update({'status': 'failed', 'failure_checkpoint': {'stage': 'stage2', 'completed': 1, 'total': 2},
+                       'error': {'type': 'WriterError', 'message': 'fixture output failure', 'notes': ['partial files remain']}})
+        record['diagnostics']['execution'] = {'backend': 'pytorch', 'requested_device': 'cuda', 'gpu': 'fixture metadata only',
+                                              'device_index': 0, 'cuda_version': 'fixture', 'stage2_calls': 1,
+                                              'stage2_frame_evaluations': 1, 'completed_prediction_frames': 1}
+        record['diagnostics']['frames_submitted'] = 1
+        self.fail_fixture(record)
+        observation = self.panel.render_observation
+        assert observation is not None
+        self.assertEqual(observation['actual_inference'], 'NOT VERIFIED')
+        self.assertIn('BEFORE FAILURE', observation['engine_reported_partial_cuda_work'])
+        self.assertEqual(observation['engine_reported']['frames_submitted'], 1)
+        self.assertIsNone(observation['engine_reported']['end_to_end_fps'])
+        self.assertEqual(observation['output_decode'], 'NOT VERIFIED')
+        target = self.root / 'failed-report.json'
+        with patch('corridorkey.desktop_readiness.QFileDialog.getSaveFileName', return_value=(str(target), 'JSON')):
+            self.panel.choose_export()
+            self.until(lambda: not self.panel.io_busy)
+        exported = json.loads(target.read_text())['render_observation']
+        self.assertEqual(exported['engine_reported']['error']['notes'], ['partial files remain'])
+        self.assertNotIn('pixels', json.dumps(exported))
+
+    def test_failed_record_binding_mismatch_old_request_and_oversize_are_not_adopted(self):
+        from corridorkey.worker_protocol import MAX_FRAME_BYTES
+        job, record = self.completed_fixture()
+        record['status'] = 'failed'
+        self.panel.observe({'request_id': 'old-request', 'kind': 'failed', 'payload': {'record': record}})
+        self.assertEqual(self.panel.submitted_id, 'completed-fixture')
+        self.assertIsNone(self.panel.failed_record)
+        for field in ('input', 'output_dir', 'requested_settings', 'writer_settings', 'hints', 'source_range', 'frames_submitted', 'oversized'):
+            broken = json.loads(json.dumps(record))
+            if field in {'input', 'output_dir'}:
+                broken[field] = str(self.root / 'wrong')
+            elif field == 'requested_settings':
+                broken[field]['model_scale'] = .5
+            elif field == 'writer_settings':
+                broken[field]['codec'] = 'different'
+            elif field == 'hints':
+                broken[field]['first_frame'] = str(self.root / 'different-hint')
+            elif field == 'source_range':
+                broken['diagnostics']['source']['start_frame'] = 99
+            elif field == 'frames_submitted':
+                broken['diagnostics']['frames_submitted'] = 999
+            else:
+                broken['oversized'] = 'x' * MAX_FRAME_BYTES
+            self.panel.prepared = job
+            self.panel.mark_submitted('failure-binding-fixture')
+            self.fail_fixture(broken)
+            observation = self.panel.render_observation
+            assert observation is not None
+            self.assertIsNone(self.panel.failed_record, field)
+            self.assertEqual(observation['record_validation']['status'], 'NOT VERIFIED', field)
+            self.assertNotIn('engine_reported', observation, field)
+            self.assertFalse(self.panel.inspect_button.isEnabled(), field)
+
+    def test_failed_last_checkpoint_fallback_and_missing_stage_never_guess_from_progress(self):
+        job, record = self.completed_fixture()
+        record['status'] = 'failed'
+        record['diagnostics']['last_checkpoint'] = {'stage': 'encoder_preflight', 'completed': 0, 'total': 1}
+        self.fail_fixture(record)
+        assert self.panel.render_observation is not None
+        self.assertEqual(self.panel.render_observation['failure_checkpoint']['stage'], 'encoder_preflight')
+        self.panel.prepared = job
+        self.panel.mark_submitted('no-failure-stage')
+        record['diagnostics']['last_checkpoint'] = None
+        self.fail_fixture(record)
+        self.assertIsNone(self.panel.render_observation['failure_checkpoint'])
+        self.assertIn('no engine checkpoint', self.panel.status.text())

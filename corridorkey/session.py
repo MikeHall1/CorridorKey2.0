@@ -222,8 +222,10 @@ class InferenceSession:
             # Check an encoder before allocating a model. EXR needs no FFmpeg.
             if writer.ffmpeg_bin and config.output_format == "video":
                 import shutil
+                diagnostics.control.checkpoint("encoder_preflight", 0, 1)
                 if shutil.which(writer.ffmpeg_bin) is None:
                     raise FileNotFoundError(f"ffmpeg binary not found: {writer.ffmpeg_bin}; install ffmpeg or select EXR output")
+                diagnostics.control.checkpoint("encoder_preflight", 1, 1)
             if guard is not None:
                 guard.check(force=True)
             if self._model is None:
@@ -244,6 +246,7 @@ class InferenceSession:
             # The rendered-batch latency excludes model load and preflight.
             diagnostics.started = processing_started
             try:
+                diagnostics.control.checkpoint("processing", 0, None)
                 if durable_foundations is not None:
                     durable_foundations.bind(self._asset_paths)
                 if durable_rvm is not None:
@@ -265,6 +268,7 @@ class InferenceSession:
                 record["end_to_end_fps"] = diagnostics.frames_submitted / record["processing_seconds"]
         except BaseException as exc:
             record["status"] = "cancelled" if isinstance(exc, (KeyboardInterrupt, CancelledError)) else "failed"
+            record["failure_checkpoint"] = json_value(diagnostics.control.last_checkpoint)
             error_info: dict[str, Any] = {"type": type(exc).__name__, "message": str(exc)}
             record["error"] = error_info
             # Failed jobs never leave a potentially contaminated model for reuse.

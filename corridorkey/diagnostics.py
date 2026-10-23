@@ -161,6 +161,7 @@ class RunDiagnostics:
 
     def snapshot(self):
         return json_value({"effective_settings": self.effective, "source": self.source,
+                           "last_checkpoint": self.control.last_checkpoint,
                            "source_witness": self.source_witness,
                            "execution": self.execution,
                            "quick_key": self.quick_key,
