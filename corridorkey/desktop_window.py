@@ -47,6 +47,7 @@ from .desktop_corrections import CorrectionDialog
 from .desktop_diagnostic_ranges import DiagnosticRangesPanel
 from .desktop_loader import PreviewLoader
 from .desktop_ofx import OfxCachePanel
+from .desktop_ofx_capture import OfxCaptureDialog
 from .desktop_playback import PlaybackControls
 from .desktop_portable_project import PortableProjectDialog
 from .desktop_preview import PreviewPair
@@ -102,6 +103,8 @@ class DesktopWindow(QMainWindow):
         self.reference_description = ''
         self.editor: CorrectionDialog | None = None
         self.portable_project: PortableProjectDialog | None = None
+        self.ofx_capture: OfxCaptureDialog | None = None
+        self.ofx_capture_publications: list[dict[str, str]] = []
         self.portable_application_records: list[dict[str, Any]] = []
         self.pending_queue_root: Path | None = None
         self.calibration: CalibrationDialog | None = None
@@ -171,6 +174,7 @@ class DesktopWindow(QMainWindow):
         project_menu.addAction('Open desktop snapshot…', self.choose_project)
         project_menu.addAction('Save desktop snapshot…', self.save_project)
         project_menu.addAction('Portable projects…', self.open_portable_project)
+        project_menu.addAction('OFX upstream capture…', self.open_ofx_capture)
         projects.setMenu(project_menu)
         toolbar.addWidget(projects)
         self._button('Developer benchmarks…', self.benchmark.show, toolbar)
@@ -765,6 +769,63 @@ class DesktopWindow(QMainWindow):
         if not self.cache_panel.io_busy and not self.cache_panel.root_path.text().strip():
             self.cache_panel.set_workspace(self.recovery.workspace.text())
         self.cache_panel.show()
+
+    def open_ofx_capture(self):
+        if self.closing:
+            return
+        if self.ofx_capture is not None and (self.ofx_capture.isVisible() or self.ofx_capture.busy):
+            self.ofx_capture.show()
+            self.ofx_capture.raise_()
+            return
+        if self.first_hint.text().strip() or self.full_hint.text().strip() or self.profile.isChecked():
+            self.error('OFX capture jobs initially do not support hints or stage profiling. Clear them explicitly before opening the capture workflow.')
+            return
+        config, writer = self.config.toPlainText(), self.writer.toPlainText()
+        if max(len(config.encode('utf-8')), len(writer.encode('utf-8'))) > 64 * 1024:
+            self.error('Capture settings exceed the 64 KiB review limit; no settings changed.')
+            return
+        if self.ofx_capture is not None:
+            previous = self.ofx_capture
+            self.ofx_capture_publications = previous.publications[-8:]
+            self.ofx_capture = None
+            previous.deleteLater()
+        self.ofx_capture = OfxCaptureDialog(config, writer, self, publications=self.ofx_capture_publications)
+        self.ofx_capture.asset_selection = self.asset_selection
+        self.ofx_capture.render_requested.connect(self.submit_ofx_capture)
+        self.ofx_capture.cancel_requested.connect(self.cancel_ofx_capture)
+        self.ofx_capture.show()
+
+    def submit_ofx_capture(self, job):
+        panel = self.ofx_capture
+        if panel is None:
+            return
+        try:
+            if panel.prepared is None or not panel.review_ready or job is not panel.prepared.job or panel.submitted_id is not None or panel.busy or panel.closing:
+                raise ValueError('Create and review a fresh immutable capture job before submitting.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark, calibration, queue activation or shutdown before capture rendering.')
+            if self.asset_selection != panel.asset_selection:
+                raise ValueError('Selected model assets changed. Reopen the capture workflow and review a new job.')
+            if len(self.jobs) >= 128:
+                raise ValueError('Queue history is full. Clear finished jobs before submitting more.')
+            if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
+                raise ValueError('Previous benchmark cleanup is unverified; cannot start another owner.')
+            self.progressive.suspend_for_export()
+            request_id = self.bridge.send('render', {'job': job_to_wire(job)})
+            self.jobs[request_id] = {'job': job, 'status': 'sending', 'event': None}
+            panel.mark_submitted(request_id)
+            self.refresh_table()
+        except (ValueError, TypeError, OSError, RuntimeError, queue.Full) as exc:
+            panel.status.setText(str(exc)[:4096])
+
+    def cancel_ofx_capture(self, request_id):
+        panel = self.ofx_capture
+        if panel is not None and panel.rendering and request_id == panel.submitted_id:
+            try:
+                self.bridge.send('cancel', {'target': request_id, 'reason': 'OFX capture render cancelled by user'})
+                panel._cancel_sent = True
+            except (ValueError, OSError, RuntimeError, queue.Full) as exc:
+                panel.status.setText('Cancellation delivery failed; retain worker ownership: ' + str(exc)[:2048])
 
     def open_ofx_cache(self):
         try:
@@ -1405,6 +1466,8 @@ class DesktopWindow(QMainWindow):
         self.benchmark.status.setText('Benchmark cancellation requested; waiting for owned process cleanup.')
 
     def poll(self):
+        if self.ofx_capture is not None:
+            self.ofx_capture.poll()
         if self.background_serial is not None and self.background_serial != self.loader.serial:
             self.background_serial = None
             if self.background_dialog is not None:
@@ -1429,6 +1492,8 @@ class DesktopWindow(QMainWindow):
                 self.resource_request = None
             self.recovery.observe(event)
             self.readiness.observe(event)
+            if self.ofx_capture is not None:
+                self.ofx_capture.observe(event)
             request_id = event.get('request_id')
             if event['kind'] == 'connected':
                 self.backend.setText(f"Worker PID {event['payload']['pid']} · CUDA required · Live GPU memory unavailable")
@@ -1467,6 +1532,9 @@ class DesktopWindow(QMainWindow):
             if self.readiness.submitted_id is not None:
                 self.readiness.observe({'request_id': self.readiness.submitted_id, 'kind': 'lost',
                                         'payload': {'error': self.bridge.failure or 'Worker connection closed'}})
+            if self.ofx_capture is not None and self.ofx_capture.rendering:
+                self.ofx_capture.observe({'request_id': self.ofx_capture.submitted_id, 'kind': 'lost',
+                                          'payload': {'error': self.bridge.failure or 'Worker connection closed'}})
             self.backend.setText('Worker stopped · ' + (self.bridge.failure or 'Clean shutdown'))
             if self.pending_queue_root is not None:
                 root, self.pending_queue_root = self.pending_queue_root, None
@@ -1552,6 +1620,7 @@ class DesktopWindow(QMainWindow):
         progressive_done = self.progressive.shutdown()
         self.pending_calibration = None
         calibration_done = self.calibration is None or self.calibration.shutdown()
+        capture_done = self.ofx_capture is None or self.ofx_capture.shutdown()
         self.bridge.stop()
         self.cancel_benchmark()
         self.benchmark.dossier_panel.close()
@@ -1567,7 +1636,7 @@ class DesktopWindow(QMainWindow):
         if portable_done and self.portable_project is not None:
             self.retain_portable_application(self.portable_project)
         editor_done = self.editor is None or self.editor.service.done.is_set()
-        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and calibration_done and not self.loader.thread.is_alive():
+        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and calibration_done and capture_done and not self.loader.thread.is_alive():
             self.timer.stop()
             event.accept()
         else:

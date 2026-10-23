@@ -25,6 +25,9 @@
     },
     "include/ofxProperty.h": {
       "git_blob_sha": "bc5c55fd7722bd3859df8049cb76b08ce701d047"
+    },
+    "include/ofxProgress.h": {
+      "git_blob_sha": "c28e2818c904887e80222261bd4ac02eec6fc7ea"
     }
   },
   "license_blob": "8fcd2ea13b5edd8865013ac0b7b91c52728c684f"

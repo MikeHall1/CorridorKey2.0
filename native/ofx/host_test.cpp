@@ -147,4 +147,5 @@ int main(int argc,char** argv){
         }
         require(acquired==released,"host image leak");require(plugin->mainEntry(kOfxActionUnload,nullptr,nullptr,nullptr)==kOfxStatOK,"unload");std::cout<<"host ABI tests passed; image leases="<<acquired<<"\n";
     }catch(const std::exception& e){std::cerr<<e.what()<<"\n";return 1;}
+    return 0;
 }
