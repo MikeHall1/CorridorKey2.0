@@ -270,3 +270,15 @@ uses bounded timer snapshots. DesktopWindow retires progressive/editor ownership
 before task creation, blocks competing processing, and waits for verified cleanup
 on close. No queue mutation or automatic recommendation application is exposed.
 See [calibration](calibration.md) for evidence scopes and unsupported contexts.
+
+
+## Archived versus operational portable paths
+
+The foreign all-collected reader extension uses
+`portable_paths.py` for bounded lexical archival job/settings validation.
+`portable_project.py` retains original provenance and exact package layout while
+resolving collected dependencies and rebuilding native jobs only after explicit
+destination and correction-resource rebinding. Desktop report projection reads
+archival settings without constructing an operational native job. Public
+plan/inspection/pin association checks precede path-derived filesystem work.
+See [review and remaining acceptance](portable-foreign-review.md).

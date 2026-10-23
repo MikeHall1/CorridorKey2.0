@@ -208,9 +208,15 @@
         "tests/test_desktop_window_portable.py",
         "docs/portable-projects.md",
         "docs/portable-projects-review.md",
-        "benchmark-results/ext09-connected-final/source-verification.json"
+        "benchmark-results/ext09-connected-final/source-verification.json",
+        "corridorkey/portable_paths.py",
+        "tests/test_portable_paths.py",
+        "tests/test_portable_foreign_project.py",
+        "tests/test_desktop_portable_foreign.py",
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
       ],
-      "next_action": "Native-flavour portable workflow locally verified. Foreign path-flavour loading/relinking remains unsupported and locally actionable; native Windows/model/runtime acceptance NOT VERIFIED. Continue EXT06 progressive preview scheduler integration."
+      "next_action": "Native packages plus foreign all-collected read/Apply locally verified; partial/reference-only foreign relinking, direct foreign publication and native Windows/runtime acceptance remain unsupported/NOT VERIFIED. Continue explicit photo composite previews."
     },
     {
       "id": "EXT-10",
@@ -923,7 +929,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Implement strict foreign path-flavour all-collected portable package inspection/application with lexical archival validation and explicit native destination rebinding; continue remaining feature contexts and supported host preparation.",
+  "next_action": "Implement explicit bounded photo composite preview backgrounds through the existing loader and synchronized A/B/playback paths, with source/render pixels preserved, clear colour/geometry policy and stale-result fences; continue remaining feature contexts and supported Resolve preparation.",
   "objective_source": "docs/product-improvements-brief.md",
-  "current_checkpoint_evidence": "benchmark-results/ext08-connected-final/source-verification.json"
+  "current_checkpoint_evidence": "benchmark-results/ext09-foreign-connected-final/source-verification.json"
 }

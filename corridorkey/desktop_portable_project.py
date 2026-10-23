@@ -29,7 +29,7 @@ from .asset_inventory import AssetSelection
 from .control import CancellationToken
 from .desktop_state import DESKTOP_MAX_PREVIEW_FRAME
 from .session import JobRequest
-from .worker_protocol import job_from_wire, job_to_wire
+from .worker_protocol import job_to_wire
 
 if TYPE_CHECKING:
     from .portable_project import ProjectInspection, ProjectPlan
@@ -74,17 +74,22 @@ def compact_project_report(report: dict, *, page: int = 0) -> dict:
     requested = report.get('requested_job')
     settings = []
     if requested is not None:
-        job = job_from_wire(requested)
-        config, writer = job.configurations()
+        from .portable_paths import archive_job
+
+        archived = archive_job(requested)
+        config, writer = archived.config, archived.writer
         settings = [f"Captured source start {config.start_frame or 0} · count {config.num_frames if config.num_frames is not None else 'all remaining'} · sequence FPS {config.frame_dir_fps} · start mode {config.start_mode}",
                     f"Captured source colour {config.source_colour_profile} · linear {config.frame_dir_linear} · alpha {config.frame_dir_alpha} · model scale {config.model_scale}",
                     f"Requested output {config.output_format} / {', '.join(sorted(config.outputs))} · EXR {config.exr_dtype} · stage2 batch {config.stage2_batch}",
-                    f"Recorded output {job.output_dir} and scratch {config.temp_dir} remain provenance; explicit new parents are required on Apply. Configured FFmpeg {writer.ffmpeg_bin} is not collected."]
+                    f"Recorded output {archived.original_wire['output_dir']} and scratch {config.temp_dir} remain provenance; explicit new parents are required on Apply. Configured FFmpeg {writer.ffmpeg_bin} is not collected."]
     compact = {'dependencies': [], 'page': page, 'page_count': page_count, 'page_size': PAGE_SIZE, 'dependency_count': len(dependencies), 'omitted_dependencies': len(dependencies),
                'total_file_count': sum(row.get('file_count', len(row.get('files', []))) for row in dependencies),
                'model_references': compact_models, 'preview_frame': report.get('preview_frame', 0), 'ready': report.get('ready') is True,
                'read_bytes': report.get('read_bytes', 0), 'copy_bytes': report.get('copy_bytes', 0),
                'collection_count': len(report.get('collect_ids', [])),
+               'archive_path_flavour': _text(report.get('archive_path_flavour'), 32),
+               'foreign_paths': report.get('foreign_paths') is True,
+               'portability_scope': _text(report.get('portability_scope'), 1024),
                'correction_identity': _text(report.get('correction_identity'), 128),
                'requested_job_identity': None if requested is None else hashlib.sha256(_json_bytes(requested)).hexdigest(),
                'requested_settings_lines': [_text(line, 2048) for line in settings],
@@ -117,6 +122,8 @@ def _loaded_context(inspection, output, scratch):
     report = compact_project_report(inspection.report)
     context = {'model_references': report['model_references'],
                'compatibility': 'Model/backend compatibility NOT VERIFIED; resolve local assets explicitly before rendering.',
+               'archive_path_flavour': report['archive_path_flavour'], 'foreign_paths': report['foreign_paths'],
+               'portability_scope': report['portability_scope'],
                'project_path': _text(inspection.package_path, 4096),
                'project_identity': hashlib.sha256(inspection.manifest_json).hexdigest(),
                'requested_job_identity': report['requested_job_identity'],
@@ -175,7 +182,7 @@ class PortableProjectDialog(QDialog):
         self._application_ack: tuple[bool, str] | None = None
         self._emitting_application = False
         root = QVBoxLayout(self)
-        intro = QLabel('Inventory reads bounded metadata only. Verify explicitly reads content within the chosen budget. Collection defaults to none: reference-only projects do not copy media or models. Review selected dependencies and budgets before publishing to a fresh child directory. Opening or applying a project never queues a job, loads a model, or changes the active model owner. Original files and recorded settings remain protected. Packages currently require the same native path flavour.')
+        intro = QLabel('Inventory reads bounded metadata only. Verify explicitly reads content within the chosen budget. Collection defaults to none: reference-only projects do not copy media or models. Review selected dependencies and budgets before publishing to a fresh child directory. Opening or applying a project never queues a job, loads a model, or changes the active model owner. Original files and recorded settings remain protected. Foreign Windows/POSIX packages require every render dependency collected; partial/reference-only foreign packages remain unsupported. Archived model references never activate automatically.')
         intro.setWordWrap(True)
         root.addWidget(intro)
         row = QHBoxLayout()
@@ -541,6 +548,8 @@ class PortableProjectDialog(QDialog):
                  f"Verification read bytes: {report.get('read_bytes', 0)} · selected copy bytes: {report.get('copy_bytes', 0)}",
                  f"Correction semantic identity: {report.get('correction_identity') or 'none / not yet verified'}",
                  'Whole source/hint sequences retain original frame names, ranges, FPS and colour settings. Originals are never moved or overwritten.']
+        if report.get('archive_path_flavour'):
+            lines.append(f"Archived path flavour: {report['archive_path_flavour']} · foreign: {report.get('foreign_paths', False)} · {report.get('portability_scope') or 'Inspect verified dependency paths before applying.'}")
         lines.extend(report.get('requested_settings_lines', []))
         if report.get('omitted_dependencies'):
             lines.append(f"{report['omitted_dependencies']} other dependency groups are available through Previous/Next groups. Page changes use the frozen snapshot without rescanning or losing collection choices. Verification and manifests retain the full inventory.")

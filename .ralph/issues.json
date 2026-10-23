@@ -6922,6 +6922,271 @@
         "benchmark-results/ext08-connected-final/source-verification.json"
       ],
       "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-327",
+      "component": "Foreign portable package desktop projection",
+      "classification": "Main confirmed native deserialization source trace before extension remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Even after core reader gains foreign package support, compact_project_report invokes native job_from_wire(requested_job) before operational path rebinding, so inventory/Verify/Apply context still refuses Windows archivalwire on POSIX. Intro also hardcodes native-only limitation.",
+      "root_cause": "Desktop bounded presentation assumes archival requested provenance is an executable native job.",
+      "proposed_action": "Use strict path-free archivalcodec for presentation only, preserving originalwire identity, display exact foreign all-collected limitations; actualQt regression through inventory Verify Apply.",
+      "acceptance": "Foreign all-collected package presents original requestedsettings andappliesnativepaths withoutqueue/model mutation orforeignFSaccess. Partial foreign remains explicitunsupported; reportbounded/offthread.",
+      "owner": "root",
+      "evidence": [
+        "desktop_portable_project.py compact_project_report requested->job_from_wire and _loaded_context uses sameprojection before Apply."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-328",
+      "component": "Foreign portable Qt newfixture static admission",
+      "classification": "First focusedRuff1 I001 beforefix; runtime/type checks notyetrun",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New helperimport/localpackageimport block lacks required grouping in mainforeignQtfixture.",
+      "root_cause": "New test drafted against agreed helper contract beforefocusedstatic formatting.",
+      "proposed_action": "Correct focusedimportgroup andverify actualQtforeignworkflow plus strictstatic without suppression.",
+      "acceptance": "FocusedRuff/Pyright andactualQt tests pass onstablepackage snapshot.",
+      "owner": "root",
+      "evidence": [
+        "Ruff I001 tests/test_desktop_portable_foreign.py:35 firstfocusedstaticrun."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-329",
+      "component": "Archival codec initial focused type verification",
+      "classification": "Authorstatic3 concrete findings classified and locallyfixed beforecoordinatortranscription; no runtime tests yets",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New mixedJSON traversalstack lacks explicitAny/depth type, missingtemp_dir optional crossesstrictstr helper andnewfixture passesstr intoPathannotateddataclass.",
+      "root_cause": "First typepass onnewpath-free codec had inference/fixture annotation gaps.",
+      "proposed_action": "Typed bounded traversalstack, preserveinvalidtemp_dir rejection via strictstring admission, andbuild foreignpaths inprimitiveJSONfixture ratherthanPathconversion; verifyfocusedruntime/static.",
+      "acceptance": "Focusedcodec cases andRuff/Pyright pass; invalidtypesstillrefused, nohostforeignpathIO.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Author firstPyright portable_paths.py:55 iterationNever, :132 optionalstr; test_portable_paths.py:27 str vsPath. Authorreports currentfocusedRuff/Pyright0, runtimepending."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-330",
+      "component": "Archival POSIX parent spelling compatibility",
+      "classification": "Authorconcrete source plus purewire reproduction beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "New lexicalcodec rejects previouslyvalid nativePOSIX parentcomponents containing literal backslash or C:prefix although leading / is unambiguous; current nativeworker accepts thosejobs.",
+      "root_cause": "Foreign spelling ambiguity checks applied inside alreadyunambiguousPOSIX pathcomponents.",
+      "proposed_action": "Preserve literal backslash/colon inPOSIXparents while retaining absoluteorigin,dotsegment/control/refusal andsafe_name collectionleaf checks; regressionagainst nativejob_from_wire.",
+      "acceptance": "NativePOSIX parentcompatibility maintained; foreignfields remainoneflavour, unsafecollectionbasenames/Windowsdevices stillrefuse.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Read-only job_from_wire accepts /shots/parent\\literal/frames and /shots/C:parent/frames while new archived_path initiallyrejects them; initial10codecPASS didnotcoverexistingnativeparentcases."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-331",
+      "component": "Foreign collection initial author static import verification",
+      "classification": "AuthorRuff3 findings beforefix; runtime testsnotexecutedyet",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Touched portable_project/newforeignfixture imports include2formatI001 findings andunusedjob_to_wireF401.",
+      "root_cause": "Newcodec import andfixture imports drafted beforefocusedstatic organization.",
+      "proposed_action": "Organizeonlyownedimportblocks/removeunusedimport, retainstrictstatic andrunactualforeign/native regressions.",
+      "acceptance": "OwnedfocusedRuff/Pyright andforeign/native tests pass withno suppresseddiagnostics.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "Author firstfocusedRuff3 findings:2I001,1F401 unusedjob_to_wire beforefix."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-332",
+      "component": "Foreign Qt fixture physical temp roots",
+      "classification": "Actualfocusedruntime/static evidence beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Firstactual2Qt tests fail successfulApply because test windowroot uses /var alias rejected by strict collectionFSadmission.",
+      "root_cause": "Existingwindowfixture keeps TemporaryDirectory lexical /var spelling; foreignpackagehelper resolvesitsownroot butnewoutput/scratchnotnormalized.",
+      "proposed_action": "Resolve newfixture rootonce beforecreatingexplicitnativeoutput/scratch; preserve productionaliasrefusal.",
+      "acceptance": "ActualApply succeeds with physicaltestroot, aliasesstillrefused; source/queue/ownerpreservation assertions remain.",
+      "owner": "root",
+      "evidence": [
+        "Actual2Qt initial0PASS2FAIL0.967s; successfulApply error Alias/symlink/reparse path refused: /var."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-333",
+      "component": "Native destination actionable error context",
+      "classification": "Actualfocusedruntime/static evidence beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P2",
+      "problem": "Wrongforeignoutput path correctlyrefuses butUI says Archived absolute paths must share one origin flavour ratherthan explainingrequirednative destination.",
+      "root_cause": "native_destination forwards generic archivalcodec ValueError lackingreceiving-host actioncontext.",
+      "proposed_action": "Wrapstrictlexicalerror with explicit nativeabsolute destination requirement, preserveoriginalcause/refusal.",
+      "acceptance": "Actualwrongflavour/relative destination reportsnative requirement, no rebasingornewartifacts.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Actual2Qt initial error ValueError Archived absolute paths must share one origin flavour; refusalassertions otherwisehold."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-334",
+      "component": "Foreign test hint optional narrowing",
+      "classification": "Actualfocusedruntime/static evidence beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Author31runtimecasespass but4newPyright diagnostics onoptional initial/full hintPath arguments.",
+      "root_cause": "Fixture proves hints present butnewtests lackexplicit postconditionassertions beforePath construction.",
+      "proposed_action": "Assertbothhints nonnull before nativepathassertions; no production/checkerchange.",
+      "acceptance": "31focusedcases andownedRuff/Pyright pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "/private/tmp/portable-foreign-initial-tests.log and /private/tmp/portable-foreign-initial-pyright.log; lines192/193."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-335",
+      "component": "Foreign archival plan publication boundary",
+      "classification": "Authoractualmanuallyconstructedpublicdataclass reproduction beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "publish_project accepts a ProjectPlan built from verifiedforeigninspection and passes archival C:\\Archive... to native _scan/_fence, probing hostcwd foreignspelling.",
+      "root_cause": "Newforeignread/Apply reader extension didnot fence native-only publication entrypoint againstforeignarchivalplan instances.",
+      "proposed_action": "Explicitlyrefuse foreignpublication immediatelyafter strictmanifestvalidation beforedestination/protection/fence IO; supportrepublish onlyfromdeliberatelynativeappliedjob/newplan.",
+      "acceptance": "Foreignplanpublication refuses before any _scan orfreshartifact; nativepublication unaffected, foreignread/Applycontinue.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "Actual foreignfixture\u2192readyinspection\u2192ProjectPlan(inspection.manifest_json,inspection.pins,inspection.report_json)\u2192publish attempts _scan C:\\Archive\\named-shot\\frames, FileNotFoundError receivingcwd spelling, noartifactcreated."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-336",
+      "component": "Public portable inspection and pin lexical admission",
+      "classification": "Independent concrete dataclasses.replace source scenario beforefix; no privilegeescalationclaim",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "A validforeignProjectInspection with replacedreport_json source path reset to archival C:\\... stillready andvalidmanifest/pins reaches native _fence/_scan; ready truthiness and callerconstructibleFilePin.paths also bypass lexicalnative admission beforestat.",
+      "root_cause": "Public immutable dataclass instances lackcomplete manifest/effective-report/pin association checks at consuming boundary.",
+      "proposed_action": "Before anyreport-derivedpath/pin IO require readyisTrue, exactfrozen depmetadata/closure/IDs/files exceptnativeeffectivepath/status, nativelexicaleffectivepaths, completepinID/type/count/nativepath/name/size/hash associations. Apply equivalentpin lexicalassociation atnativepublication beforeassert_pin. CanonicalJSON descriptor/provenance comparison must preserve bool/integer distinction, with regression.",
+      "acceptance": "dataclasses.replace wrongpath/truthyready, forgedpinpath/class/malformedclosure refuse before_scan/stat; validnativeandforeignworkflows unchanged.",
+      "owner": "root; readiness_ui; readiness_review",
+      "evidence": [
+        "Independent source trace ProjectInspection.apply\u2192readytruthiness\u2192reportdependencies\u2192_fence _scan(Path(archivalforeignsource)); FilePin.path assert_pin precedes lexicaladmission.",
+        "Authorpreacceptance source review: report/frozen dict equality treats required=1 as required=True; tighten canonicalJSON comparison beforestrictdescriptor acceptance; independentlynativepathguardsstillrefuseforeignI/O."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-337",
+      "component": "Public inspection dependency type narrowing",
+      "classification": "Author34focusedPASS0.618s plus2newPyright diagnostics beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "_apply report.get dependencies remainsOptional inchecker at loops despite purehelper runtimevalidation.",
+      "root_cause": "Interprocedural helper admissiondoesnot narrowcaller variabletype.",
+      "proposed_action": "Explicit listadmission beforepinassociation; retainstrictmalformedmetadata refusal, no suppression.",
+      "acceptance": "34focusedcases andownedstatic pass; malformeddependenciesstillrefusebeforeI/O.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "/private/tmp/portable-foreign-336-tests.log; Pyright2 optionaliteration at771/779."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-PORTABLE-338",
+      "component": "Inspection semantic binding to pinned package manifest",
+      "classification": "Independentactualnativepackage dataclasses.replace reproduction beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Replacing BOTH inspection.manifest_json originaljob model_scale1\u21920.5 and matchingreport.requested_job produces nativeApplymodel_scale0.5 whilepinnedphysicalproject.json remainsoriginalscale1.",
+      "root_cause": "Inspectionmatches detachedreport/manifest butdoesnot authenticate theirsemanticJSON againstactualpinnedmanifestmetadata; metadata pinhasnoSHA.",
+      "proposed_action": "Readboundedpinnedmanifestmetadata with existing_metadata checks, compare canonicalparsedJSON semantics tovalidatedinspectionmanifestbefore operationalprotection/fence/application; rawwhitespace/lengthnotassumedequal.",
+      "acceptance": "Forgedconsistentdetachedmanifest/report refuses; legitimateprettyforeignmanifestworks, originalpackage bytes/settingsunchanged; nooutput/scratchartifactonrefusal.",
+      "owner": "root; readiness_ui; readiness_review",
+      "evidence": [
+        "Independentactualfrozen2b1b6ee source test: stored_scale1.0, returned_scale0.5, physical_manifest_unchangedTrue, realpins/sourcebytes original; no privilegeescalationclaim."
+      ],
+      "verification": [
+        "docs/portable-foreign-review.md",
+        "benchmark-results/ext09-foreign-focused/",
+        "benchmark-results/ext09-foreign-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed foreign all-collected read/Apply and strict public-record/native path admission accepted locally by frozen completeCPU/static gate,0new diagnostics; native Windows/GPU/quality/Resolve remain NOT VERIFIED."
     }
   ]
 }

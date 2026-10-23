@@ -26,6 +26,12 @@ from typing import Any
 
 from .corrections import MAX_CORRECTION_BYTES, CorrectionDocument
 from .diagnostics import finite_json_float
+from .portable_paths import (
+    archive_job,
+    archived_path,
+    infer_flavour,
+    native_destination,
+)
 from .project_collection import (
     MAX_FILES,
     FilePin,
@@ -280,7 +286,7 @@ def _source_hash(dep: dict[str, Any]) -> str:
 def _correction_timing(wire, source, correction):
     if source['kind'] != 'sequence':
         return  # Native video timing requires the shared decoder at render time.
-    config, _ = job_from_wire(wire).configurations()
+    config = archive_job(wire).config
     start = config.start_frame or 0
     count = source['file_count'] - start
     if config.num_frames > 0:
@@ -341,6 +347,48 @@ def plan_project(job: JobRequest, preview_frame: int, *, collect_ids: Iterable[s
     return ProjectPlan(raw, tuple(verified.items()), _json(report))
 
 
+def _validate_pin(pin, expected_path: Path, *, size=None, sha256=None) -> None:
+    """Validate public Python records lexically, before any filesystem operation."""
+    if not isinstance(pin, FilePin):
+        raise TypeError('Expected a FilePin instance')
+    if not isinstance(pin.path, str) or native_destination(pin.path) != expected_path:
+        raise ValueError('Pin path differs from its native dependency association')
+    fingerprint = pin.fingerprint
+    if (not isinstance(fingerprint, tuple) or len(fingerprint) != 5
+            or any(type(value) is not int for value in fingerprint) or fingerprint[2] < 0):
+        raise ValueError('Invalid pin fingerprint')
+    if not isinstance(pin.sha256, str) or (pin.sha256 != '' and not re.fullmatch(r'[0-9a-f]{64}', pin.sha256)):
+        raise ValueError('Invalid pin content identity')
+    if (size is not None and pin.size != size) or (sha256 is not None and pin.sha256 != sha256):
+        raise ValueError('Pin size/content identity differs from frozen metadata')
+
+
+def _validate_pin_association(frozen_deps, resolved_deps, raw_pins):
+    if not isinstance(resolved_deps, list) or len(resolved_deps) != len(frozen_deps):
+        raise ValueError('Resolved dependency inventory differs')
+    if not isinstance(raw_pins, tuple) or len(raw_pins) != len(frozen_deps):
+        raise TypeError('Expected complete immutable dependency pins')
+    pins = {}
+    for frozen, resolved, pair in zip(frozen_deps, resolved_deps, raw_pins, strict=True):
+        if (not isinstance(resolved, dict) or resolved.get('status') != 'verified'
+                or _json({key: value for key, value in resolved.items() if key not in ('path', 'status')})
+                != _json({key: value for key, value in frozen.items() if key not in ('path', 'status')})):
+            raise ValueError('Resolved dependency metadata differs from frozen manifest')
+        if not isinstance(resolved.get('path'), str):
+            raise TypeError('Expected a native dependency path string')
+        root = native_destination(resolved['path'])
+        if (not isinstance(pair, tuple) or len(pair) != 2 or pair[0] != frozen['id']
+                or not isinstance(pair[1], tuple) or len(pair[1]) != len(frozen['files'])):
+            raise ValueError('Pin dependency IDs/count/type differ from frozen manifest')
+        for row, pin in zip(frozen['files'], pair[1], strict=True):
+            path = root / row['relative_path'] if frozen['kind'] == 'sequence' else root
+            if path.name != row['relative_path']:
+                raise ValueError('Pin basename differs from frozen file')
+            _validate_pin(pin, path, size=row['bytes'], sha256=row['sha256'])
+        pins[frozen['id']] = pair[1]
+    return pins
+
+
 def _fence(deps, pins, check):
     for dep in deps:
         check_now(check)
@@ -354,21 +402,23 @@ def _fence(deps, pins, check):
 
 def _protect(destination: Path, manifest: dict[str, Any]) -> None:
     candidate = real_path(destination, missing=True)
-    roots = [Path(dep['path']) for dep in manifest['dependencies']]
+    roots = [dep['path'] for dep in manifest['dependencies']]
     refs = manifest['model_references']
     if refs.get('asset_root'):
-        roots.append(Path(refs['asset_root']))
-    roots.extend(Path(row['path']) for row in refs.get('entries', []))
-    for root in roots:
-        root = root.resolve()
+        roots.append(refs['asset_root'])
+    roots.extend(row['path'] for row in refs.get('entries', []))
+    for reference in roots:
+        if infer_flavour(reference) != ('windows' if os.name == 'nt' else 'posix'):
+            continue  # Archival foreign references have no native filesystem meaning.
+        root = Path(reference).resolve()
         if _locations_overlap(candidate, root):
             raise ValueError('Write location overlaps a protected dependency/model reference')
 
 
-def _collection_dir(dep: dict[str, Any]) -> str:
+def _collection_dir(dep: dict[str, Any], flavour: str | None = None) -> str:
     parts = ['assets', dep['id']]
     if dep['kind'] == 'sequence':
-        path = Path(dep['path'])
+        path = archived_path(dep['path'], flavour or infer_flavour(dep['path']))
         if path.stem.lower() in ('frames', 'rgb', 'input'):
             parts.append(safe_name(path.parent.name))
         parts.append(safe_name(path.name))
@@ -384,9 +434,11 @@ def publish_project(plan: ProjectPlan, destination_parent: Path, check: Check | 
     if not isinstance(plan, ProjectPlan):
         raise TypeError('Expected immutable ProjectPlan instance')
     manifest = _validate_manifest(plan.manifest_json)
+    if archive_job(manifest['original_job']).flavour != ('windows' if os.name == 'nt' else 'posix'):
+        raise ValueError('Foreign archival plans cannot be published directly. Apply with explicit native destinations, then create and review a new native plan.')
+    pins = _validate_pin_association(manifest['dependencies'], manifest['dependencies'], plan.pins)
     parent = real_path(destination_parent, directory=True)
     _protect(parent / 'prospective-package', manifest)
-    pins = dict(plan.pins)
     _fence(manifest['dependencies'], pins, check)
     root = fresh_directory(parent, 'corridorkey-project-')
     try:
@@ -434,7 +486,8 @@ def _validate_manifest(raw: bytes) -> dict[str, Any]:
     data = _parse(raw)
     if set(data) != {'schema_version', 'type', 'original_job', 'preview_frame', 'dependencies', 'model_references', 'corrections'} or type(data['schema_version']) is not int or data['schema_version'] != 2 or data['type'] != 'corridorkey_portable_project':
         raise ValueError('Unsupported portable schema/type/fields')
-    job = job_from_wire(data['original_job'])
+    archive = archive_job(data['original_job'])
+    wire = archive.original_wire
     _frame(data['preview_frame'])
     deps = data['dependencies']
     if not isinstance(deps, list) or not 1 <= len(deps) <= MAX_FILES:
@@ -457,9 +510,8 @@ def _validate_manifest(raw: bytes) -> dict[str, Any]:
             raise ValueError('Correction dependencies must be single files')
         if dep['role'] != ('correction_asset' if identifier.startswith('correction_asset_') else identifier) or dep['required'] is not True or type(dep['collected']) is not bool or dep['kind'] not in ('file', 'sequence') or dep['status'] != 'verified':
             raise ValueError('Invalid portable role/kind/state')
-        if not isinstance(dep['path'], str) or not Path(dep['path']).is_absolute() or '\x00' in dep['path']:
-            raise ValueError('Reference path must be absolute')
-        if 'package_path' in dep and dep['package_path'] != _collection_dir(dep):
+        archived_path(dep['path'], archive.flavour)
+        if 'package_path' in dep and dep['package_path'] != _collection_dir(dep, archive.flavour):
             raise ValueError('Unsafe collection package path')
         if not isinstance(dep['depends_on'], list) or any(not isinstance(item, str) for item in dep['depends_on']):
             raise ValueError('Invalid dependency closure')
@@ -480,12 +532,12 @@ def _validate_manifest(raw: bytes) -> dict[str, Any]:
             raise ValueError('Correction metadata exceeds 4MiB')
         if dep['kind'] == 'sequence' and [row['relative_path'] for row in files] != sorted((row['relative_path'] for row in files), key=lambda name: frame_path_key(Path(name))):
             raise ValueError('Frozen frame order differs from source scheduler')
-    expected = {'source': job.input_path}
-    if job.initial_hint_path is not None:
-        expected['initial_hint'] = job.initial_hint_path
-    if job.hint_video_path is not None:
-        expected['full_hint'] = job.hint_video_path
-    config, _ = job.configurations()
+    expected = {'source': wire['input_path']}
+    if wire['initial_hint_path'] is not None:
+        expected['initial_hint'] = wire['initial_hint_path']
+    if wire['hint_video_path'] is not None:
+        expected['full_hint'] = wire['hint_video_path']
+    config = archive.config
     correction = data['corrections']
     if config.corrections_path is not None:
         expected['corrections'] = str(config.corrections_path)
@@ -521,13 +573,16 @@ def _validate_manifest(raw: bytes) -> dict[str, Any]:
     if not isinstance(refs, dict) or set(refs) != {'asset_root', 'weights', 'entries', 'scope'}:
         raise ValueError('Invalid model-reference metadata')
     for key in ('asset_root', 'weights'):
-        if refs[key] is not None and (not isinstance(refs[key], str) or not Path(refs[key]).is_absolute()):
-            raise ValueError('Model reference path must be absolute')
+        if refs[key] is not None:
+            archived_path(refs[key], archive.flavour)
     if not isinstance(refs['entries'], list) or len(refs['entries']) > 5 or not isinstance(refs['scope'], str):
         raise ValueError('Invalid model-reference inventory')
     for row in refs['entries']:
-        if not isinstance(row, dict) or set(row) != {'id', 'path', 'status', 'bytes'} or not isinstance(row['path'], str) or not Path(row['path']).is_absolute() or row['id'] not in ('weights', 'foundation_stats', 'rvm_ckpt', 'moge_checkpoint', 'cradio_dir') or not isinstance(row['status'], str) or (row['bytes'] is not None and (type(row['bytes']) is not int or row['bytes'] < 0)):
+        if not isinstance(row, dict) or set(row) != {'id', 'path', 'status', 'bytes'} or not isinstance(row['path'], str) or row['id'] not in ('weights', 'foundation_stats', 'rvm_ckpt', 'moge_checkpoint', 'cradio_dir') or not isinstance(row['status'], str) or (row['bytes'] is not None and (type(row['bytes']) is not int or row['bytes'] < 0)):
             raise ValueError('Invalid model-reference row')
+        archived_path(row['path'], archive.flavour)
+    if archive.flavour != ('windows' if os.name == 'nt' else 'posix') and any(not dep['collected'] for dep in deps):
+        raise ValueError('Foreign path-flavour packages require every render dependency to be collected; partial/reference-only foreign packages are unsupported.')
     return data
 
 
@@ -547,7 +602,11 @@ def _resolve(root, data, relinks, check):
         raise TypeError('Relinks require dependency ID -> explicit local path')
     if set(relinks) - {dep['id'] for dep in data['dependencies']}:
         raise ValueError('Unknown relink dependency ID')
-    report = {'dependencies': [], 'model_references': data['model_references'], 'preview_frame': data['preview_frame'],
+    archive = archive_job(data['original_job'])
+    foreign = archive.flavour != ('windows' if os.name == 'nt' else 'posix')
+    report = {'archive_path_flavour': archive.flavour, 'foreign_paths': foreign,
+              'portability_scope': ('Foreign all-collected dependencies only; external model/executable references remain unverified.' if foreign else 'Native path flavour; collected or explicit exact-identity references.'),
+              'dependencies': [], 'model_references': data['model_references'], 'preview_frame': data['preview_frame'],
               'ready': False, 'read_bytes': 0, 'copy_bytes': 0, 'collect_ids': [],
               'requested_job': data['original_job'], 'correction_identity': None if data['corrections'] is None else data['corrections']['identity']}
     pins = {}
@@ -555,7 +614,7 @@ def _resolve(root, data, relinks, check):
         dep = json.loads(_json(original))
         identifier = dep['id']
         if identifier in relinks:
-            path = Path(relinks[identifier])
+            path = native_destination(relinks[identifier]) if foreign else Path(relinks[identifier])
         elif dep['collected']:
             if 'package_path' not in dep:
                 raise ValueError('Incomplete collected dependency descriptor')
@@ -674,15 +733,39 @@ def _locations_overlap(first: Path, second: Path) -> bool:
 def _apply(inspection, *, output_dir, temp_dir, check):
     if not isinstance(inspection, ProjectInspection):
         raise TypeError('Expected a ProjectInspection instance, not a dataclass class')
-    if not inspection.ready:
+    report = inspection.report
+    if report.get('ready') is not True:
         raise ValueError('A completely verified ProjectInspection instance is required before Apply')
-    data, report = _validate_manifest(inspection.manifest_json), inspection.report
+    data = _validate_manifest(inspection.manifest_json)
+    deps = report.get('dependencies')
+    if not isinstance(deps, list):
+        raise TypeError('Expected resolved dependency list')
+    pins = _validate_pin_association(data['dependencies'], deps, inspection.pins)
+    actual_provenance = {key: report.get(key) for key in
+                         ('requested_job', 'model_references', 'preview_frame', 'correction_identity')}
+    expected_provenance = {'requested_job': data['original_job'], 'model_references': data['model_references'],
+                           'preview_frame': data['preview_frame'],
+                           'correction_identity': None if data['corrections'] is None else data['corrections']['identity']}
+    if _json(actual_provenance) != _json(expected_provenance):
+        raise ValueError('Inspection provenance differs from frozen manifest')
+    if not isinstance(inspection.package_path, str):
+        raise TypeError('Expected native package path string')
+    package = native_destination(inspection.package_path)
+    _validate_pin(inspection.manifest_pin, package / 'project.json')
+    _validate_pin(inspection.marker_pin, package / COMMIT_MARKER, size=0)
     assert_pin(inspection.manifest_pin)
     assert_pin(inspection.marker_pin)
-    deps, pins = report['dependencies'], dict(inspection.pins)
+    physical = _parse(_metadata(inspection.manifest_pin, MAX_PROJECT_BYTES, check))
+    if _json(physical) != _json(data):
+        raise ValueError('Inspection manifest differs from the pinned package manifest')
     effective = dict(data, dependencies=deps)
-    output_dir = real_path(output_dir, missing=True)
-    temp_dir = real_path(temp_dir, missing=True)
+    archive = archive_job(data['original_job'])
+    foreign = archive.flavour != ('windows' if os.name == 'nt' else 'posix')
+    if (foreign and archive.config.output_format == 'video' and archive.writer_executable_absolute
+            and archive.writer_executable_flavour != ('windows' if os.name == 'nt' else 'posix')):
+        raise ValueError('The archived video job refers to a foreign absolute FFmpeg executable. Choose an explicitly compatible encoder in the originating job and republish, or use an EXR package; the encoder reference is never silently rewritten.')
+    output_dir = real_path(native_destination(output_dir) if foreign else output_dir, missing=True)
+    temp_dir = real_path(native_destination(temp_dir) if foreign else temp_dir, missing=True)
     for path in (output_dir, temp_dir):
         package = Path(inspection.package_path)
         if _locations_overlap(path, package):

@@ -331,3 +331,12 @@ No render defaults or aliases change. Profiles cover scale, temporal window/stri
 Stage 2 batching, explicit memory/cache and Quick Key settings; recommendations
 never change jobs. Sequence-only; hints/corrections/video and auto-VRAM/stage
 profiling are explicitly refused. See [workflow, limits and verification](calibration.md).
+
+
+## Foreign portable collection paths
+
+The all-collected Windows/POSIX schema2 reader extension is locally verified. It preserves original archival settings and requires explicit native
+absolute output/scratch destinations for foreign Apply; native package destination
+behavior is unchanged. Partial/reference-only foreign packages and direct foreign
+publication refuse. EXR retains unused encoder references; foreign absolute video
+encoders refuse without replacement. See [scope and review](portable-foreign-review.md).

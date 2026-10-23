@@ -1,42 +1,41 @@
-# Current checkpoint — explicit machine calibration, 2026-10-23
+# Current checkpoint — foreign collected projects, 2026-10-23
 
-Tenth connected increment locally accepted. All ten workflows/full product
+Eleventh connected increment locally accepted. All ten workflows/full product
 acceptance remain incomplete; [extension brief](product-improvements-brief.md).
 
-Calibrate performance… explicitly captures local sequence/profile metadata,
-verifies source/model/package bytes within a chosen budget, then requests a
-separate Start. The desktop retires progressive/editor work before calibration
-owns one shared-engine worker at a time. Controlled cold/warm trials retain raw
-records, failures/skipped cases, resource/latency scopes and measured-only
-recommendations with uncertain processing-duration estimates. Queue/settings,
-original sources and previous outputs remain unchanged. No automatic application.
+Fully collected Windows/POSIX archives can be inspected, verified and explicitly
+applied to native draft paths. The codec preserves original wire/settings, uses
+producing-flavour collection names, and rebinds all operational source/hint/
+correction resources before native job construction. Exact source offsets, hint
+sequences and schema4 tracked/guidance correction identities and final rasters
+are preserved. Bounded desktop provenance shows archive flavour and scope, with
+no queue/model-owner changes. Native package behavior remains available.
 
-Independent substantial review and main distinct self-review accepted fixes316–326:
-default asset selection, timer failure boundary, cleanup status/visibility,
-strict measurement binding, sparse neural-work counters, retained artifact roots,
-failfast unavailable prerequisites, exclusion reasons and live scratch retirement.
-Focused23core,8dialog,6parent cases pass; independent29core/UI plus2race regressions
-pass. [Review](calibration-review.md), [workflow/limits](calibration.md).
+Independent substantial review and main distinct self-review accepted327–338:
+desktop archival projection, POSIX parent-name compatibility, explicit native
+destination errors, foreign publication refusal and strict public inspection/
+manifest/report/pin association and canonical settings provenance. Final35core/
+collection,11codec,2newQt and15existingQt pass; independent41CPU+2Qt and the
+settings-forgery replay pass. [Review](portable-foreign-review.md), [workflow](portable-projects.md).
 
-Final **1385CPU tests PASS104.076s/no skips**;397Python files/full compilation/import/dependency/static regression/whitespace gate PASS,0new vsbaseline AND actualdf82f2c. Existing519Ruff/684Pyright errors17warnings
-remain; static005/nativeQt126 stay open. Frozen source mapping:
-`e8afba7b05b57a2ab665427d4462bc0864ba3a08d5d96a79a6a051346926c5f4`.
-Evidence: `benchmark-results/ext08-connected-final/`. Prior unchanged-driver headless benchmark3x1137CPU reused
-for applicable orchestration scope only; new calibration source independently
+Final **1408CPU tests PASS103.288s/no skips**;401Python files/full compilation/import/dependency/static regression/whitespace gate PASS,0new vsbaseline AND actualc357cad. Existing519Ruff/684Pyright errors17warnings
+remain; static005/nativeQt126 stay open. Frozen source identity:
+`e61fd11e399a0a631dca193168c28d2ecaf398271f351526235f65a1cfa722cc`.
+Evidence: `benchmark-results/ext09-foreign-connected-final/`. Prior unchanged-driver headless benchmark3x1137CPU reused
+for applicable orchestration scope only; new foreign portable source independently
 full-suite/static verified. No inference speed or quality claim.
 
-Sequence-only samples restart temporal context; hints/corrections/video, automatic
-VRAM selection and synchronized stage profiling are explicitly refused. Scratch
-outputs are retained and sampled byte budgets are soft stops. Physical GPU UUID/
-driver and continuously reverified package/environment expiry are unsupported;
-reopened report bindings remain explicitly NOT REVERIFIED. Actual pretrained CUDA
-throughput/latency/VRAM/quality, optional SAM2, native/frozen Windows and Resolve
-SDK/host acceptance remain NOT VERIFIED. No dependency/user-environment or render
-default/precision/colour change, model download or asset publication.
+Partial/reference-only foreign packages and direct foreign publication remain
+unsupported. Foreign absolute video encoders refuse without replacement; unused
+EXR and bare/relative encoder references remain archival/unverified. Actual tests
+use Windows-flavour manifests and real local POSIX payloads, not native Windows.
+Native Windows/filesystem/packaging, pretrained CUDA/quality/VRAM, optional SAM2
+and Resolve SDK/host acceptance remain NOT VERIFIED. No dependency/user-environment,
+render-default/precision/colour change, download or asset publication.
 
-Prior df82f2cf5e59980434144b07049c330fd075953c pushed/confirmed to
+Prior c357cadd0df626791212b4fb653df077f7538b01 pushed/confirmed to
 MikeHall1/CorridorKey2.0 review/corridorkey-audit-20261023. This publication's
-identity follows in ignored `benchmark-results/ext08-connected-publication.json`.
+identity follows in ignored `benchmark-results/ext09-foreign-publication.json`.
 
-Next: Implement strict foreign path-flavour all-collected portable package inspection/application with lexical archival validation and explicit native destination rebinding; continue remaining feature contexts and supported host preparation.
+Next: Implement explicit bounded photo composite preview backgrounds through the existing loader and synchronized A/B/playback paths, with source/render pixels preserved, clear colour/geometry policy and stale-result fences; continue remaining feature contexts and supported Resolve preparation.
 Five cycles is an interval; continue without signoff or another supervisor.

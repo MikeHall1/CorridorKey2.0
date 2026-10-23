@@ -57,9 +57,15 @@ larger int64 portable frames refuse before application without changing the stor
 value. A late committed correction snapshot is retained for review when Cancel or
 Close prevents draft application; no late job is emitted or automatically rendered.
 
-Initial portability supports the same native path flavour only. Windows↔POSIX
-manifests cannot currently be opened/relinked, even when all media was collected;
-this is an unsupported capability, not a passed test or just missing hardware.
+Schema2 now supports foreign Windows/POSIX archives when every render dependency
+is collected. Paths are validated lexically in their producing flavour, then
+collected files and correction resources become native only after verification
+and explicit Apply destinations. Original wire/model paths remain archival
+provenance and are never probed as native paths. Partial/reference-only foreign
+packages refuse; general foreign missing-reference relinking remains unsupported.
+Direct foreign publication refuses: Apply to an explicit native draft and create
+a fresh verified native plan. This is a reader extension, with no changed writer
+layout or implicit manifest migration. [Detailed scope/review](portable-foreign-review.md).
 Model roots/weights remain external references; selecting/relinking a compatible
 model environment is deliberate through Local assets. The initial dialog admits
 0–65536MiB verification/copy budgets (defaults256MiB read/0copy); the core accepts
@@ -83,3 +89,19 @@ python -m unittest discover -s tests -v
 
 Real moved-package fixtures do not establish native Windows packaging, model
 compatibility or pretrained/GPU/Resolve acceptance. Those remain NOT VERIFIED.
+
+
+Foreign Apply requires explicit absolute native output/scratch paths; native
+package destination behavior remains compatible. Video jobs with a foreign
+absolute encoder refuse without replacement. EXR preserves that unused reference.
+Bare/relative executables remain unverified environment references; models are
+never automatically activated. Single-origin lexical paths must be unambiguous;
+device namespaces, relative drives, dot segments, controls and unsafe collection
+names produce explicit compatibility errors. POSIX literal backslashes/colons in
+parent names remain valid. Public plan/inspection/file-pin records are checked
+for exact native associations before I/O; Apply also rereads bounded pinned
+manifest metadata to preserve actual package settings provenance.
+
+**1408CPU tests PASS103.288s/no skips**;401Python files/full compilation/import/dependency/static regression/whitespace gate PASS,0new vsbaseline AND actualc357cad. Windows-flavour moved
+package/offset/hint/schema4 raster/Qt cases run on POSIX payloads, not native
+Windows. Native Windows filesystem/packaging/runtime acceptance remains NOT VERIFIED.
