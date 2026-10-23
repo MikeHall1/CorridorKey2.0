@@ -5336,6 +5336,104 @@
       "resolution": "Workspace/owner records have a 4MiB default bound before constructor/pruning/eviction. Typed RVM/Hann metadata is bounded; generic completed manifests retain their configured store quota. Typed publication entry limits do not reject unrelated valid mixed-cache entries.",
       "requirement": "Development brief reliability, bounded resources and source preservation; docs/review-objective.md",
       "relevant_commit": "Final bounded-read and process-authority review checkpoint on review/corridorkey-audit-20261023; exact identity in Git history."
+    },
+    {
+      "id": "HEALTH-READINESS-255",
+      "component": "new readiness service/tests",
+      "classification": "pre-acceptance fixture and static defects",
+      "severity": "low",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Initial eight-test service run has one path assertion comparing macOS /var spelling to canonical /private/var; new datetime use triggers UP017.",
+      "root_cause": "Fixture compared a noncanonical temporary directory to normalized JobRequest output; new module used legacy UTC spelling.",
+      "evidence": [
+        "Initial targeted readiness run: 7 PASS,1 assertion failure; Ruff UP017; Pyright0."
+      ],
+      "proposed_action": "Compare canonical paths and use datetime.UTC without changing runtime semantics or checker policy.",
+      "acceptance": "Focused service tests and new-file static checks pass.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext01-service-tests.txt",
+        "benchmark-results/ext01-focused.txt",
+        "benchmark-results/ext01-review-summary.json",
+        "benchmark-results/ext01-ext05-accepted/source-verification.json"
+      ],
+      "requirement": "Accurate verification with preserved canonical job path semantics",
+      "resolution": "Canonical fixture comparison and datetime.UTC corrected; new service/tests Ruff/Pyright0; independent review no blockers.",
+      "relevant_commit": "Product-extension checkpoint containing these records; exact identity in Git history and benchmark-results/ext01-ext05-publication.json."
+    },
+    {
+      "id": "HEALTH-READINESS-256",
+      "component": "desktop_readiness.py mark_submitted",
+      "classification": "confirmed resource ownership defect before batch acceptance",
+      "severity": "medium",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Repeated guided renders append old/duplicate protected input paths into the retained base report despite replacing its render observation.",
+      "evidence": [
+        "benchmark-results/ext01-report-growth-probe.json:in-memory realmethod/fake-label probe1/10/100 renders retains2/20/200 paths; no files rendered."
+      ],
+      "root_cause": "Current render protection list aliases base readiness-report list instead of owning a fresh snapshot.",
+      "proposed_action": "Copy base lightweight-check paths; retain only latest render dependency protection, deduplicate on export and add repeated-render regression.",
+      "acceptance": "Repeated submissions keep base report unchanged and current render protection bounded; export still protects scanned and latest-render inputs.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext01-report-growth-probe.json",
+        "benchmark-results/ext01-ext05-postreview-focused.txt",
+        "benchmark-results/ext01-ext05-final-fixed/verification.json",
+        "benchmark-results/ext01-ext05-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-01 safe report export and bounded resource ownership",
+      "resolution": "Copied base report dependencies, deduplicated current render/export protection;100-render regression passes.1022CPU tests73.282s and complete static gatePASS; independent reviewer accepted fix.",
+      "relevant_commit": "Product-extension checkpoint containing these records; exact identity in Git history and benchmark-results/ext01-ext05-publication.json."
+    },
+    {
+      "id": "HEALTH-PLAYBACK-257",
+      "component": "desktop_playback.py Play/Pause cursor",
+      "classification": "confirmed independent-review pre-acceptance defect",
+      "severity": "medium",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Play after Pause restarts at the unchanged still-navigation spinbox instead of the paused playback position.",
+      "evidence": [
+        "Independent actualPNG/EXR fixture:playBabsolute2\u2192display3;pauseengine3/display3/spinbox0;Play submits2."
+      ],
+      "root_cause": "play always rebinds and seeks using manual spinbox, never retaining paused cursor for unchanged source/view/range binding.",
+      "proposed_action": "Retain paused cursor for unchanged binding; still honor deliberate manual navigation, source/view/range changes and repeated Play.",
+      "acceptance": "Actual decoded play\u2192advance\u2192pause\u2192play resumes paused sourceframe; explicit manual seek/range/source/view changes remain authoritative; bounded pending retirement unchanged.",
+      "owner": "readiness_ui; independentreadiness_review",
+      "verification": [
+        "benchmark-results/ext01-ext05-final-focused.txt",
+        "independent reviewer33focusedPASS3.930s",
+        "benchmark-results/ext01-ext05-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-05 responsive pause/resume and aligned seeking",
+      "resolution": "Pause freezes accepted display position; same binding resumes, repeatedPlay leaves running timeline unchanged; manual navigation explicitly invalidates resume.11real-decoder UI cases verify. Independent reviewer accepted257.",
+      "relevant_commit": "Product-extension checkpoint containing these records; exact identity in Git history and benchmark-results/ext01-ext05-publication.json."
+    },
+    {
+      "id": "HEALTH-PLAYBACK-258",
+      "component": "desktop_playback.py complete_loader stale error path",
+      "classification": "confirmed independent-review pre-acceptance ownership defect",
+      "severity": "medium",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "An obsolete decoder generation error pauses a newly selected/restarted playback generation.",
+      "evidence": [
+        "Independent deterministicQt probe holds oldAlpha decode, navigates toSource andPlay(oldgen6/newgen13), then releases old decode withValueError; newSource playback stops despite invalid completion token."
+      ],
+      "root_cause": "Completion ownership validity fences pixels, but error branch mutates playback state without checking generation/source identity.",
+      "proposed_action": "Retire old owner but gate error-side state/status mutation by matching current generation/source identity; current-generation errors must still pause/report.",
+      "acceptance": "Obsolete errors retire ownership without pausing latestplayback or replacing its status; currenterrors still stop/report; add deterministic realdecoder-gated regression.",
+      "owner": "root; independentreadiness_review",
+      "verification": [
+        "benchmark-results/ext05-stale-errors-focused.txt",
+        "Independent13actualQt/PNG/EXR testsPASS2.603s on final reviewedhashes",
+        "benchmark-results/ext01-ext05-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-05 responsive seek and stale request rejection",
+      "resolution": "Only matching generation/source errors change playback status; obsolete errors release owner and allow latest Source to continue. Current errors still stop/report; two deterministic regressions added. Independent review accepted.",
+      "relevant_commit": "Product-extension checkpoint containing these records; exact identity in Git history and benchmark-results/ext01-ext05-publication.json."
     }
   ]
 }

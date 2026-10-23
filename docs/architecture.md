@@ -147,3 +147,20 @@ one pinned regular descriptor, admitted extent/hash and exact header/provenance
 checks before safetensors loading. Worker class-owned reaping and root signalling
 share one lock; timeout releases it before forced cleanup. See the final
 [review evidence and limits](review-2026-10-23.md).
+
+
+The ten-feature extension starts with `readiness.py`, a Qt/model-independent
+metadata service returning named PASS/FAIL/WARNING/NOT VERIFIED observations.
+`desktop_readiness.py` owns cancellable off-thread checks, export and immutable
+short-job preparation; actual processing uses the existing `DesktopBridge` and
+shared engine. Requested/effective settings and unexecuted stages remain distinct.
+No new inference implementation or automatic model/backend selection is added.
+
+`playback.py` plans one outstanding source-coordinate frame or atomic A/B pair.
+Its caller-bound identity and generation reject obsolete completions after
+pause/seek/rebind; it reuses `RenderView` for original recorded export offsets.
+`desktop_playback.py` consumes the workspace's existing sole `PreviewLoader` and
+50ms timer, retiring pending ownership even when manual previews supersede it.
+Initial desktop playback requires source sequences with declared rates and EXR
+exports; video/VFR timing is explicitly unsupported. Preview display conversion
+and scheduling do not change rendered pixels or future job settings.

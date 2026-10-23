@@ -43,8 +43,10 @@ from .desktop_corrections import CorrectionDialog
 from .desktop_diagnostic_ranges import DiagnosticRangesPanel
 from .desktop_loader import PreviewLoader
 from .desktop_ofx import OfxCachePanel
+from .desktop_playback import PlaybackControls
 from .desktop_preview import PreviewPair
 from .desktop_queue import QueuePanel
+from .desktop_readiness import ReadinessPanel
 from .desktop_recovery import RecoveryPanel
 from .desktop_resources import ResourcesPanel
 from .desktop_settings import SettingsPanel
@@ -111,7 +113,11 @@ class DesktopWindow(QMainWindow):
         self.benchmark = BenchmarkPanel(self)
         self.benchmark.run_requested.connect(self.start_benchmark)
         self.benchmark.cancel_requested.connect(self.cancel_benchmark)
+        self.readiness = ReadinessPanel(self)
+        self.readiness.run_requested.connect(self.submit_readiness)
         self._build()
+        self.source.textChanged.connect(self.playback.navigate)
+        self.config.textChanged.connect(self.playback.navigate)
         for field in (self.source, self.output, self.first_hint, self.full_hint):
             field.textChanged.connect(self.diagnostic_editor_changed)
         self.config.textChanged.connect(self.diagnostic_editor_changed)
@@ -132,6 +138,7 @@ class DesktopWindow(QMainWindow):
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
         toolbar = QHBoxLayout()
+        self._button('Readiness / first render…', self.readiness.show, toolbar)
         self._button('Open video…', self.choose_video, toolbar)
         self._button('Open frames…', self.choose_frames, toolbar)
         self._button('Open project…', self.choose_project, toolbar)
@@ -268,6 +275,8 @@ class DesktopWindow(QMainWindow):
         self.preview_note.setWordWrap(True)
         self.preview_note.setMinimumHeight(44)
         workspace.addWidget(self.preview_note)
+        self.playback = PlaybackControls(self)
+        workspace.addWidget(self.playback)
         self.config.textChanged.connect(self.invalidate_source_preview)
         self.frame.valueChanged.connect(self.refresh_comparison)
         self.view.currentTextChanged.connect(self.refresh_comparison)
@@ -278,6 +287,7 @@ class DesktopWindow(QMainWindow):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.itemSelectionChanged.connect(self.show_record)
+        self.table.itemSelectionChanged.connect(self.playback.selection_changed)
         workspace.addWidget(self.table, 2)
         queue_bar = QHBoxLayout()
         self._button('Cancel selected', self.cancel_selected, queue_bar)
@@ -493,6 +503,26 @@ class DesktopWindow(QMainWindow):
                             self.config.toPlainText(), self.writer.toPlainText(),
                             first_hint=self.first_hint.text(), full_hint=self.full_hint.text(), profile=self.profile.isChecked())
 
+    def submit_readiness(self, job):
+        try:
+            if self.readiness.prepared is None or job != self.readiness.prepared or self.readiness.submitted_id is not None:
+                raise ValueError('Prepare and review a fresh short-render snapshot before submission.')
+            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark, queue activation or shutdown before rendering.')
+            if len(self.jobs) >= 128:
+                raise ValueError('Queue history is full. Clear finished jobs before submitting more.')
+            if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
+                raise ValueError('Previous benchmark cleanup is unverified; cannot start another owner.')
+            if self.asset_selection != self.readiness.prepared_selection:
+                raise ValueError('Selected model assets changed. Prepare and review a new short-render snapshot.')
+            request_id = self.bridge.send('render', {'job': job_to_wire(job)})
+            self.jobs[request_id] = {'job': job, 'status': 'sending', 'event': None}
+            self.readiness.mark_submitted(request_id)
+            self.refresh_table()
+            self.statusBar().showMessage('Explicit short render submitted; current settings preserved')
+        except (ValueError, OSError, RuntimeError, queue.Full) as exc:
+            self.readiness.status.setText(str(exc))
+
     def enqueue(self):
         try:
             if self.pending_queue_root is not None:
@@ -560,10 +590,13 @@ class DesktopWindow(QMainWindow):
         self.refresh_table()
 
     def show_record(self):
+        if self._updating_diagnostic_rows:
+            return
         request_id = self.selected()
         if request_id is not None:
             self.details.setPlainText(json.dumps(self.jobs[request_id].get('event'), indent=2))
-        self.refresh_comparison()
+        if not (self.playback.engine is not None and request_id == self.playback.selected_id):
+            self.refresh_comparison()
         self.refresh_diagnostic_context()
 
     def diagnostic_selection(self) -> tuple[str, JobRequest, dict[str, Any]] | None:
@@ -626,6 +659,7 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def preview_diagnostic_range(self, options: dict[str, Any], context: str):
+        self.playback.navigate()
         try:
             self.refresh_diagnostic_context()
             if self.closing or context != self._diagnostic_context:
@@ -707,6 +741,7 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def request_preview(self):
+        self.playback.navigate()
         self._diagnostic_preview_context = None
         try:
             if self.moving_reference is not None:
@@ -758,6 +793,7 @@ class DesktopWindow(QMainWindow):
         return completed_view(state['job'], state['event']['payload']['record'])
 
     def synchronize_reference(self):
+        self.playback.navigate()
         try:
             if self.view.currentText() == 'Source':
                 raise ValueError('Select an export view (Alpha, Foreground or composite) for A first.')
@@ -775,10 +811,12 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def refresh_comparison(self, *_):
+        self.playback.navigate()
         if self.moving_reference is not None:
             self.request_preview()
 
     def request_comparison(self):
+        self.playback.navigate()
         a = self.moving_reference
         assert a is not None
         try:
@@ -821,6 +859,7 @@ class DesktopWindow(QMainWindow):
             self.request_preview()
 
     def pin_reference(self):
+        self.playback.navigate()
         if self.pixmap is None:
             self.error('Decode a frame successfully before pinning a comparison.')
             return
@@ -833,6 +872,7 @@ class DesktopWindow(QMainWindow):
         self.reference_note.setToolTip(self.preview_description)
 
     def clear_reference(self):
+        self.playback.navigate()
         self.moving_reference = None
         self.preview_serial = -1
         self.frame_label.setText('Frame (zero-based)')
@@ -1082,6 +1122,7 @@ class DesktopWindow(QMainWindow):
         self.benchmark.status.setText('Benchmark cancellation requested; waiting for owned process cleanup.')
 
     def poll(self):
+        self.readiness.poll()
         self.diagnostic_ranges.poll()
         self.benchmark.refresh()
         self.assets.poll()
@@ -1096,6 +1137,7 @@ class DesktopWindow(QMainWindow):
                 self.resources.observe(event)
                 self.resource_request = None
             self.recovery.observe(event)
+            self.readiness.observe(event)
             request_id = event.get('request_id')
             if event['kind'] == 'connected':
                 self.backend.setText(f"Worker PID {event['payload']['pid']} · CUDA required · Live GPU memory unavailable")
@@ -1131,6 +1173,9 @@ class DesktopWindow(QMainWindow):
                     state['event'] = {'kind': 'lost', 'payload': {'error': self.bridge.failure or 'Connection closed before terminal acknowledgement',
                                                                  'outputs_may_be_partial': True}}
                     changed = True
+            if self.readiness.submitted_id is not None:
+                self.readiness.observe({'request_id': self.readiness.submitted_id, 'kind': 'lost',
+                                        'payload': {'error': self.bridge.failure or 'Worker connection closed'}})
             self.backend.setText('Worker stopped · ' + (self.bridge.failure or 'Clean shutdown'))
             if self.pending_queue_root is not None:
                 root, self.pending_queue_root = self.pending_queue_root, None
@@ -1151,11 +1196,13 @@ class DesktopWindow(QMainWindow):
         if changed:
             self.refresh_table()
             self.show_record()
+        self.playback.tick()
         try:
             serial, frame, error = self.loader.results.get_nowait()
         except queue.Empty:
             return
-        if serial != self.preview_serial:
+        playback_valid = self.playback.complete_loader(serial, error)
+        if serial != self.preview_serial or playback_valid is False:
             return
         if error is not None:
             self.preview_note.setText(error)
@@ -1191,10 +1238,12 @@ class DesktopWindow(QMainWindow):
             event.ignore()
             return
         self.closing = True
+        self.playback.pause()
         self.loader.stopping.set()
         self.bridge.stop()
         self.cancel_benchmark()
         self.benchmark.dossier_panel.close()
+        self.readiness.close()
         self.diagnostic_ranges.close()
         self.ofx_cache.close()
         self.cache_panel.close()
@@ -1203,7 +1252,7 @@ class DesktopWindow(QMainWindow):
         if self.editor is not None:
             self.editor.close()
         editor_done = self.editor is None or self.editor.service.done.is_set()
-        if self.bridge.done.is_set() and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and not self.loader.thread.is_alive():
+        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and not self.loader.thread.is_alive():
             self.timer.stop()
             event.accept()
         else:

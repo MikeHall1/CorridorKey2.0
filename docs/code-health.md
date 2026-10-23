@@ -1,6 +1,6 @@
 # Continuous code health — milestone 9
 
-The current objective is [the repository review](review-objective.md). Read the task and issue ledgers at each resume. Keep pre-existing static findings distinct from runtime defects and new regressions; CPU checks do not establish GPU, quality or Resolve acceptance.
+The current objective is [the product extension](product-improvements-brief.md); the repository review below is historical evidence. Read the task and issue ledgers at each resume. Keep pre-existing static findings distinct from runtime defects and new regressions; CPU checks do not establish GPU, quality or Resolve acceptance.
 
 ## Reproducible local environment
 
@@ -152,3 +152,15 @@ remain open with explicit dispositions, not suppressed. Exact source identities
 and raw results: benchmark-results/fresh-review-final-source-verification.json
 and fresh-review-final/. Final checkpoint publication is blocked by missing Git
 authentication. No model/GPU/quality/Windows/Resolve acceptance is inferred.
+
+
+Ten-feature extension first checkpoint: final1028CPU/no skips73.166s and335file
+compilation/import/requirements/VCS/dependency/whitespace gate PASS.519Ruff and
+684Pyright errors17warnings remain,0new fingerprints vs unchanged historical
+baseline AND actual final repository-review evidence. Initial1021/1022passing
+integration runs retained; later concrete report-growth/resume/stale-error
+findings256–258 were fixed before final acceptance. Independent review and
+main self-review identify final source hashes in
+benchmark-results/ext01-ext05-accepted/source-verification.json. Existing static005
+and nativeQt126 remain open. No checker, baseline, interpreter or dependency
+changes; no GPU/quality/host claims.

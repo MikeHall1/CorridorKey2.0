@@ -1,16 +1,25 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T08:56:11.691012+00:00",
-  "objective_source": "docs/review-objective.md",
-  "milestone": 46,
-  "review_batches_completed": 6,
-  "review_complete": true,
+  "created_utc": "2026-10-23T11:40:48.924905+00:00",
+  "objective_source": "docs/product-improvements-brief.md",
+  "base_commit": "1c3f9f2d9aebadc3e8b0e4802ee306834416c676",
   "product_complete": false,
-  "boundary_reason": "Final local review accepted; exact Git authentication push blocker documented under objective exception.",
-  "review_branch": "review/corridorkey-audit-20261023",
-  "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743",
-  "checkpoint_commit": "Final review commit containing this checkpoint; exact identity in Git history.",
-  "verification_summary": {
+  "local_implementation_complete": false,
+  "run_state": "Initial connected readiness/playback increment locally accepted; next implementation work remains",
+  "checkpoint_interval": 5,
+  "cycles_completed": 5,
+  "completed_work": [
+    "Audited ten features/source and persisted portable brief/dependency/acceptance mapping.",
+    "Connected local readiness/check/cancel/export and explicit immutable short-render submission.",
+    "Connected source-sequence/EXR playback with play/pause/resume/loop/speed, actual displayed source time, A/Boffsets and stale-result/error ownership.",
+    "Independent OFX/Resolve supported-interface investigation and tracked-correction schema3 design.",
+    "Classified/fixed255\u2013258; independent review and final1028CPU/335file fullstatic gate pass."
+  ],
+  "verification": [
+    "benchmark-results/ext01-ext05-accepted/verification.json",
+    "benchmark-results/ext01-ext05-accepted/source-verification.json"
+  ],
+  "previous_review_evidence": {
     "evidence": "benchmark-results/fresh-review-final-source-verification.json",
     "cpu_tests": 985,
     "cpu_seconds": 72.674,
@@ -31,28 +40,44 @@
       "pyright": {}
     }
   },
-  "completed_review_issues": "239\u2013254 confirmed locally resolvable review issues; all resolved with focused/integrated/independent evidence.",
-  "remaining_dispositions": {
-    "HEALTH-STATIC-005": "Existing backlog; per-diagnostic risk triage retained; not static-clean.",
-    "HEALTH-FORMS-126": "Native mechanism unproven; LLDB target launch unavailable; interactive target acceptance NOT VERIFIED."
-  },
+  "remaining": [
+    "All ten workflows remain incomplete overall; detailed pending scenarios in docs/acceptance.md and docs/product-improvements.md."
+  ],
   "external_product_acceptance": [
     "CUDA/real pretrained weights and representative permitted held-out footage",
     "Windows clean package and native target execution",
-    "Resolve host/SDK build, managed colour and viewer/export scenarios"
+    "Resolve host/SDK build, managed colour and viewer/export scenarios",
+    "Optional segmentation provider/model and actual inference"
   ],
-  "active_agents": {},
-  "running_processes": [],
   "push": {
-    "status": "blocked_authentication",
+    "status": "See local publication receipt after normal push; no success inferred before acknowledgment",
     "destination": "MikeHall1/CorridorKey2.0",
     "branch": "review/corridorkey-audit-20261023",
-    "approval": "User explicitly approved exact56c067f push after initial auto-review rejection.",
-    "evidence": "HTTPS could not read Username; gh absent; existing SSH agent has no identities. No remote branch created or alternative commit published."
+    "remote_verified_commit": "1c3f9f2d9aebadc3e8b0e4802ee306834416c676",
+    "note": "Fresh authorized network check succeeds; historical authentication blocker is not assumed current.",
+    "confirmation_file": "benchmark-results/ext01-ext05-publication.json"
   },
-  "next_action": "Review scope complete with documented push-authentication exception. Authenticate Git, then publish the local branch; product acceptance remains separate.",
-  "acceptance_matrix": "docs/acceptance.md",
-  "report": "docs/review-2026-10-23.md",
-  "checkpoint_interval": 5,
-  "cycles_completed": 19
+  "next_action": "Continue EXT-01: explicit backend/FFmpeg capability checks and engine execution record plus guided output decode/display. Complete remaining playback controls, then tracked corrections with schema3 design.",
+  "checkpoint_commit": "Commit containing this checkpoint; exact push identity in benchmark-results/ext01-ext05-publication.json",
+  "verification_summary": {
+    "cpu_tests": 1028,
+    "cpu_seconds": 73.166,
+    "skips": 0,
+    "source_files": 335,
+    "reviewed_source_identity": "cb27649b7dd20eae686132357f095c1086307394b4534f9167cce8c863a7c84a",
+    "new_vs_actual_review": {
+      "ruff": {},
+      "pyright": {}
+    },
+    "ruff_findings": 519,
+    "pyright_errors": 684,
+    "pyright_warnings": 17,
+    "static_clean": false
+  },
+  "resolved_review_issues": [
+    "HEALTH-READINESS-255",
+    "HEALTH-READINESS-256",
+    "HEALTH-PLAYBACK-257",
+    "HEALTH-PLAYBACK-258"
+  ]
 }

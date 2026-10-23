@@ -1,5 +1,25 @@
 # Product acceptance
 
+## Ten-feature extension acceptance (2026-10-23)
+
+The current [extension brief](product-improvements-brief.md) adds the rows below;
+existing product acceptance and external prerequisites remain in force. Detailed
+dependencies and audited reuse: [implementation map](product-improvements.md).
+
+| ID | Required acceptance scenario | State | Evidence / prerequisite |
+|---|---|---|---|
+| EXT-01 | Identify failing readiness stage, cancel safely, explicitly render local short range with unchanged quality, decode/display and export truthful report | In progress | Lightweight checks and explicit preparation/worker submission locally verified with independent review; 1028CPU/335file final gate passes; independent source review accepted. Real CUDA/model/decode/display and capability checks remain unverified. |
+| EXT-05 | Synchronized playable source/alpha/foreground/composite A/B, source-time seek/loops, zoom/pan/speed and bounded diagnostics | In progress | Declared source-sequence/EXR playback, source-aligned A/B, loop/speed/pause/resume/seek and bounded diagnostics locally verified;13actual-decoder tests and1028CPU integration gate pass. Video/VFR, persistent readers/cache, zoom/pan/photo backgrounds and representative runtime acceptance remain pending. |
+| EXT-02 | Motion-following corrections, anchor/cut/reliability policies, preview/commit, undo/save/reopen and invalidation | Not implemented | Existing stationary masks/motion utilities are foundations, not tracked corrections. |
+| EXT-03 | Inspect/check alignment/exposure of plate and accept reversible spatial guidance | Not implemented | Representative footage required for real quality benefit. |
+| EXT-04 | Positive/negative clicks predictably refine optional provider mask, cancel, preview and save/track guidance | Not implemented | Provider interface/evaluation/model and local runtime acceptance required. |
+| EXT-06 | Latest playhead requests win; bounded draft→refined scheduling rejects stale results; final export retains requested quality | Not implemented | Existing decoder serial fence is not an inference scheduler. |
+| EXT-07 | Frame-aligned spatial diagnostic overlays, documented meaning/provenance, correction/rerender actions | Not implemented | Motion arrays exist; persisted spatial maps and UI acceptance pending. |
+| EXT-08 | Explicit cold/warm calibration with identity/expiry/failures, measured recommendations and uncertain estimates | Not implemented | Benchmark runner exists; actual hardware/sample measurements required. |
+| EXT-09 | Preview inventory, safely collect selected assets or reference-only, move/relink with identity/compatibility and preserved settings/corrections | Not implemented | Existing schema1 absolute-path snapshots retained; portable format and workflow pending. |
+| EXT-10 | Supported host selected range prepares/validates cache with progress/cancel and safe refresh/attachment | In progress | [Supported-interface investigation](resolve-assisted-preparation.md) complete; capture/companion workflow not implemented. Actual target Developer docs/SDK/Resolve viewer/export acceptance required. |
+
+
 Authority: [development brief](development-brief.md), with required Resolve delivery reinforced by the active user goal. This matrix tracks acceptance, not milestone progress. Existing code is preserved; a local fixture does not establish pretrained quality, performance, packaged usability or host compatibility.
 
 Statuses: **Not implemented**, **In progress**, **Implemented but unverified**, **Locally verified**, **Externally blocked**, **Fully accepted**. A row's status describes its full stated scenario; narrower passing evidence stays in its evidence column. No full product acceptance is claimed.

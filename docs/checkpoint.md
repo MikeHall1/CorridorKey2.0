@@ -1,52 +1,47 @@
-# Current checkpoint — final repository review, 2026-10-23
+# Current checkpoint — ten-feature extension, 2026-10-23
 
-The local repository-review acceptance conditions are met, using the explicit
-push-blocker exception in [review-objective.md](review-objective.md). Full product
-acceptance remains incomplete. [Review report](review-2026-10-23.md).
+First connected increment locally accepted; all ten workflows and full product
+acceptance remain incomplete. Current objective: [extension brief](product-improvements-brief.md).
+[Dependency/implementation map](product-improvements.md), [acceptance](acceptance.md).
+Previous repository-review results remain historical evidence.
 
-## Changes and verification
+EXT-01 adds explicit cancellable local readiness stages/report export, immutable
+1–120-frame preparation and shared-worker submission. Requested quality/backend/
+precision remain unchanged; cut/reset markers rebase, moved first hints and
+correction subranges refuse silent reinterpretation. Model/inference/decode/
+display and FFmpeg capability stages remain unverified until explicitly executed.
 
-Resolved confirmed review issues239–254: source/hint/correction preservation,
-pre-prune recovery admission, owned preview/worker lifecycle and cleanup
-uncertainty, correction selection, launcher exit status, fixture synchronization,
-portable records, bounded queue projection/cache payload/ownership reads. Final
-248fix serializes class-owned reaping and root signalling. All fixes have focused
-regressions, main diff review and independent stable source review.
+EXT-05 adds actual sequence/EXR playback: source-time A/B offsets, loop/speed,
+pause/resume, displayed frame/time and bounded scheduling diagnostics. Manual
+navigation supersedes paused cursor; obsolete successes/errors cannot stop or
+replace newer playback. One existing decoder/queue is retained. Declared sequence
+timing only; video/VFR, persistent readers/cache, zoom/pan and photo backgrounds
+remain pending. Thirteen actual PNG/nativeEXR offscreen cases verify these paths.
 
-Final frozen-source full invocation: **985CPU tests PASS72.674s, no skips**;
-327Python files,0syntax errors; compilation/import/dependency/VCS/whitespace PASS.
-Ruff519/Pyright684errors17warnings retained,0new vsbaseline, actualM45 and first
-review checkpoint. No checker weakening. Exact hashes and commands:
-`benchmark-results/fresh-review-final-source-verification.json`,
-`benchmark-results/fresh-review-final/`. Previous failed logs remain archived.
-ActualM46 Qt/pixel-oracle proof is reused for unchanged numerical behavior.
+Independent review plus main self-review resolved255–258: canonical-path fixture/
+UTC diagnostic, report-path retention growth, paused cursor reset and obsolete
+error ownership. Final **1028CPU tests PASS73.166s, no skips**;335Python files,
+compilation/import/requirements/VCS/dependency/whitespace/static gate PASS.
+Existing519Ruff/684Pyright errors17warnings remain;0new against unchanged baseline
+AND actual accepted review. Exact reviewed source identity/hashes and raw gates:
+`benchmark-results/ext01-ext05-accepted/source-verification.json`. Earlier passing
+1021/1022gates and probes are retained, never substituted for final fixes. No
+checker/baseline/environment changes. User `.venv` preserved.
 
-## Git and publication
+[Resolve investigation](resolve-assisted-preparation.md) records supported OFX
+interfaces and target-document/host gaps; no automatic host preparation is claimed.
+Tracked-correction design records schema3 replacement semantics to avoid double
+application; no tracking controls are exposed yet. All required external CUDA/
+pretrained/local-footage, optional-provider, Windows packaging and Resolve/SDK
+acceptance remain NOT VERIFIED. NativeQt126 and static005 remain open.
 
-Branch: `review/corridorkey-audit-20261023`.
-Verified origin: `https://github.com/MikeHall1/CorridorKey2.0.git`.
-First local checkpoint: `56c067f21e0c685ab699e4eb3e0aa9db628cd743`.
-Final checkpoint: the commit containing this file; exact identity via
-`git log -1 --format=%H`. Source/tests/docs only; no footage, weights, caches,
-generated reports or private IDE settings. Licences/pinned SDK bytes preserved.
+Checkpoint publication: verified origin `MikeHall1/CorridorKey2.0`, branch
+`review/corridorkey-audit-20261023`, starting commit `1c3f9f2`. This checkpoint's
+commit is the Git commit containing this record. The exact commit/remote result
+is saved after normal push in `benchmark-results/ext01-ext05-publication.json`;
+no successful publication is inferred before Git acknowledgment.
 
-The user explicitly approved the first checkpoint push. It failed:
-`fatal: could not read Username for 'https://github.com': Device not configured`.
-GitHub CLI is absent; the existing SSH agent has no identities. No remote branch
-was created or alternate commit published. Git authentication is required before
-`git push --set-upstream origin review/corridorkey-audit-20261023`.
-Do not repeat the unchanged failed attempt or force-push.
-
-## Remaining prerequisites
-
-Static backlog005 remains visible; nativeQt126 needs native instrumentation and
-interactive target acceptance (LLDB target launch unavailable). CUDA is unavailable,
-all five configured model/foundation paths are absent, and ffmpeg/CMake/nvcc are
-absent from PATH. GPU/weights/representative held-out quality, actual Windows
-packaging and Resolve host/SDK acceptance are NOT VERIFIED. Reproduction commands
-and affected criteria remain in [acceptance.md](acceptance.md).
-
-No active source owners, live verification handles or extra supervisor remain.
-Next action: authenticate Git and publish the local review branch; resume product
-acceptance only with its actual target prerequisites. Do not restart this completed
-review or repeat unchanged full-suite evidence merely to demonstrate activity.
+Next: continue EXT-01 explicit backend/FFmpeg capabilities and engine execution/
+guided output decode/display, then remaining playback controls and tracked
+corrections. Detailed tasks remain ready in `.ralph/plan.json`; five cycles are a
+checkpoint interval. No competing supervisor or recursive runner was launched.

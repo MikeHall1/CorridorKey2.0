@@ -1,7 +1,144 @@
 {
   "schema_version": 1,
-  "objective": "Complete the fresh repository review, remediate confirmed locally resolvable defects, tidy justified artifacts/docs, verify coherent checkpoints and push to the verified fork review branch; product acceptance remains separate.",
+  "objective": "Implement and integrate the ten product improvements in docs/product-improvements-brief.md, preserving the shared engine and explicit external acceptance.",
   "tasks": [
+    {
+      "id": "EXT-01",
+      "title": "Readiness and guided short real render",
+      "status": "in_progress",
+      "dependencies": [],
+      "acceptance": "Stage-specific cancellable checks, deliberate model/inference job, decoded/displayed output and local report; actual inference evidence separate from fixtures.",
+      "evidence": [
+        "corridorkey/readiness.py",
+        "corridorkey/desktop_readiness.py",
+        "tests/test_readiness.py",
+        "tests/test_desktop_readiness.py",
+        "benchmark-results/ext01-ext05-final-fixed/verification.json"
+      ],
+      "next_action": "Integrate explicit capability/model/inference records and guided output decoding/display; first-run persistence and real CUDA acceptance remain pending."
+    },
+    {
+      "id": "EXT-05",
+      "title": "Synchronized playable previews",
+      "status": "in_progress",
+      "dependencies": [
+        "EXT-01"
+      ],
+      "acceptance": "Source-time aligned playback/seek/loops, bounded owners/caches, custom composites, zoom/pan, speeds and dropped/buffering diagnostics; VFR explicitly handled.",
+      "evidence": [
+        "corridorkey/playback.py",
+        "corridorkey/desktop_playback.py",
+        "tests/test_playback.py",
+        "tests/test_desktop_playback.py",
+        "docs/product-improvements.md",
+        "benchmark-results/ext01-ext05-final-fixed/verification.json"
+      ],
+      "next_action": "Add persistent bounded readers/cache and matched zoom/pan; source-only playback/video timestamp proof remains pending."
+    },
+    {
+      "id": "EXT-02",
+      "title": "Tracked manual corrections",
+      "status": "ready",
+      "dependencies": [
+        "EXT-05"
+      ],
+      "acceptance": "Motion-following masks with cut/reliability policies, immutable authored anchors, preview/commit/history/persistence and dependent invalidation.",
+      "evidence": [
+        "docs/product-improvements.md"
+      ],
+      "next_action": "Implement schema3 tracks replacing original final constraint within trackedspan at original ordering position; do not append masks beside stationary original. Strict1/2 compatibility, derived assets/provenance, preview/accept/history/invalidation required. Design recorded in docs/product-improvements.md."
+    },
+    {
+      "id": "EXT-03",
+      "title": "Clean-plate assistance",
+      "status": "ready",
+      "dependencies": [
+        "EXT-02"
+      ],
+      "acceptance": "Reference identity/alignment/exposure diagnostics, reversible inspectable spatial guidance integrated with correction/refinement; no new neural channels.",
+      "evidence": [
+        "docs/product-improvements.md"
+      ],
+      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+    },
+    {
+      "id": "EXT-04",
+      "title": "Click-to-select subject guidance",
+      "status": "ready",
+      "dependencies": [
+        "EXT-02"
+      ],
+      "acceptance": "Optional provider and positive/negative iterative clicks, cancellable coarse-mask preview, saved provenance/correction conversion and optional tracked range.",
+      "evidence": [
+        "docs/product-improvements.md"
+      ],
+      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+    },
+    {
+      "id": "EXT-06",
+      "title": "Progressive preview refinement",
+      "status": "ready",
+      "dependencies": [
+        "EXT-05"
+      ],
+      "acceptance": "Explicit budgeted priority scheduling, draft/refined/final/stale states, newest-request fences and provenance-compatible reuse; exports preserve requested quality.",
+      "evidence": [
+        "docs/product-improvements.md"
+      ],
+      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+    },
+    {
+      "id": "EXT-07",
+      "title": "Visual problem overlays",
+      "status": "ready",
+      "dependencies": [
+        "EXT-02",
+        "EXT-05"
+      ],
+      "acceptance": "Source-aligned diagnostic maps with provenance/legend/limits and correction/rerender actions; heuristics distinct from measured observations.",
+      "evidence": [
+        "docs/product-improvements.md"
+      ],
+      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+    },
+    {
+      "id": "EXT-08",
+      "title": "Machine-specific calibration",
+      "status": "ready",
+      "dependencies": [
+        "EXT-01"
+      ],
+      "acceptance": "Explicit cancellable cold/warm configuration measurements, identity/expiry, failures and recommendations/duration uncertainty with no implicit job changes.",
+      "evidence": [
+        "docs/product-improvements.md"
+      ],
+      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+    },
+    {
+      "id": "EXT-09",
+      "title": "Safe project portability",
+      "status": "ready",
+      "dependencies": [
+        "EXT-01"
+      ],
+      "acceptance": "Versioned manifests/inventory, deliberate relink and optional budgeted selected collection, collision/traversal/source identity checks; preserve legacy projects.",
+      "evidence": [
+        "docs/product-improvements.md"
+      ],
+      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+    },
+    {
+      "id": "EXT-10",
+      "title": "Resolve-assisted preparation",
+      "status": "in_progress",
+      "dependencies": [],
+      "acceptance": "Investigate real supported SDK/host interfaces, selected-range capture and shared-engine preparation/cancel/validation/refresh where supported; actual host acceptance required.",
+      "evidence": [
+        "docs/product-improvements.md",
+        "docs/resolve-assisted-preparation.md"
+      ],
+      "next_action": "Implement bounded host-action source capture against actual supported interfaces; target Resolve Developer docs and host validation remain external."
+    },
     {
       "id": "fresh-repository-review",
       "title": "Fresh first-party review, confirmed-defect remediation, justified cleanup and fork checkpoints",
@@ -701,5 +838,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Review scope complete with documented push-authentication exception. Authenticate Git, then publish the local branch; product acceptance remains separate."
+  "next_action": "Continue EXT-01: explicit backend/FFmpeg capability checks and engine execution record plus guided output decode/display. Complete remaining playback controls, then tracked corrections with schema3 design.",
+  "objective_source": "docs/product-improvements-brief.md",
+  "current_checkpoint_evidence": "benchmark-results/ext01-ext05-accepted/source-verification.json"
 }

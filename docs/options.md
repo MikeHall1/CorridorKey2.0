@@ -219,3 +219,20 @@ payload bounds within the configured cache budget. Invalid cache data recomputes
 unverifiable ownership fails closed before pruning. Generic completed manifests
 retain the configured store quota rather than the tighter typed-adapter limit.
 No new inference flag or precision change is introduced.
+
+
+Desktop **Readiness / first render…** opens without automatic checks or processing.
+**Check readiness** inspects local metadata off-thread. **Prepare short render**
+uses explicit absolute In and 1–120 frames (default8) in a fresh unique output child;
+**Run displayed snapshot** submits only after review. Quality/backend/precision
+remain requested; supplied cuts/resets rebase, moved first hints and correction
+subranges refuse rather than silently change meaning. No new inference defaults
+or CLI aliases. See [scope and pending acceptance](product-improvements.md).
+
+Desktop **Play sequence / Pause** requires a selected completed source image
+sequence/EXR render with recorded declared timing. Optional loop source In/Out
+are exclusive ranges; blank uses the common range. Speeds¼×–4× affect preview
+scheduling only. Source frame/time and buffering/drop counters are shown. Manual
+preview/navigation/view/selection/settings changes pause playback. Video/VFR
+explicitly refuses; 50ms UI polling and per-frame reader reopening are documented
+limits. No inference/export setting or persisted project schema changes.
