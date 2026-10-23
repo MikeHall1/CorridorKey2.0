@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "kind": "decode_reuse",
+  "description": "Generated local sequence reader experiment. Existing window overlap reuse is the baseline; no neural inference or GPU throughput is measured.",
+  "artifact_parent": "../../benchmark-results",
+  "repetitions": 3,
+  "cache_bytes": 262144,
+  "frame_count": 12,
+  "shape_hw": [64, 64],
+  "chunk": 8,
+  "stride": 4,
+  "quick_interval": 3
+}

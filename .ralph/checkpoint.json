@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-23T03:25:53.902079+00:00",
+  "cycles_completed": 19,
+  "checkpoint_interval": 5,
+  "boundary_reason": "First fresh-review checkpoint:239\u2013251 verified/resolved, M46 locally verified,252\u2013254 open.",
+  "completed": [
+    {
+      "id": "code-health",
+      "evidence": [
+        "scripts/code_health.py",
+        "requirements-dev.txt",
+        ".ralph/static-baseline.json",
+        ".ralph/issues.json",
+        "docs/code-health.md",
+        "docs/environments/cpu-macos-py312.txt",
+        "tests/test_code_health.py",
+        "benchmark-results/health-m9-metrics/health.json"
+      ]
+    },
+    {
+      "id": "serializer-types",
+      "evidence": [
+        "corridorkey/diagnostics.py",
+        "tests/test_diagnostics.py",
+        ".ralph/issues.json",
+        "benchmark-results/health-m9-serializer-tests.txt"
+      ]
+    },
+    {
+      "id": "baseline",
+      "evidence": [
+        "docs/baseline.md",
+        "docs/options.md"
+      ]
+    },
+    {
+      "id": "session-cache",
+      "evidence": [
+        "benchmark-results/cpu-adapters-milestone3.json",
+        "docs/feature-cache.md"
+      ]
+    },
+    {
+      "id": "loop",
+      "evidence": [
+        "scripts/ralph_loop.py",
+        "tests/test_ralph.py",
+        "docs/ralph-loop.md"
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "evidence": [
+        "corridorkey/control.py",
+        "tests/test_control.py",
+        "tests/test_io.py",
+        "tests/test_session.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "mapping-cleanup",
+      "evidence": [
+        "corridorkey/resources.py",
+        "tests/test_resources.py",
+        "tests/test_foundation_cache.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "quick-key-adaptive",
+      "evidence": [
+        "corridorkey/quick_key.py",
+        "corridorkey/draft.py",
+        "corridorkey/motion.py",
+        "tests/test_draft.py",
+        "tests/test_quick_runtime.py",
+        "corridorkey/shot_analysis.py",
+        "tests/test_shot_analysis.py",
+        "tests/test_past_draft.py",
+        "tests/test_quick_key.py",
+        "tests/test_motion.py",
+        "docs/quick-key.md",
+        "benchmark-results/cpu-adapters-milestone6.json",
+        "benchmark-results/cpu-stdlib-milestone6.json",
+        "benchmarks/suites/quick-key-matrix.example.json"
+      ]
+    },
+    {
+      "id": "corrections",
+      "evidence": [
+        "corridorkey/corrections.py",
+        "corridorkey/identities.py",
+        "tests/test_corrections.py",
+        "corridorkey/correction_rasters.py",
+        "tests/test_correction_rasters.py",
+        "tests/test_correction_runtime.py",
+        "tests/test_session.py",
+        "tests/test_benchmark.py",
+        "benchmark-results/cpu-adapters-milestone7.json",
+        "benchmark-results/cpu-stdlib-milestone7.json",
+        "docs/corrections.md",
+        "docs/checkpoint.md",
+        "corridorkey/correction_editor.py",
+        "corridorkey/correction_editor_service.py",
+        "corridorkey/correction_canvas.py",
+        "corridorkey/desktop_corrections.py",
+        "tests/test_correction_editor.py",
+        "tests/test_editor_service.py",
+        "tests/test_correction_canvas.py",
+        "tests/test_desktop_corrections.py",
+        "docs/correction-editor.md",
+        "benchmark-results/m20-final-verification.txt",
+        "benchmark-results/correction-m20-generated/summary.json"
+      ]
+    },
+    {
+      "id": "engine-worker",
+      "evidence": [
+        "corridorkey/worker_protocol.py",
+        "corridorkey/worker_core.py",
+        "corridorkey/worker_transport.py",
+        "corridorkey/worker_client.py",
+        "corridorkey/worker.py",
+        "tests/test_worker_protocol.py",
+        "tests/test_worker_core.py",
+        "tests/test_worker_process.py",
+        "tests/test_worker_faults.py",
+        "tests/test_worker_transport.py",
+        "tests/worker_fixture.py",
+        "docs/worker.md",
+        "benchmark-results/m17-worker-generated-summary.json",
+        "benchmark-results/m17-final-verification.txt"
+      ]
+    },
+    {
+      "id": "writer-prefix-recovery",
+      "scope": "Locally verified optional EXR writer-prefix mechanics; fullproduct remains incomplete.",
+      "evidence": [
+        "benchmark-results/m42-verification-summary.json",
+        "benchmark-results/m42-source-verification.json",
+        "benchmark-results/m42-review-summary.json",
+        "benchmark-results/m42-writer-prefix-ui-generated-summary.json"
+      ]
+    },
+    {
+      "id": "diagnostic-ranges",
+      "scope": "CK-Q10-19 locally verified bounded inspection/sourcepreview/explicit standalone range rerender; no quality or fullclipequivalence claim.",
+      "evidence": [
+        "benchmark-results/m43-verification-summary.json",
+        "benchmark-results/m43-source-verification.json",
+        "benchmark-results/m43-review-summary.json",
+        "benchmark-results/m43-diagnostic-ranges-ui-generated-summary.json"
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "quick-key",
+      "status": "external",
+      "acceptance": "Full-rate interval 1; regular/final/cut/correction anchors; native context inference strategy; current source RGB; full output timing preserved.",
+      "next_action": "Local runtime/correction integration is implemented. Remaining acceptance requires actual CUDA/weights/held-out footage and encoded timing/visual comparisons; continue independent ready tasks."
+    },
+    {
+      "id": "desktop",
+      "status": "in_progress",
+      "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI.",
+      "next_action": "M43 diagnostic/source-range standalone rerender workflow locally verified. Fix low233 generic stale comparison status; retain highQt126 and target package/native dialog acceptance. Continue required decoded reuse investigation through shared developer runner."
+    },
+    {
+      "id": "recovery",
+      "status": "in_progress",
+      "acceptance": "Checksums, completion records, safe bounded reuse, cancellation/failure/stale cache tests.",
+      "next_action": "Stage2 and durable EXRwriter-prefix workflows locally verified M37/M42. Preserve exact identities/fresh attempts; directseek remains unimplemented/unverified and actual pretrained/Windows recovery acceptance pending; avoid restarting accepted checkpoints."
+    },
+    {
+      "id": "evaluation",
+      "status": "in_progress",
+      "acceptance": "Defined normalized metrics/masks, missing references unavailable, baseline/candidate comparisons, stress fixtures and honest reports.",
+      "next_action": "M38 dossier and M40 stress mechanics locally verified. Actual trained GPU/reference footage/human review/physical fault-volume/Windows acceptance remains pending; do not infer quality from fixtures."
+    },
+    {
+      "id": "colour-precision",
+      "status": "in_progress",
+      "acceptance": "High-bit inputs, HDR/association/invalid-value fixtures; no ineffective controls or silent precision changes.",
+      "next_action": "M41 declared scene-linear sequence primaries locally verified. Highbit video/source transfer/range/time/model primaries and managed Windows/Resolve colour acceptance remain pending; do not retry unchanged absent prerequisites."
+    },
+    {
+      "id": "packaging",
+      "status": "in_progress",
+      "acceptance": "Maintainable desktop bundle recipe, asset validation/download UX, retained notices; no unauthorized distribution.",
+      "next_action": "M33 asset audit/M34 deliberate download and explicit path selection locally verified. Clean Windows package/builder/target workflows and real model compatibility/distribution licence review remain unverified; no installs/downloads/publication authorized."
+    },
+    {
+      "id": "resolve-design",
+      "status": "in_progress",
+      "acceptance": "Host capabilities verified from primary SDK docs; deterministic shot/cache/checkpoint design with isolation and protocol tests.",
+      "next_action": "Validate actual target host project/source/settings/managed-colour/output invalidation, sequential/random/reverse/concurrent/viewer-export under Windows/NVIDIA. Locally maintain v1manual compatibility and strictv2allselectedsource verification; avoid notification-only cached-verification epochs."
+    },
+    {
+      "id": "gpu-acceptance",
+      "status": "external",
+      "acceptance": "CUDA machine, weights and licensed local held-out footage; numerical tolerances, >=3 alternating measurements, memory and quality regression checks."
+    },
+    {
+      "id": "release-acceptance",
+      "status": "external",
+      "acceptance": "Target platform bundle smoke test, asset/legal distribution requirements reviewed, no invented macOS CUDA support."
+    },
+    {
+      "id": "resolve-acceptance",
+      "status": "external",
+      "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
+    }
+  ],
+  "next_action": "Commit/push reviewed checkpoint; then resolve252\u2013254 with disjoint source ownership and focused verification.",
+  "acceptance_matrix": "docs/acceptance.md",
+  "last_verification_logs": [
+    "benchmark-results/m45-final-fixed/verification.json",
+    "benchmark-results/m45-final-fixed/code-health/health.json",
+    "benchmark-results/m45-review-summary.json"
+  ],
+  "product_complete": false,
+  "run": {
+    "milestone": 45,
+    "status": "locally_verified_checkpoint_continuing",
+    "product_complete": false
+  },
+  "verification_summary": {
+    "evidence": "benchmark-results/m45-verification-summary.json",
+    "cpu_tests": 916,
+    "cpu_seconds": 65.759,
+    "skips": 0,
+    "static_files": 314,
+    "new_findings": 0,
+    "ruff_findings": 519,
+    "pyright_errors": 686,
+    "pyright_warnings": 17,
+    "static_clean": false,
+    "actual_m44_diagnostic_delta": {
+      "ruff": {},
+      "pyright": {}
+    },
+    "actual_qt": "129x197source/nativeexports;192x256\u219264x128 halfscalegrid;alpha.4oracle1e-6/fullqualityreset1/immutablesnapshots/A-B/sourcepreservation/ownersjoined"
+  },
+  "active_agents": {},
+  "running_processes": [],
+  "next_work_package": {
+    "requirement": "CK-Q10-04",
+    "status": "implementation_in_progress_imports_and_tests_held",
+    "next_action": "CK-Q10-04: agree native trimap foreground/background/unknown semantics, ordered correction/refinement/conditioning behavior and bounded editor import/save/reopen/attach workflow; implement existing-model native unknown-region refinement without invented model channels, verify actual Qt/sharedworker outputs and preserve defaults. Read docs/checkpoint.md; M45 accepted, do not repeat unchanged916-test gate.",
+    "acceptance": [
+      "Explicit native-resolution foreground/background/unknown trimap import with strict precision/geometry/class validation.",
+      "Known-region constraints and bounded unknown-region-only refinement; defaults unchanged and no invented learned model channels.",
+      "Preserve authored ordering/strength/direction/ranges, spatialdraft native coordinates and Quicktemporal semantics; immutable job/recovery identities.",
+      "Actual Qt import\u2192save\u2192reopen\u2192attach\u2192explicit sharedworker render; source/assets/oldoutputs preserved and ownedtask close/cancel verified.",
+      "Independent review + applicable CPU/static integration; no quality improvement claim without representative held-out evidence."
+    ],
+    "contract": "docs/trimap-refinement.md"
+  },
+  "root_pending": "corrections.py schema2 plus test_trimap_schema.py authored and frozen; docs/ledgers only until combined source freeze, then focused checks and actual workflow.",
+  "objective_source": "docs/review-objective.md",
+  "review_branch": "review/corridorkey-audit-20261023",
+  "review_baseline": "benchmark-results/m46-final-source-verification.json",
+  "review_batches_completed": 5,
+  "milestone": 46,
+  "source_verification": "benchmark-results/fresh-review-checkpoint-verification.json",
+  "review_complete": false
+}

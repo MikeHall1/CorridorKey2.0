@@ -15,5 +15,8 @@ if "%~1"=="" (
     "%PYTHON%" run_interactive.py "%~1"
 )
 
+set "CORRIDORKEY_EXIT_CODE=%ERRORLEVEL%"
+
 echo.
 pause
+exit /b %CORRIDORKEY_EXIT_CODE%

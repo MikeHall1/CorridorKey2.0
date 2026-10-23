@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-21T19:31:19.984200+00:00",
+  "cycles_completed": 4,
+  "cycle_limit": 5,
+  "boundary_reason": "Four-cycle run boundary; resume Quick Key motion prototype",
+  "completed": [
+    {
+      "id": "baseline",
+      "evidence": [
+        "docs/baseline.md",
+        "docs/options.md"
+      ]
+    },
+    {
+      "id": "session-cache",
+      "evidence": [
+        "benchmark-results/cpu-adapters-milestone3.json",
+        "docs/feature-cache.md"
+      ]
+    },
+    {
+      "id": "loop",
+      "evidence": [
+        "scripts/ralph_loop.py",
+        "tests/test_ralph.py",
+        "docs/ralph-loop.md"
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "evidence": [
+        "corridorkey/control.py",
+        "tests/test_control.py",
+        "tests/test_io.py",
+        "tests/test_session.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "mapping-cleanup",
+      "evidence": [
+        "corridorkey/resources.py",
+        "tests/test_resources.py",
+        "tests/test_foundation_cache.py",
+        "docs/sessions.md"
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "quick-key",
+      "status": "in_progress",
+      "acceptance": "Full-rate interval 1; regular/final/cut/correction anchors; native context inference strategy; current source RGB; full output timing preserved."
+    },
+    {
+      "id": "quick-key-adaptive",
+      "status": "ready",
+      "acceptance": "Explicit diagnostic reliability, causal semantics, fallback policies, actual neural frame counts and CPU motion fixtures."
+    },
+    {
+      "id": "corrections",
+      "status": "ready",
+      "acceptance": "Working matte/keep/remove/reset effects, persistence and dependent-range invalidation, correction anchors."
+    },
+    {
+      "id": "colour-precision",
+      "status": "ready",
+      "acceptance": "High-bit inputs, HDR/association/invalid-value fixtures; no ineffective controls or silent precision changes."
+    },
+    {
+      "id": "evaluation",
+      "status": "ready",
+      "acceptance": "Defined normalized metrics/masks, missing references unavailable, baseline/candidate comparisons, stress fixtures and honest reports."
+    },
+    {
+      "id": "recovery",
+      "status": "ready",
+      "acceptance": "Checksums, completion records, safe bounded reuse, cancellation/failure/stale cache tests."
+    },
+    {
+      "id": "desktop",
+      "status": "ready",
+      "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI."
+    },
+    {
+      "id": "packaging",
+      "status": "ready",
+      "acceptance": "Maintainable desktop bundle recipe, asset validation/download UX, retained notices; no unauthorized distribution."
+    },
+    {
+      "id": "resolve-design",
+      "status": "ready",
+      "acceptance": "Host capabilities verified from primary SDK docs; deterministic shot/cache/checkpoint design with isolation and protocol tests."
+    },
+    {
+      "id": "gpu-acceptance",
+      "status": "external",
+      "acceptance": "CUDA machine, weights and licensed local held-out footage; numerical tolerances, >=3 alternating measurements, memory and quality regression checks."
+    },
+    {
+      "id": "release-acceptance",
+      "status": "external",
+      "acceptance": "Target platform bundle smoke test, asset/legal distribution requirements reviewed, no invented macOS CUDA support."
+    },
+    {
+      "id": "resolve-acceptance",
+      "status": "external",
+      "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
+    }
+  ],
+  "next_action": {
+    "id": "quick-key",
+    "title": "Shot-aware offline motion-guided Quick Key",
+    "status": "in_progress",
+    "acceptance": "Full-rate interval 1; regular/final/cut/correction anchors; native context inference strategy; current source RGB; full output timing preserved.",
+    "evidence": [
+      "corridorkey/quick_key.py",
+      "tests/test_quick_key.py",
+      "docs/quick-key.md"
+    ],
+    "next_action": "Implement CPU offline bidirectional motion/warp prototype with current-frame source RGB, reliability diagnostics and explicit uncertain-region behavior; then integrate native-context anchor inference and full-rate interval-1 routing."
+  },
+  "last_verification_logs": ".ralph/runs/manual-check",
+  "product_complete": false
+}

@@ -1,0 +1,296 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-22T18:39:16.332094+00:00",
+  "cycles_completed": 5,
+  "cycle_limit": 5,
+  "boundary_reason": "Milestone24 five-cycle boundary: dirty shutdown fix and sealed-history/fresh-queue workflow verified; original full product and external acceptance remain incomplete.",
+  "completed": [
+    {
+      "id": "code-health",
+      "evidence": [
+        "scripts/code_health.py",
+        "requirements-dev.txt",
+        ".ralph/static-baseline.json",
+        ".ralph/issues.json",
+        "docs/code-health.md",
+        "docs/environments/cpu-macos-py312.txt",
+        "tests/test_code_health.py",
+        "benchmark-results/health-m9-metrics/health.json"
+      ]
+    },
+    {
+      "id": "serializer-types",
+      "evidence": [
+        "corridorkey/diagnostics.py",
+        "tests/test_diagnostics.py",
+        ".ralph/issues.json",
+        "benchmark-results/health-m9-serializer-tests.txt"
+      ]
+    },
+    {
+      "id": "baseline",
+      "evidence": [
+        "docs/baseline.md",
+        "docs/options.md"
+      ]
+    },
+    {
+      "id": "session-cache",
+      "evidence": [
+        "benchmark-results/cpu-adapters-milestone3.json",
+        "docs/feature-cache.md"
+      ]
+    },
+    {
+      "id": "loop",
+      "evidence": [
+        "scripts/ralph_loop.py",
+        "tests/test_ralph.py",
+        "docs/ralph-loop.md"
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "evidence": [
+        "corridorkey/control.py",
+        "tests/test_control.py",
+        "tests/test_io.py",
+        "tests/test_session.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "mapping-cleanup",
+      "evidence": [
+        "corridorkey/resources.py",
+        "tests/test_resources.py",
+        "tests/test_foundation_cache.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "quick-key-adaptive",
+      "evidence": [
+        "corridorkey/quick_key.py",
+        "corridorkey/draft.py",
+        "corridorkey/motion.py",
+        "tests/test_draft.py",
+        "tests/test_quick_runtime.py",
+        "corridorkey/shot_analysis.py",
+        "tests/test_shot_analysis.py",
+        "tests/test_past_draft.py",
+        "tests/test_quick_key.py",
+        "tests/test_motion.py",
+        "docs/quick-key.md",
+        "benchmark-results/cpu-adapters-milestone6.json",
+        "benchmark-results/cpu-stdlib-milestone6.json",
+        "benchmarks/suites/quick-key-matrix.example.json"
+      ]
+    },
+    {
+      "id": "corrections",
+      "evidence": [
+        "corridorkey/corrections.py",
+        "corridorkey/identities.py",
+        "tests/test_corrections.py",
+        "corridorkey/correction_rasters.py",
+        "tests/test_correction_rasters.py",
+        "tests/test_correction_runtime.py",
+        "tests/test_session.py",
+        "tests/test_benchmark.py",
+        "benchmark-results/cpu-adapters-milestone7.json",
+        "benchmark-results/cpu-stdlib-milestone7.json",
+        "docs/corrections.md",
+        "docs/checkpoint.md",
+        "corridorkey/correction_editor.py",
+        "corridorkey/correction_editor_service.py",
+        "corridorkey/correction_canvas.py",
+        "corridorkey/desktop_corrections.py",
+        "tests/test_correction_editor.py",
+        "tests/test_editor_service.py",
+        "tests/test_correction_canvas.py",
+        "tests/test_desktop_corrections.py",
+        "docs/correction-editor.md",
+        "benchmark-results/m20-final-verification.txt",
+        "benchmark-results/correction-m20-generated/summary.json"
+      ]
+    },
+    {
+      "id": "engine-worker",
+      "evidence": [
+        "corridorkey/worker_protocol.py",
+        "corridorkey/worker_core.py",
+        "corridorkey/worker_transport.py",
+        "corridorkey/worker_client.py",
+        "corridorkey/worker.py",
+        "tests/test_worker_protocol.py",
+        "tests/test_worker_core.py",
+        "tests/test_worker_process.py",
+        "tests/test_worker_faults.py",
+        "tests/test_worker_transport.py",
+        "tests/worker_fixture.py",
+        "docs/worker.md",
+        "benchmark-results/m17-worker-generated-summary.json",
+        "benchmark-results/m17-final-verification.txt"
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "quick-key",
+      "status": "external",
+      "acceptance": "Full-rate interval 1; regular/final/cut/correction anchors; native context inference strategy; current source RGB; full output timing preserved."
+    },
+    {
+      "id": "desktop",
+      "status": "in_progress",
+      "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI."
+    },
+    {
+      "id": "recovery",
+      "status": "in_progress",
+      "acceptance": "Checksums, completion records, safe bounded reuse, cancellation/failure/stale cache tests."
+    },
+    {
+      "id": "evaluation",
+      "status": "in_progress",
+      "acceptance": "Defined normalized metrics/masks, missing references unavailable, baseline/candidate comparisons, stress fixtures and honest reports."
+    },
+    {
+      "id": "colour-precision",
+      "status": "in_progress",
+      "acceptance": "High-bit inputs, HDR/association/invalid-value fixtures; no ineffective controls or silent precision changes."
+    },
+    {
+      "id": "packaging",
+      "status": "in_progress",
+      "acceptance": "Maintainable desktop bundle recipe, asset validation/download UX, retained notices; no unauthorized distribution."
+    },
+    {
+      "id": "resolve-design",
+      "status": "ready",
+      "acceptance": "Host capabilities verified from primary SDK docs; deterministic shot/cache/checkpoint design with isolation and protocol tests."
+    },
+    {
+      "id": "gpu-acceptance",
+      "status": "external",
+      "acceptance": "CUDA machine, weights and licensed local held-out footage; numerical tolerances, >=3 alternating measurements, memory and quality regression checks."
+    },
+    {
+      "id": "release-acceptance",
+      "status": "external",
+      "acceptance": "Target platform bundle smoke test, asset/legal distribution requirements reviewed, no invented macOS CUDA support."
+    },
+    {
+      "id": "resolve-acceptance",
+      "status": "external",
+      "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
+    }
+  ],
+  "next_action": {
+    "id": "desktop",
+    "title": "Usable standalone desktop on the shared engine",
+    "status": "in_progress",
+    "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI.",
+    "evidence": [
+      "docs/worker.md",
+      "corridorkey/worker_client.py",
+      "benchmark-results/m17-worker-generated-summary.json",
+      "corridorkey/desktop.py",
+      "corridorkey/desktop_window.py",
+      "corridorkey/desktop_bridge.py",
+      "corridorkey/desktop_loader.py",
+      "corridorkey/desktop_preview.py",
+      "corridorkey/desktop_state.py",
+      "tests/test_desktop_window.py",
+      "tests/test_desktop_bridge.py",
+      "tests/test_desktop_preview.py",
+      "tests/test_desktop_state.py",
+      "requirements-desktop.txt",
+      "docs/desktop.md",
+      "docs/environments/desktop-macos-py312.txt",
+      "benchmark-results/m18-final-verification.txt",
+      "benchmark-results/desktop-m18-generated/summary.json",
+      "corridorkey/desktop_benchmark.py",
+      "corridorkey/benchmark_task.py",
+      "corridorkey/benchmark_report.py",
+      "tests/benchmark_fixture.py",
+      "tests/test_benchmark_control.py",
+      "tests/test_benchmark_task.py",
+      "tests/test_desktop_benchmark.py",
+      "docs/developer-benchmark.md",
+      "benchmark-results/m19-final-verification.txt",
+      "benchmark-results/benchmark-m19-generated/summary.json",
+      "benchmark-results/benchmark-m19-generated/cancel-summary.json",
+      "corridorkey/correction_editor.py",
+      "corridorkey/correction_editor_service.py",
+      "corridorkey/correction_canvas.py",
+      "corridorkey/desktop_corrections.py",
+      "tests/test_correction_editor.py",
+      "tests/test_editor_service.py",
+      "tests/test_correction_canvas.py",
+      "tests/test_desktop_corrections.py",
+      "docs/correction-editor.md",
+      "benchmark-results/m20-final-verification.txt",
+      "benchmark-results/correction-m20-generated/summary.json",
+      "corridorkey/queue_store.py",
+      "corridorkey/queue_snapshot.py",
+      "corridorkey/local_json.py",
+      "corridorkey/desktop_queue.py",
+      "corridorkey/desktop_recovery.py",
+      "tests/test_queue_store.py",
+      "tests/test_durable_bridge.py",
+      "tests/test_desktop_queue.py",
+      "tests/test_queue_snapshot.py",
+      "tests/test_queue_recovery.py",
+      "docs/durable-queue.md",
+      "benchmark-results/m21-final-verification.txt",
+      "benchmark-results/m21-generated-summary.json",
+      "corridorkey/desktop_settings.py",
+      "tests/test_desktop_settings.py",
+      "benchmark-results/m22-cycle1-verification.txt",
+      "corridorkey/desktop_recipe.py",
+      "tests/test_desktop_recipe.py",
+      "benchmark-results/m22-cycle2-verification.txt",
+      "corridorkey/runtime_paths.py",
+      "tests/test_runtime_paths.py",
+      "benchmark-results/m22-cycle3-health-fixed/health.json",
+      "corridorkey/asset_inventory.py",
+      "corridorkey/desktop_assets.py",
+      "tests/test_desktop_assets.py",
+      "benchmark-results/m22-cycle4-verification.txt",
+      "tests/qt_cleanup.py",
+      "docs/desktop-settings.md",
+      "benchmark-results/m22-final-verification.txt",
+      "benchmark-results/m22-generated-summary.json",
+      "benchmark-results/m23-editor-lifetime-after.txt",
+      "benchmark-results/m23-cycle1-verification.txt",
+      "tests/test_queue_paging.py",
+      "benchmark-results/m23-cycle2-verification.txt",
+      "benchmark-results/m23-cycle3-verification.txt",
+      "corridorkey/resource_snapshot.py",
+      "tests/test_resource_snapshot.py",
+      "benchmark-results/m23-cycle4-verification.txt",
+      "corridorkey/desktop_resources.py",
+      "tests/test_desktop_resources.py",
+      "docs/resource-snapshots.md",
+      "benchmark-results/m23-final-verification.txt",
+      "benchmark-results/m23-generated-summary.json",
+      "benchmark-results/m23-cpu-benchmark.json",
+      "benchmark-results/m24-dirty-close-after.txt",
+      "benchmark-results/m24-cycle1-verification.txt",
+      "tests/test_queue_archive.py",
+      "benchmark-results/m24-cycle2-verification.txt",
+      "benchmark-results/m24-cycle3-verification.txt",
+      "benchmark-results/m24-cycle4-verification.txt",
+      "docs/queue-archives.md",
+      "benchmark-results/m24-final-verification.txt",
+      "benchmark-results/m24-generated-summary.json",
+      "benchmark-results/m24-cpu-benchmark.json"
+    ],
+    "validation_scope": "Optional working Qt workspace uses the existing worker/session/controller, native CPU source/export previews/composites/fixed A/B, immutable settings, real developer benchmarks, native correction authoring/recovery/save and durable queue/recovery controls. Common forms and local metadata/backend asset selection preserve code roots. Readonly history paging and explicit resource snapshots are implemented. Milestone24 guards dirty parent shutdown before stopping owners and disables input during accepted editor closing; seals stopped queue history with bounded owner-bound exclusive-publication marker, rechecks writer admission after locking, retains unresolved data and performs explicit fresh-queue transitions with truthful partial-failure state.464 tests/no skips,207 files/0 AST errors,0 new fingerprints. Real generated Qt/worker/native EXR fixture preserves old database/outputs/corrections and requires explicit rendering after settings load;3 CPU correctness repetitions median29.989s, not neural FPS. Native Qt crash mechanism126, actual GPU/quality/Windows/power-loss/packaging/Resolve remain NOT VERIFIED; global budgets, portable backups/deletion and synchronized A/B/ranges are incomplete.",
+    "next_action": "Build synchronized source-aligned A/B comparison and usable range controls using actual completed exports, source-selection offsets and shared decode/colour contracts. Continue total resource/disk budgets and explicit retention deletion/portable backup beyond sealed managed history, target packaging/dependency/asset compatibility/distribution, and advanced corrections. Keep native Qt GC/painting investigation126 open until real target instrumentation/interaction works. Preserve explicit settings load/render/resume, immutable saved data and all GPU/quality/colour/recovery/Windows/Resolve/controlled-stress acceptance."
+  },
+  "last_verification_logs": ".ralph/runs/manual-check",
+  "product_complete": false
+}

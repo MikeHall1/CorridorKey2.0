@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-22T23:19:47.512937+00:00",
+  "cycles_completed": 13,
+  "checkpoint_interval": 5,
+  "boundary_reason": "M39 telemetry accepted locally; continue required productionstressworkflow.",
+  "completed": [
+    {
+      "id": "code-health",
+      "evidence": [
+        "scripts/code_health.py",
+        "requirements-dev.txt",
+        ".ralph/static-baseline.json",
+        ".ralph/issues.json",
+        "docs/code-health.md",
+        "docs/environments/cpu-macos-py312.txt",
+        "tests/test_code_health.py",
+        "benchmark-results/health-m9-metrics/health.json"
+      ]
+    },
+    {
+      "id": "serializer-types",
+      "evidence": [
+        "corridorkey/diagnostics.py",
+        "tests/test_diagnostics.py",
+        ".ralph/issues.json",
+        "benchmark-results/health-m9-serializer-tests.txt"
+      ]
+    },
+    {
+      "id": "baseline",
+      "evidence": [
+        "docs/baseline.md",
+        "docs/options.md"
+      ]
+    },
+    {
+      "id": "session-cache",
+      "evidence": [
+        "benchmark-results/cpu-adapters-milestone3.json",
+        "docs/feature-cache.md"
+      ]
+    },
+    {
+      "id": "loop",
+      "evidence": [
+        "scripts/ralph_loop.py",
+        "tests/test_ralph.py",
+        "docs/ralph-loop.md"
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "evidence": [
+        "corridorkey/control.py",
+        "tests/test_control.py",
+        "tests/test_io.py",
+        "tests/test_session.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "mapping-cleanup",
+      "evidence": [
+        "corridorkey/resources.py",
+        "tests/test_resources.py",
+        "tests/test_foundation_cache.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "quick-key-adaptive",
+      "evidence": [
+        "corridorkey/quick_key.py",
+        "corridorkey/draft.py",
+        "corridorkey/motion.py",
+        "tests/test_draft.py",
+        "tests/test_quick_runtime.py",
+        "corridorkey/shot_analysis.py",
+        "tests/test_shot_analysis.py",
+        "tests/test_past_draft.py",
+        "tests/test_quick_key.py",
+        "tests/test_motion.py",
+        "docs/quick-key.md",
+        "benchmark-results/cpu-adapters-milestone6.json",
+        "benchmark-results/cpu-stdlib-milestone6.json",
+        "benchmarks/suites/quick-key-matrix.example.json"
+      ]
+    },
+    {
+      "id": "corrections",
+      "evidence": [
+        "corridorkey/corrections.py",
+        "corridorkey/identities.py",
+        "tests/test_corrections.py",
+        "corridorkey/correction_rasters.py",
+        "tests/test_correction_rasters.py",
+        "tests/test_correction_runtime.py",
+        "tests/test_session.py",
+        "tests/test_benchmark.py",
+        "benchmark-results/cpu-adapters-milestone7.json",
+        "benchmark-results/cpu-stdlib-milestone7.json",
+        "docs/corrections.md",
+        "docs/checkpoint.md",
+        "corridorkey/correction_editor.py",
+        "corridorkey/correction_editor_service.py",
+        "corridorkey/correction_canvas.py",
+        "corridorkey/desktop_corrections.py",
+        "tests/test_correction_editor.py",
+        "tests/test_editor_service.py",
+        "tests/test_correction_canvas.py",
+        "tests/test_desktop_corrections.py",
+        "docs/correction-editor.md",
+        "benchmark-results/m20-final-verification.txt",
+        "benchmark-results/correction-m20-generated/summary.json"
+      ]
+    },
+    {
+      "id": "engine-worker",
+      "evidence": [
+        "corridorkey/worker_protocol.py",
+        "corridorkey/worker_core.py",
+        "corridorkey/worker_transport.py",
+        "corridorkey/worker_client.py",
+        "corridorkey/worker.py",
+        "tests/test_worker_protocol.py",
+        "tests/test_worker_core.py",
+        "tests/test_worker_process.py",
+        "tests/test_worker_faults.py",
+        "tests/test_worker_transport.py",
+        "tests/worker_fixture.py",
+        "docs/worker.md",
+        "benchmark-results/m17-worker-generated-summary.json",
+        "benchmark-results/m17-final-verification.txt"
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "quick-key",
+      "status": "external",
+      "acceptance": "Full-rate interval 1; regular/final/cut/correction anchors; native context inference strategy; current source RGB; full output timing preserved.",
+      "next_action": "Local runtime/correction integration is implemented. Remaining acceptance requires actual CUDA/weights/held-out footage and encoded timing/visual comparisons; continue independent ready tasks."
+    },
+    {
+      "id": "desktop",
+      "status": "in_progress",
+      "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI.",
+      "next_action": "Reconcile engine allocation/write choke points and user resource-budget workflow; agree truthful enforceable contract before implementation. No sources currently mutable."
+    },
+    {
+      "id": "recovery",
+      "status": "in_progress",
+      "acceptance": "Checksums, completion records, safe bounded reuse, cancellation/failure/stale cache tests.",
+      "next_action": "Continue direct seek and Stage2/writer checkpoints after desktop lifetime/resource usability; recipes now remove manual batch JSON for single-job preparation. Preserve conservative identities/fresh destinations and require actual pretrained/Windows/host acceptance."
+    },
+    {
+      "id": "evaluation",
+      "status": "in_progress",
+      "acceptance": "Defined normalized metrics/masks, missing references unavailable, baseline/candidate comparisons, stress fixtures and honest reports.",
+      "next_action": "Controlled manual AB/BA pairprotocol and existing developer UI nowimplemented with requested/effective setting stability and truthful partial reports. Run actual pretrainedGPU/quality pairs onpreparedtarget; continue multi-report/category/worstcase/stress and resource telemetry locally."
+    },
+    {
+      "id": "colour-precision",
+      "status": "in_progress",
+      "acceptance": "High-bit inputs, HDR/association/invalid-value fixtures; no ineffective controls or silent precision changes.",
+      "next_action": "Implement reference quality metrics through evaluation next, then return to higher-bit video and managed source-colour/host contracts. Do not treat CPU image/math tests as complete colour-pipeline acceptance."
+    },
+    {
+      "id": "packaging",
+      "status": "in_progress",
+      "acceptance": "Maintainable desktop bundle recipe, asset validation/download UX, retained notices; no unauthorized distribution.",
+      "next_action": "Execute recipe and full packaged GUI/render/benchmark/cancel/recovery/dynamic model tests on prepared Windows CUDA environment; review dependency licences/asset distribution and improve deliberate download/compatibility UX. Continue independent SDK adapter and resource/retention work while native acceptance is unavailable."
+    },
+    {
+      "id": "resolve-design",
+      "status": "in_progress",
+      "acceptance": "Host capabilities verified from primary SDK docs; deterministic shot/cache/checkpoint design with isolation and protocol tests.",
+      "next_action": "Validate actual target host project/source/settings/managed-colour/output invalidation, sequential/random/reverse/concurrent/viewer-export under Windows/NVIDIA. Locally maintain v1manual compatibility and strictv2allselectedsource verification; avoid notification-only cached-verification epochs."
+    },
+    {
+      "id": "gpu-acceptance",
+      "status": "external",
+      "acceptance": "CUDA machine, weights and licensed local held-out footage; numerical tolerances, >=3 alternating measurements, memory and quality regression checks."
+    },
+    {
+      "id": "release-acceptance",
+      "status": "external",
+      "acceptance": "Target platform bundle smoke test, asset/legal distribution requirements reviewed, no invented macOS CUDA support."
+    },
+    {
+      "id": "resolve-acceptance",
+      "status": "external",
+      "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
+    }
+  ],
+  "next_action": "Collect UI six-job actual worker/preview evidence and independent stable review; validate actual profile exports through quality binding/dossier, fix findings, one complete CPU/static gate before local acceptance.",
+  "acceptance_matrix": "docs/acceptance.md",
+  "last_verification_logs": [
+    "benchmark-results/m40-final-verification.txt"
+  ],
+  "product_complete": false,
+  "run": {
+    "milestone": 40,
+    "cycles_completed": 8,
+    "cumulative_cycles_since_m28_start": 13,
+    "checkpoint_interval": 5,
+    "status": "integrated_checkpoint_continuing",
+    "product_complete": false,
+    "previous_goal_turn_classification": "no progress",
+    "evidence": [
+      "benchmark-results/m40-verification-summary.json",
+      "benchmark-results/m40-review-summary.json",
+      "benchmark-results/m40-stress-ui-generated-summary.json",
+      "benchmark-results/m40-stress-ui-close-generated-summary.json"
+    ],
+    "active_work_package": {
+      "milestone": 41,
+      "status": "integrated_verification",
+      "main_owner": "config/session/runtime/quality/CLI and authoritative records",
+      "next_action": "Collect UI six-job actual worker/preview evidence and independent stable review; validate actual profile exports through quality binding/dossier, fix findings, one complete CPU/static gate before local acceptance.",
+      "independent_reviewer": "/root/cache_review",
+      "owners": {
+        "/root/cache_maintenance": "colour_contract/video_io frozen;11focusedPASS0.725s/newmodulechecks0",
+        "/root/cache_ui": "desktop/preview/comparison/correction frozen; actual6jobQt demo; newtestsoftmaskfix held until demo terminal",
+        "/root/cache_review": "stable independent M41 source/probes; UItest-onlyunfreeze pending"
+      }
+    },
+    "running_processes": [
+      {
+        "session_id": 37573,
+        "purpose": "M41 complete CPU/static gate",
+        "status": "confirmedlive"
+      }
+    ],
+    "previous_goal_turn_note": "User requested follow-up goal text; no implementation changed. This continuation resumed actual M40 integration.",
+    "current_goal_turn_classification": "progress"
+  },
+  "verification_summary": "benchmark-results/m40-verification-summary.json",
+  "active_agents": {
+    "milestone": 41,
+    "status": "integration_review",
+    "main_owner": "config/session/runtime/quality/CLI and authoritative records",
+    "next_action": "Collect UI six-job actual worker/preview evidence and independent stable review; validate actual profile exports through quality binding/dossier, fix findings, one complete CPU/static gate before local acceptance.",
+    "independent_reviewer": "/root/cache_review",
+    "owners": {
+      "/root/cache_maintenance": "colour_contract/video_io frozen;11focusedPASS0.725s/newmodulechecks0",
+      "/root/cache_ui": "desktop/preview/comparison/correction frozen; actual6jobQt demo; newtestsoftmaskfix held until demo terminal",
+      "/root/cache_review": "stable independent M41 source/probes; UItest-onlyunfreeze pending"
+    }
+  },
+  "running_processes": []
+}

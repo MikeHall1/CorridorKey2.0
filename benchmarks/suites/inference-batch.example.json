@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "inference_batch",
+  "jobs": [
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/example-first",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": ["alpha", "fg"],
+        "output_format": "exr",
+        "exr_dtype": "float"
+      }
+    },
+    {
+      "input": "/local/dev/clip.mp4",
+      "output_dir": "../../benchmark-results/example-second",
+      "settings": {
+        "hann_chunk": 8,
+        "hann_stride": 4,
+        "num_frames": 17,
+        "outputs": ["alpha", "fg"],
+        "output_format": "exr",
+        "exr_dtype": "float"
+      }
+    }
+  ]
+}

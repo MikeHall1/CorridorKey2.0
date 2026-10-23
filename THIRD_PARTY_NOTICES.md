@@ -37,3 +37,11 @@ the Apache License 2.0, also reproduced in `third_party/MoGe/LICENSE`.
 - Use: frozen recurrent video feature extractor. `corridorkey/rvm.py` is a
   PyTorch port of the reference architecture; weights are downloaded to
   `vfms/rvm/`.
+
+## OpenFX interface headers
+
+- Publisher: OpenFX and contributors / Academy Software Foundation
+- Source: https://github.com/AcademySoftwareFoundation/openfx
+- Pinned commit: c3f1c2dcf4f51762b794c4fc21181b4a501be1bf
+- License: BSD 3-Clause, retained in `third_party/OpenFX/LICENSE.md`
+- Use: unmodified C ABI interface headers for the experimental native cached-frame adapter. Per-file Git blob identities are retained in `third_party/OpenFX/provenance.json`. This is not evidence of Resolve host compatibility or an Apple inference backend.

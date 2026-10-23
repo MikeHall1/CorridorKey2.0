@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "kind": "temporal_sequence_evaluation",
+  "source": "/local/dev/clip.mp4",
+  "fps": 24,
+  "flow_convention": "current_to_previous_xy_pixels",
+  "consistency_pixels": 1.5,
+  "reference_provenance": {
+    "author": "REPLACE with actual author",
+    "origin": "REPLACE with reference origin/alignment evidence",
+    "permitted_use": "REPLACE with actual permission/licence evidence",
+    "split": "development"
+  },
+  "flow_provenance": {
+    "method": "REPLACE with actual source-based estimator/version/settings or ground truth",
+    "origin": "REPLACE with independent source/reference flow provenance",
+    "visibility_definition": "True current pixels have valid nonoccluded/nondisoccluded correspondence",
+    "independent_of_candidate": true
+  },
+  "frames": [
+    {"frame": 0, "candidate": "/local/candidate/alpha_000000.exr", "reference": "/local/reference/alpha_000000.png", "baseline": "/local/baseline/alpha_000000.exr"},
+    {"frame": 1, "candidate": "/local/candidate/alpha_000001.exr", "reference": "/local/reference/alpha_000001.png", "baseline": "/local/baseline/alpha_000001.exr", "backward_flow": "/local/flow/current1_to_previous0.npy", "forward_flow": "/local/flow/previous0_to_current1.npy", "visibility": "/local/flow/visible1.png", "flow_previous_frame": 0}
+  ]
+}

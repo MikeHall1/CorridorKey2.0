@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "kind": "alpha_sequence_evaluation",
+  "source": "/local/dev/clip.mp4",
+  "fps": 24,
+  "boundary_radius": 1,
+  "channels": {"candidate": "gray", "reference": "gray", "baseline": "gray", "mask": "gray"},
+  "reference_provenance": {
+    "author": "REPLACE with reference author",
+    "origin": "REPLACE with local reference origin",
+    "permitted_use": "REPLACE with actual permission/licence evidence",
+    "split": "development"
+  },
+  "frames": [
+    {"frame": 0, "candidate": "/local/candidate/alpha_000000.exr", "reference": "/local/reference/alpha_000000.png", "baseline": "/local/baseline/alpha_000000.exr", "mask": "/local/reference/valid_000000.png"},
+    {"frame": 1, "candidate": "/local/candidate/alpha_000001.exr", "reference": "/local/reference/alpha_000001.png", "baseline": "/local/baseline/alpha_000001.exr", "mask": "/local/reference/valid_000001.png"}
+  ]
+}

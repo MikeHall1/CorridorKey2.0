@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "kind": "inference",
+  "batch_manifest": "inference-batch.example.json",
+  "model_state": "warm_session",
+  "repetitions": 3,
+  "quality_manifests": ["alpha-sequence.example.json", "alpha-sequence.example.json"],
+  "description": "Replace all local source/reference/baseline/mask paths and provenance before use. Quality template candidate paths bind to each actual completed EXR alpha export. Frame IDs are output-relative. No weights or footage are bundled."
+}

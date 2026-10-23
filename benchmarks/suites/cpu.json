@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "kind": "cpu_correctness",
+  "repetitions": 3,
+  "description": "Local deterministic scheduling, configuration, CLI compatibility and writer failure checks; no neural inference or quality measurement."
+}

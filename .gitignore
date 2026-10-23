@@ -37,3 +37,10 @@ tmp/
 # Local / studio-specific files
 path_mappings.json
 .claude/
+.vscode/settings.json
+
+# Local benchmark artifacts (footage and reports stay local).
+benchmark-results/
+.ralph/runs/
+.ralph/runner.lock
+.ralph/STOP

@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-22T08:39:18.287632+00:00",
+  "cycles_completed": 5,
+  "cycle_limit": 5,
+  "boundary_reason": "Five-cycle boundary: bounded worker protocol/owner/transport/client, working batch and recovery CLI, actual child/export/cancel/crash/restart/signal/backpressure verification and fault remediation completed locally. Desktop GUI, full target-platform/GPU/quality/host acceptance and other brief work remain open.",
+  "completed": [
+    {
+      "id": "code-health",
+      "evidence": [
+        "scripts/code_health.py",
+        "requirements-dev.txt",
+        ".ralph/static-baseline.json",
+        ".ralph/issues.json",
+        "docs/code-health.md",
+        "docs/environments/cpu-macos-py312.txt",
+        "tests/test_code_health.py",
+        "benchmark-results/health-m9-metrics/health.json"
+      ]
+    },
+    {
+      "id": "serializer-types",
+      "evidence": [
+        "corridorkey/diagnostics.py",
+        "tests/test_diagnostics.py",
+        ".ralph/issues.json",
+        "benchmark-results/health-m9-serializer-tests.txt"
+      ]
+    },
+    {
+      "id": "baseline",
+      "evidence": [
+        "docs/baseline.md",
+        "docs/options.md"
+      ]
+    },
+    {
+      "id": "session-cache",
+      "evidence": [
+        "benchmark-results/cpu-adapters-milestone3.json",
+        "docs/feature-cache.md"
+      ]
+    },
+    {
+      "id": "loop",
+      "evidence": [
+        "scripts/ralph_loop.py",
+        "tests/test_ralph.py",
+        "docs/ralph-loop.md"
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "evidence": [
+        "corridorkey/control.py",
+        "tests/test_control.py",
+        "tests/test_io.py",
+        "tests/test_session.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "mapping-cleanup",
+      "evidence": [
+        "corridorkey/resources.py",
+        "tests/test_resources.py",
+        "tests/test_foundation_cache.py",
+        "docs/sessions.md"
+      ]
+    },
+    {
+      "id": "quick-key-adaptive",
+      "evidence": [
+        "corridorkey/quick_key.py",
+        "corridorkey/draft.py",
+        "corridorkey/motion.py",
+        "tests/test_draft.py",
+        "tests/test_quick_runtime.py",
+        "corridorkey/shot_analysis.py",
+        "tests/test_shot_analysis.py",
+        "tests/test_past_draft.py",
+        "tests/test_quick_key.py",
+        "tests/test_motion.py",
+        "docs/quick-key.md",
+        "benchmark-results/cpu-adapters-milestone6.json",
+        "benchmark-results/cpu-stdlib-milestone6.json",
+        "benchmarks/suites/quick-key-matrix.example.json"
+      ]
+    },
+    {
+      "id": "corrections",
+      "evidence": [
+        "corridorkey/corrections.py",
+        "corridorkey/identities.py",
+        "tests/test_corrections.py",
+        "corridorkey/correction_rasters.py",
+        "tests/test_correction_rasters.py",
+        "tests/test_correction_runtime.py",
+        "tests/test_session.py",
+        "tests/test_benchmark.py",
+        "benchmark-results/cpu-adapters-milestone7.json",
+        "benchmark-results/cpu-stdlib-milestone7.json",
+        "docs/corrections.md",
+        "docs/checkpoint.md"
+      ]
+    },
+    {
+      "id": "engine-worker",
+      "evidence": [
+        "corridorkey/worker_protocol.py",
+        "corridorkey/worker_core.py",
+        "corridorkey/worker_transport.py",
+        "corridorkey/worker_client.py",
+        "corridorkey/worker.py",
+        "tests/test_worker_protocol.py",
+        "tests/test_worker_core.py",
+        "tests/test_worker_process.py",
+        "tests/test_worker_faults.py",
+        "tests/test_worker_transport.py",
+        "tests/worker_fixture.py",
+        "docs/worker.md",
+        "benchmark-results/m17-worker-generated-summary.json",
+        "benchmark-results/m17-final-verification.txt"
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "quick-key",
+      "status": "external",
+      "acceptance": "Full-rate interval 1; regular/final/cut/correction anchors; native context inference strategy; current source RGB; full output timing preserved."
+    },
+    {
+      "id": "desktop",
+      "status": "in_progress",
+      "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI."
+    },
+    {
+      "id": "recovery",
+      "status": "in_progress",
+      "acceptance": "Checksums, completion records, safe bounded reuse, cancellation/failure/stale cache tests."
+    },
+    {
+      "id": "evaluation",
+      "status": "in_progress",
+      "acceptance": "Defined normalized metrics/masks, missing references unavailable, baseline/candidate comparisons, stress fixtures and honest reports."
+    },
+    {
+      "id": "colour-precision",
+      "status": "in_progress",
+      "acceptance": "High-bit inputs, HDR/association/invalid-value fixtures; no ineffective controls or silent precision changes."
+    },
+    {
+      "id": "packaging",
+      "status": "ready",
+      "acceptance": "Maintainable desktop bundle recipe, asset validation/download UX, retained notices; no unauthorized distribution."
+    },
+    {
+      "id": "resolve-design",
+      "status": "ready",
+      "acceptance": "Host capabilities verified from primary SDK docs; deterministic shot/cache/checkpoint design with isolation and protocol tests."
+    },
+    {
+      "id": "gpu-acceptance",
+      "status": "external",
+      "acceptance": "CUDA machine, weights and licensed local held-out footage; numerical tolerances, >=3 alternating measurements, memory and quality regression checks."
+    },
+    {
+      "id": "release-acceptance",
+      "status": "external",
+      "acceptance": "Target platform bundle smoke test, asset/legal distribution requirements reviewed, no invented macOS CUDA support."
+    },
+    {
+      "id": "resolve-acceptance",
+      "status": "external",
+      "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
+    }
+  ],
+  "next_action": {
+    "id": "desktop",
+    "title": "Usable standalone desktop on the shared engine",
+    "status": "in_progress",
+    "acceptance": "Drag/drop, previews/composites/range/A-B, render queue, cancellation, settings/corrections/cache/resources, developer benchmark UI.",
+    "evidence": [
+      "docs/worker.md",
+      "corridorkey/worker_client.py",
+      "benchmark-results/m17-worker-generated-summary.json"
+    ],
+    "validation_scope": "Worker/queue/CLI foundation implemented and locally verified; graphical shell, previews/editor/settings/assets/cache/resources and developer benchmark UI remain unimplemented.",
+    "next_action": "Choose and justify a maintainable GUI framework from actual environment/packaging constraints; implement a usable desktop shell using WorkerClient with source selection/preview, actual queue/progress/cancel/status and saved settings. Continue alpha/foreground/composite/range/A-B/corrections/cache/resources and real benchmark developer mode. Keep unsupported CUDA/assets explicit; do not simulate a successful model preview."
+  },
+  "last_verification_logs": ".ralph/runs/manual-check",
+  "product_complete": false
+}

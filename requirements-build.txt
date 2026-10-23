@@ -1,0 +1,2 @@
+# Optional Windows bundle builder; install only in a deliberate build environment.
+PyInstaller==6.22.3
