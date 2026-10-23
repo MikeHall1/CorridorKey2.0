@@ -164,3 +164,13 @@ pause/seek/rebind; it reuses `RenderView` for original recorded export offsets.
 Initial desktop playback requires source sequences with declared rates and EXR
 exports; video/VFR timing is explicitly unsupported. Preview display conversion
 and scheduling do not change rendered pixels or future job settings.
+
+
+Explicit `readiness_capabilities.py` probes use stdlib nonblocking bounded pipe
+reads and direct owned subprocess cleanup; they are separate from lightweight
+metadata checks and model execution. The readiness panel reuses its existing
+single I/O owner for explicit completed-frame decoding, retaining one thumbnail
+and immutable matching engine metadata. GUI presentation and JSON evidence are
+separate from model/quality acceptance; no pixels enter reports. `desktop.py`
+defers first-run introduction through the existing Qt loop/preferences, without
+starting work. See [readiness](readiness.md).

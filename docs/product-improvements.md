@@ -47,9 +47,10 @@ The local report is an explicit fresh JSON file; exporting into source, hint,
 correction-asset or selected model trees is refused. No automatic large copies,
 downloads, installation or environment changes are introduced.
 
-Remaining EXT-01 work: explicit capability/backend/model stages, inference record
-integration, guided successful decode/display, first-run persistence and actual
-CUDA/local-footage acceptance. The other workflows remain incomplete; initial sequence playback is described below.
+EXT-01 now has first-run introduction, explicit backend/encoder metadata probes,
+matching engine-reported execution and selected output decoding/Qt presentation.
+Failed/cancelled engine stage summaries, remaining inspection roles and actual
+CUDA/local-footage acceptance remain pending. See [readiness](readiness.md). The other workflows remain incomplete; initial sequence playback is described below.
 Required external evidence remains CUDA/pretrained weights/permitted footage,
 optional segmentation provider/hardware, Windows packaging and actual Resolve
 SDK/host execution. Nothing here establishes quality or speed improvement.

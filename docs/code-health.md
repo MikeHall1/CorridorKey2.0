@@ -164,3 +164,13 @@ main self-review identify final source hashes in
 benchmark-results/ext01-ext05-accepted/source-verification.json. Existing static005
 and nativeQt126 remain open. No checker, baseline, interpreter or dependency
 changes; no GPU/quality/host claims.
+
+
+Second readiness checkpoint:1047CPU/no skips77.537s;338Pythonfiles and full
+compile/import/requirements/VCS/dependency/whitespace/static gate PASS.519Ruff,
+684Pyright errors17warnings remain;0new vs unchangedbaseline AND actual previous
+acceptedcheckpoint. Independent review accepted259–264 and main self-review
+recorded final source identity in benchmark-results/ext01-guided-accepted/source-verification.json.
+No checker/baseline/dependency/environment changes or GPU/encoding/Windows/host
+claims. ScopedQSettings fixtures preserve user preferences; subprocess lifecycle
+fixtures include real cancel/overflow/deadline/kill/reap.

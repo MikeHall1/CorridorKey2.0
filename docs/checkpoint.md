@@ -1,47 +1,46 @@
-# Current checkpoint — ten-feature extension, 2026-10-23
+# Current checkpoint — guided readiness, 2026-10-23
 
-First connected increment locally accepted; all ten workflows and full product
-acceptance remain incomplete. Current objective: [extension brief](product-improvements-brief.md).
-[Dependency/implementation map](product-improvements.md), [acceptance](acceptance.md).
-Previous repository-review results remain historical evidence.
+Second connected increment locally accepted. All ten-feature workflows and full
+product acceptance remain incomplete. Current objective:
+[extension brief](product-improvements-brief.md), [acceptance](acceptance.md).
 
-EXT-01 adds explicit cancellable local readiness stages/report export, immutable
-1–120-frame preparation and shared-worker submission. Requested quality/backend/
-precision remain unchanged; cut/reset markers rebase, moved first hints and
-correction subranges refuse silent reinterpretation. Model/inference/decode/
-display and FFmpeg capability stages remain unverified until explicitly executed.
+First-run presentation now opens the readiness introduction once without work;
+`--readiness` forces it and `--no-first-run` suppresses it for one invocation.
+Explicit bounded backend/encoder probes preserve requested settings, expose
+ambiguous aliases as NOT VERIFIED and cancel/reap the direct child. Guided
+completed-output inspection validates the submitted snapshot, decodes one selected
+frame off-thread and reports engine, decode and Qt presentation separately.
+[Workflow and limits](readiness.md).
 
-EXT-05 adds actual sequence/EXR playback: source-time A/B offsets, loop/speed,
-pause/resume, displayed frame/time and bounded scheduling diagnostics. Manual
-navigation supersedes paused cursor; obsolete successes/errors cannot stop or
-replace newer playback. One existing decoder/queue is retained. Declared sequence
-timing only; video/VFR, persistent readers/cache, zoom/pan and photo backgrounds
-remain pending. Thirteen actual PNG/nativeEXR offscreen cases verify these paths.
+Review fixes259–264 cover interrupted-stage metadata, fixture import/style,
+encoder aliases/block formats, old-output inspection hiding a prepared job,
+unproven source-end cause and decode evidence on Qt presentation failure. Main
+self-review and independent review accepted the final source. Twenty actual Qt/
+PNG/EXR cases and9capability/first-run cases pass independently. A real child
+ignoring SIGTERM escalates to kill/reap; native Windows remains NOT VERIFIED.
 
-Independent review plus main self-review resolved255–258: canonical-path fixture/
-UTC diagnostic, report-path retention growth, paused cursor reset and obsolete
-error ownership. Final **1028CPU tests PASS73.166s, no skips**;335Python files,
-compilation/import/requirements/VCS/dependency/whitespace/static gate PASS.
-Existing519Ruff/684Pyright errors17warnings remain;0new against unchanged baseline
-AND actual accepted review. Exact reviewed source identity/hashes and raw gates:
-`benchmark-results/ext01-ext05-accepted/source-verification.json`. Earlier passing
-1021/1022gates and probes are retained, never substituted for final fixes. No
-checker/baseline/environment changes. User `.venv` preserved.
+Final **1047CPU tests PASS77.537s, no skips**;338Python files. Compilation/import/
+requirements/VCS/dependency/whitespace/static gate PASS,0new against unchanged
+baseline AND actual previous checkpoint. Existing519Ruff/684Pyright errors and
+17warnings remain; static005/nativeQt126 stay open. Exact source identities/raw
+results: `benchmark-results/ext01-guided-accepted/source-verification.json`.
+No checker/baseline/dependency/interpreter/user-venv changes. Qt preferences in
+fixtures use temporary files; no actual model/download/encoder run is claimed.
 
-[Resolve investigation](resolve-assisted-preparation.md) records supported OFX
-interfaces and target-document/host gaps; no automatic host preparation is claimed.
-Tracked-correction design records schema3 replacement semantics to avoid double
-application; no tracking controls are exposed yet. All required external CUDA/
-pretrained/local-footage, optional-provider, Windows packaging and Resolve/SDK
-acceptance remain NOT VERIFIED. NativeQt126 and static005 remain open.
+Official [SAM2/Cutie investigation](subject-guidance-provider.md) recommends one
+optional SAM2image provider; no provider or checkpoint was installed/executed.
+Earlier sequence playback remains locally verified with declared timing only.
+Video/VFR, persistent readers/cache, zoom/pan/photo backgrounds, tracking, plate/
+click guidance, progressive scheduling/overlays, calibration/portability and host
+preparation remain incomplete. Actual CUDA/pretrained/quality/localfootage,
+Windows packaging and Resolve/SDK acceptance remain NOT VERIFIED.
 
-Checkpoint publication: verified origin `MikeHall1/CorridorKey2.0`, branch
-`review/corridorkey-audit-20261023`, starting commit `1c3f9f2`. This checkpoint's
-commit is the Git commit containing this record. The exact commit/remote result
-is saved after normal push in `benchmark-results/ext01-ext05-publication.json`;
-no successful publication is inferred before Git acknowledgment.
+Previous checkpoint `3c7d4f4230ce29365451fdf481b5d1c760248fcf` was normally pushed
+and remotely confirmed on `review/corridorkey-audit-20261023` in
+`MikeHall1/CorridorKey2.0`. This checkpoint's exact commit/push acknowledgment is
+recorded after publication in `benchmark-results/ext01-guided-publication.json`.
+No publication success is inferred before acknowledgment.
 
-Next: continue EXT-01 explicit backend/FFmpeg capabilities and engine execution/
-guided output decode/display, then remaining playback controls and tracked
-corrections. Detailed tasks remain ready in `.ralph/plan.json`; five cycles are a
-checkpoint interval. No competing supervisor or recursive runner was launched.
+Next: capture failed/cancelled engine record stage summaries, finish playback
+controls, then tracked corrections with the saved schema3 replacement design.
+Five cycles remain a checkpoint interval; no competing supervisor was launched.

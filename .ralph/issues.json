@@ -5434,6 +5434,162 @@
       "requirement": "EXT-05 responsive seek and stale request rejection",
       "resolution": "Only matching generation/source errors change playback status; obsolete errors release owner and allow latest Source to continue. Current errors still stop/report; two deterministic regressions added. Independent review accepted.",
       "relevant_commit": "Product-extension checkpoint containing these records; exact identity in Git history and benchmark-results/ext01-ext05-publication.json."
+    },
+    {
+      "id": "HEALTH-READINESS-259",
+      "component": "new readiness_capabilities.py/tests",
+      "classification": "pre-acceptance report/static defect",
+      "severity": "low",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Cancellation while backend probe executes is labelled ffmpeg_capabilities; initial new helper fixture has oneSIM117 diagnostic.",
+      "evidence": [
+        "Six new focused testsPASS0.310s; RuffSIM1171/Pyright0.",
+        "Owned mocked backend cancellation reproduction returnscancelled/interrupted_stageffmpeg_capabilities."
+      ],
+      "root_cause": "Stage transition inserted before backend call rather than after its completion; nested testcontext spelling.",
+      "proposed_action": "Move stage transition after backend, add mid-backend cancellation assertion; combine fixture contexts without weakeningchecker.",
+      "acceptance": "Correct exact interruptedstage; focused lifecycle/capability tests and new-file staticchecks pass.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext01-capabilities-focused.txt",
+        "independent6focusedPASS0.322s/headlesspython-SimportPASS",
+        "benchmark-results/ext01-guided-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-01 exact failing/cancelled readiness stage",
+      "resolution": "Stage transition moved after backend completion; mid-backend cancellation test and fixture contexts fixed;6focused tests/newstaticpass.",
+      "relevant_commit": "Second readiness checkpoint containing these records; publication identity in benchmark-results/ext01-guided-publication.json."
+    },
+    {
+      "id": "HEALTH-READINESS-260",
+      "component": "readiness_capabilities.py encoder help parsing",
+      "classification": "confirmed independent-review metadata truth defect",
+      "severity": "medium",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Valid FFmpeg codec-descriptor aliases can print canonical encoder names, causing a false FAIL; first global pixel-format line could belong to another encoder block.",
+      "evidence": [
+        "Independent WriterConfig codec=h264/helpEncoderlibx264 fixture incorrectlyreturnsFAIL/encoder_listedFalse.",
+        "Official FFmpeg fftools/opt_common.c show_help_codec fallback resolves descriptor aliases into multiplecanonical encoders."
+      ],
+      "root_cause": "Assumed requested codec string must exactly equal printedencoder name and parsed oneglobalformat line.",
+      "proposed_action": "Parse encoder blocks independently; canonicalexactmatching checks itsformats, aliases/multiplecandidates remainNOT VERIFIED withdiscoverednames ratherthanfalseFAIL or assumedselection.",
+      "acceptance": "Canonical encoder/pixfmt truthful, aliasmetadata notfalseFAIL, noformat leakage acrossblocks, requested settings unchanged.",
+      "owner": "root; independentreadiness_review",
+      "verification": [
+        "benchmark-results/ext01-first-run-capabilities.txt",
+        "benchmark-results/ext01-capabilities-alias-fixed.txt",
+        "benchmark-results/ext01-inspection-review-fixed.txt",
+        "Independent9capability/first-run cases0.388s and20Qtdecode cases3.490s accepted stable source; complete gate pending.",
+        "benchmark-results/ext01-guided-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-01 configured FFmpeg capability distinctions",
+      "resolution": "Focused correction verified with independent stable review; no remaining blocking finding in this increment. Exact fix and acceptance retained above.",
+      "relevant_commit": "Second readiness checkpoint containing these records; publication identity in benchmark-results/ext01-guided-publication.json."
+    },
+    {
+      "id": "HEALTH-READINESS-261",
+      "component": "desktop.py first-run import placement",
+      "classification": "pre-acceptance static finding",
+      "severity": "low",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Initial first-run entrypoint QtCore import follows relative import, introducing oneRuffI001.",
+      "evidence": [
+        "Nine first-run/capability testsPASS0.380s; RuffI0011; Pyright result recorded in tool output."
+      ],
+      "root_cause": "New deferred QtCore import was placed after package-relative import.",
+      "proposed_action": "Group optional Qt imports in guarded optional dependency block before package imports.",
+      "acceptance": "First-run actualtemporaryQSettings tests and focused static checks pass; desktophelp remainsheadless.",
+      "owner": "root",
+      "verification": [
+        "benchmark-results/ext01-first-run-capabilities.txt",
+        "benchmark-results/ext01-capabilities-alias-fixed.txt",
+        "benchmark-results/ext01-inspection-review-fixed.txt",
+        "Independent9capability/first-run cases0.388s and20Qtdecode cases3.490s accepted stable source; complete gate pending.",
+        "benchmark-results/ext01-guided-accepted/source-verification.json"
+      ],
+      "requirement": "Code health with unchangedcheckers",
+      "resolution": "Focused correction verified with independent stable review; no remaining blocking finding in this increment. Exact fix and acceptance retained above.",
+      "relevant_commit": "Second readiness checkpoint containing these records; publication identity in benchmark-results/ext01-guided-publication.json."
+    },
+    {
+      "id": "HEALTH-READINESS-262",
+      "component": "desktop_readiness.py explicit completed-output inspection",
+      "classification": "confirmed pre-acceptance workflow/report defect",
+      "severity": "medium",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Inspecting an older completed output replaces displayeddetails but leaves a newer preparedjob enabled for Run.",
+      "root_cause": "Inspection doesnot invalidate thepreparedsnapshot before replacingdetails.",
+      "proposed_action": "Invalidateprepared snapshot on explicitinspection before updatingdisplay.",
+      "acceptance": "After prepareNew\u2192inspectOld, Run disabled/no preparedjob; explicit reprepare needed.",
+      "evidence": [
+        "Independent realPNG/EXR fixture:preparednew displayedTrue\u2192oldinspect retainedTrue/runTrue/newdisplayedFalse\u2192mock bridge submitsnewoutput."
+      ],
+      "owner": "root; independentreadiness_review",
+      "verification": [
+        "benchmark-results/ext01-first-run-capabilities.txt",
+        "benchmark-results/ext01-capabilities-alias-fixed.txt",
+        "benchmark-results/ext01-inspection-review-fixed.txt",
+        "Independent9capability/first-run cases0.388s and20Qtdecode cases3.490s accepted stable source; complete gate pending.",
+        "benchmark-results/ext01-guided-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-01 reviewable explicitrender and exactfailingstage evidence",
+      "resolution": "Focused correction verified with independent stable review; no remaining blocking finding in this increment. Exact fix and acceptance retained above.",
+      "relevant_commit": "Second readiness checkpoint containing these records; publication identity in benchmark-results/ext01-guided-publication.json."
+    },
+    {
+      "id": "HEALTH-READINESS-263",
+      "component": "desktop_readiness.py explicit completed-output inspection",
+      "classification": "confirmed pre-acceptance workflow/report defect",
+      "severity": "low",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Any observed shortercount is attributed to source-end truncation without total/end metadata.",
+      "root_cause": "Inferredcause from observedcount alone; fixture itself has more availableframes.",
+      "proposed_action": "State fewerframes observed with reason/sourceend NOT VERIFIED; preserve exactrequestedcount NOT VERIFIED.",
+      "acceptance": "Shorter validrecord accepted with requested/observedcounts and no unsupported truncationcause.",
+      "evidence": [
+        "Independent+main source inspection:fixture4frames/In1/request2/observed1 labelledsourceend."
+      ],
+      "owner": "root; independentreadiness_review",
+      "verification": [
+        "benchmark-results/ext01-first-run-capabilities.txt",
+        "benchmark-results/ext01-capabilities-alias-fixed.txt",
+        "benchmark-results/ext01-inspection-review-fixed.txt",
+        "Independent9capability/first-run cases0.388s and20Qtdecode cases3.490s accepted stable source; complete gate pending.",
+        "benchmark-results/ext01-guided-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-01 reviewable explicitrender and exactfailingstage evidence",
+      "resolution": "Focused correction verified with independent stable review; no remaining blocking finding in this increment. Exact fix and acceptance retained above.",
+      "relevant_commit": "Second readiness checkpoint containing these records; publication identity in benchmark-results/ext01-guided-publication.json."
+    },
+    {
+      "id": "HEALTH-READINESS-264",
+      "component": "desktop_readiness.py explicit completed-output inspection",
+      "classification": "confirmed pre-acceptance workflow/report defect",
+      "severity": "low",
+      "priority": "P2",
+      "status": "resolved",
+      "problem": "Qt thumbnail-construction failure leaves output_decode PENDING even after successful backgrounddecoding.",
+      "root_cause": "Decode evidence isassigned only after Qt presentation success.",
+      "proposed_action": "Record completed decode evidence before attempting Qt image/pixmap construction; display failure separate.",
+      "acceptance": "Simulated Qt nullpixmap shows decodePASS/displayFAIL and no thumbnail, image-free report.",
+      "evidence": [
+        "Main deterministic branch inspection:_display_completed receivesdecodedframe but nullQImage/QPixmap returnpath setsdisplayFAIL only."
+      ],
+      "owner": "root; independentreadiness_review",
+      "verification": [
+        "benchmark-results/ext01-first-run-capabilities.txt",
+        "benchmark-results/ext01-capabilities-alias-fixed.txt",
+        "benchmark-results/ext01-inspection-review-fixed.txt",
+        "Independent9capability/first-run cases0.388s and20Qtdecode cases3.490s accepted stable source; complete gate pending.",
+        "benchmark-results/ext01-guided-accepted/source-verification.json"
+      ],
+      "requirement": "EXT-01 reviewable explicitrender and exactfailingstage evidence",
+      "resolution": "Focused correction verified with independent stable review; no remaining blocking finding in this increment. Exact fix and acceptance retained above.",
+      "relevant_commit": "Second readiness checkpoint containing these records; publication identity in benchmark-results/ext01-guided-publication.json."
     }
   ]
 }

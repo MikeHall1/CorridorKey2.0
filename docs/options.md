@@ -236,3 +236,13 @@ scheduling only. Source frame/time and buffering/drop counters are shown. Manual
 preview/navigation/view/selection/settings changes pause playback. Video/VFR
 explicitly refuses; 50ms UI polling and per-frame reader reopening are documented
 limits. No inference/export setting or persisted project schema changes.
+
+
+First launch now shows the readiness introduction once (no automatic checks or
+render). Desktop `--readiness` forces the introduction; `--no-first-run` suppresses
+it for this invocation. Explicit **Probe backend / encoders** runs bounded
+subprocess metadata queries. **Inspect completed frame** decodes one matching
+completed Alpha/Foreground/composite frame, at most512px thumbnail, with separate
+decode/display evidence. It invalidates any newly prepared render whose displayed
+details it replaces. No inference defaults/aliases or queued settings change.
+See [workflow, bounds and unverified acceptance](readiness.md).

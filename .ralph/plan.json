@@ -13,9 +13,12 @@
         "corridorkey/desktop_readiness.py",
         "tests/test_readiness.py",
         "tests/test_desktop_readiness.py",
-        "benchmark-results/ext01-ext05-final-fixed/verification.json"
+        "benchmark-results/ext01-ext05-final-fixed/verification.json",
+        "docs/readiness.md",
+        "corridorkey/readiness_capabilities.py",
+        "tests/test_desktop_first_run.py"
       ],
-      "next_action": "Integrate explicit capability/model/inference records and guided output decoding/display; first-run persistence and real CUDA acceptance remain pending."
+      "next_action": "Capture failed/cancelled engine record stage summaries; remaining inspection-role coverage and actual CUDA/weights/localfootage acceptance stay pending."
     },
     {
       "id": "EXT-05",
@@ -64,15 +67,16 @@
     {
       "id": "EXT-04",
       "title": "Click-to-select subject guidance",
-      "status": "ready",
+      "status": "in_progress",
       "dependencies": [
         "EXT-02"
       ],
       "acceptance": "Optional provider and positive/negative iterative clicks, cancellable coarse-mask preview, saved provenance/correction conversion and optional tracked range.",
       "evidence": [
-        "docs/product-improvements.md"
+        "docs/product-improvements.md",
+        "docs/subject-guidance-provider.md"
       ],
-      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+      "next_action": "Implement one optional local SAM2image provider with immutable click/provenance contracts; reuse correction import and clean GPUowner handoff, no automatic downloads or multiple bundledmodels."
     },
     {
       "id": "EXT-06",
@@ -838,7 +842,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Continue EXT-01: explicit backend/FFmpeg capability checks and engine execution record plus guided output decode/display. Complete remaining playback controls, then tracked corrections with schema3 design.",
+  "next_action": "Capture failed/cancelled engine record stage summaries; finish remaining playback controls and tracked corrections; all external acceptance stays unverified.",
   "objective_source": "docs/product-improvements-brief.md",
-  "current_checkpoint_evidence": "benchmark-results/ext01-ext05-accepted/source-verification.json"
+  "current_checkpoint_evidence": "benchmark-results/ext01-guided-accepted/source-verification.json"
 }
