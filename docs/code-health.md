@@ -203,3 +203,13 @@ execution and actualQt reviews + main distinct review resolve306–314. Frozen
 mapping3f5fc42e94b3b4a42775e7fdea218c0767af6db6bab17781e1b644f858d65f53,
 logs ext06-connected-final/. Initial failedQt/static evidence retained.005/nativeQt126
 remain open; no checker/baseline/environment changes or GPU/quality/host claims.
+
+Ninth extension checkpoint:1348CPU tests PASS91.069s/no skips;390Python files,
+full compile/import/requirements/VCS/dependency/whitespace/static regression gate
+PASS.0new fingerprints vs unchanged baseline AND actual prior865529e; retained
+519Ruff/684Pyright errors17warnings, not static-clean. Independent overlaycore/
+editor/actualQt reviews + main distinct review accept; fixture315 resolved.
+Frozen mappingc7ef2ce7e733edfa9b5184f2450bb50275448ee6271b77218097a5b0c690de24,
+logs ext07-connected-final/. Initial failedfixture/static evidence retained.
+005/nativeQt126 remain open; no checker/baseline/environment changes or quality/
+GPU/host acceptance inferred.

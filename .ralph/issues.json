@@ -6658,6 +6658,28 @@
         "benchmark-results/ext06-connected-final/source-verification.json"
       ],
       "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-OVERLAY-315",
+      "component": "Spatial diagnostic first Qt integration verification",
+      "classification": "ActualnewQt5case run4PASS/1fixtureimporterror plus12 focusedstaticfixturefindings before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Latecancelregression imports nonexistent EditorModel instead ofactualCorrectionEditor; newfixture accesses optional snapshots/drafts without explicitadmission assertions. Production3touchedfiles have0Pyright diagnostics.",
+      "root_cause": "Newtest usedprovisional modelclassname andinferred optional values across asynchronous wait callbacks rather thanasserting stablepostconditions.",
+      "proposed_action": "Correct actualmodelimport andaddmeaningful snapshot/draft postcondition assertions, preserve latecancellation/nativepixel/history checks; no suppression/checker/baseline changes.",
+      "acceptance": "All5actualQt tests pass -Werror and touchedstaticclean; failedlogs retained.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext07-integration-initial/ui-tests.txt",
+        "benchmark-results/ext07-integration-initial/ui-pyright.txt"
+      ],
+      "verification": [
+        "benchmark-results/ext07-connected-final/source-verification.json",
+        "docs/tracking-overlays-review.md"
+      ],
+      "resolution": "Fixture uses actualCorrectionEditor and explicitoptionalpostconditions;5actualQtPASS1.732s/static0, independent17QtPASS4.149s; final1348CPU/no-skips390filefullgatePASS0newstatic."
     }
   ]
 }

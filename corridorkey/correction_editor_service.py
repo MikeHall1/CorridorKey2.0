@@ -106,6 +106,8 @@ class EditorService:
                         model.prepare_tracking(**payload)
                     elif action == 'track_view':
                         view = model.tracking_view(**payload)
+                    elif action == 'track_overlay_view':
+                        view = model.tracking_overlay_view(**payload)
                     elif action == 'track_accept':
                         model.accept_tracking()
                     elif action == 'track_discard':

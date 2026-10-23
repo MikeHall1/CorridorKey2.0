@@ -1,43 +1,45 @@
-# Current checkpoint — progressive previews, 2026-10-23
+# Current checkpoint — spatial tracking overlays, 2026-10-23
 
-Eighth connected increment locally accepted. All ten workflows/full product
+Ninth connected increment locally accepted. All ten workflows/full product
 acceptance remain incomplete; [extension brief](product-improvements-brief.md).
 
-Desktop Progressive preview adds explicitly enabled sequence inference, captured
-settings and separate scratch, optional deliberate lower-scale draft, final
-configured preview stage, current/surrounding/upcoming/idle priorities and a
-bounded exact-context thumbnail cache. It uses the existing sequential engine
-owner through a transient preview action, outside durable export history. Normal
-renders disable/cancel previews and retain their recipes. Temporal state restarts
-per frame; final preview is not full-range export equivalence.
+The correction editor can explicitly capture bounded spatial flow reliability
+and uncertain-fraction proxies during its existing tracking computation. Inspect
+read-only source-aligned overlays with staged opacity, local/absolute frame events,
+captured range and a new-correction action that reloads the real source before
+painting. Maps are algorithmic heuristics, not confidence or proven occlusions.
+Declared anchors and uncomputed intervals have no fabricated spatial evidence.
+Diagnostic inspection never authorizes tracked-mask acceptance.
 
-Independent and main distinct reviews accept fixes306–314: strict ownership and
-bounded provenance, retained preparation/cleanup errors with retry, original
-capture token fencing, guarded invalid-editor admission, ctime-aware source cache
-identity, retired-marker cleanup proof/minimum budget and hidden obsolete pixels.
-CPU fixture execution is explicitly labelled non-neural. [Review](progressive-previews-review.md).
+Independent core/editor/actualQt reviews and main distinct review pass. Actual
+nonzero source offsets, linearEXR source/model-proxy distinction, stopped frames
+without masks, source/history preservation, dirty guards, opacity, stale-binding
+refusal, late cancelled display suppression and committed-mask preservation on
+map cleanup failures are verified. Fixture315 corrected model-class naming and
+optional assertions without production/checker suppression. [Review](tracking-overlays-review.md).
 
-Final **1323CPU tests PASS91.578s/no skips**. Full386Python-file compilation,
+Final **1348CPU tests PASS91.069s/no skips**. Full390Python-file compilation,
 imports, dependencies, static regression and whitespace checks PASS,0new vs
-baseline AND actual priorf387223. Existing519Ruff/684Pyright errors17warnings
+baseline AND actual prior865529e. Existing519Ruff/684Pyright errors17warnings
 remain; static005/nativeQt126 stay open. Frozen source mapping:
-`3f5fc42e94b3b4a42775e7fdea218c0767af6db6bab17781e1b644f858d65f53`.
-Evidence: `benchmark-results/ext06-connected-final/`. Prior unchanged-driver
-headless benchmark3x1137CPU is reused for applicable orchestration scope;
-new shared source independently full-suite verified, with no inference speed claim.
+`c7ef2ce7e733edfa9b5184f2450bb50275448ee6271b77218097a5b0c690de24`.
+Evidence: `benchmark-results/ext07-connected-final/`. Prior unchanged-driver
+headless benchmark3x1137CPU reused for applicable orchestration scope only;
+new overlay source independently full-suite verified, with no inference speed claim.
 
-Initial preview context support excludes video/VFR, QuickKey, hints/corrections
-and native images above4Mi pixels. Model metadata is not authentication or
-compatibility proof; budgets are admission/retention limits, not whole-process
-memory/disk caps. Actual pretrained CUDA, optional SAM2, representative quality,
-latency/VRAM, frozen/native Windows and Resolve SDK/host acceptance remain NOT
-VERIFIED. No checker/baseline, dependency, user-environment or original-data changes.
+Initial maps are current-preview-only, maximum side256, with separate64MiB map/
+receipt and512MiB mask admission budgets. Saved maps, motion-aligned matte-change/
+boundary roles and representative false-positive/missed-defect evaluation remain
+pending. Actual pretrained CUDA/quality/latency/VRAM, optional SAM2, frozen/native
+Windows and Resolve SDK/host acceptance remain NOT VERIFIED. No checker/baseline,
+dependency, user-environment, original-data, precision or render-default changes.
 
-Priorf387223f7ad135d3d3ff898e5f1edb35bed98ec1 pushed/confirmed to
+Prior865529eafa362bd8e42305ae10c2ab325d1a4de0 pushed/confirmed to
 MikeHall1/CorridorKey2.0 review/corridorkey-audit-20261023. This publication's
-identity follows in ignored `benchmark-results/ext06-connected-publication.json`.
+identity follows in ignored `benchmark-results/ext07-connected-publication.json`.
 
-Next: bounded spatial diagnostics captured during explicit correction tracking,
-source-aligned read-only overlays/legend/navigation and established correction
-and rerender actions. Continue remaining calibration/portability compatibility/
-host work. Five cycles is an interval; no milestone signoff or competing supervisor.
+Next: explicit short-sample machine calibration with separate cold/warm trials,
+exact requested/effective/provenance, failures/exclusions, measured-only
+recommendations and no queued-job mutation. Continue portability compatibility,
+remaining feature contexts and host work. Five cycles is an interval; continue
+without milestone signoff or competing supervisor.

@@ -142,16 +142,25 @@
     {
       "id": "EXT-07",
       "title": "Visual problem overlays",
-      "status": "ready",
+      "status": "in_progress",
       "dependencies": [
         "EXT-02",
         "EXT-05"
       ],
       "acceptance": "Source-aligned diagnostic maps with provenance/legend/limits and correction/rerender actions; heuristics distinct from measured observations.",
       "evidence": [
-        "docs/product-improvements.md"
+        "docs/product-improvements.md",
+        "corridorkey/tracking_overlays.py",
+        "corridorkey/correction_tracking_editor.py",
+        "corridorkey/desktop_corrections.py",
+        "tests/test_tracking_overlays.py",
+        "tests/test_tracking_overlay_editor.py",
+        "tests/test_desktop_tracking_overlays.py",
+        "docs/tracking-overlays.md",
+        "docs/tracking-overlays-review.md",
+        "benchmark-results/ext07-connected-final/source-verification.json"
       ],
-      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+      "next_action": "Initial explicit tracking-derived overlays locally verified; savedtrackspatialmaps/motion-alignedmatte-change/boundarydiagnostics and representativefalsepositive/misseddefect/nativeGPUacceptance remain pending. Continue machine-specific calibration EXT08."
     },
     {
       "id": "EXT-08",
@@ -903,7 +912,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Capture bounded spatial tracking diagnostic maps during existing explicit tracking preview, expose read-only source-aligned overlays/legend/navigation and established correction actions without new analysis by default.",
+  "next_action": "Implement explicit cancellable short-sample machine calibration with controlled cold/warm configurations, exact provenance, measured-only recommendations and no queued-job mutation.",
   "objective_source": "docs/product-improvements-brief.md",
   "current_checkpoint_evidence": "benchmark-results/ext01-guided-accepted/source-verification.json"
 }

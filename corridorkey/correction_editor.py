@@ -135,6 +135,10 @@ class CorrectionEditor:
         from .correction_tracking_editor import tracking_view
         return tracking_view(self, frame)
 
+    def tracking_overlay_view(self, frame, kind, opacity=.55):
+        from .correction_tracking_editor import tracking_overlay_view
+        return tracking_overlay_view(self, frame, kind, opacity)
+
     def clear_tracking(self):
         data = self.document.to_dict()
         if not data.get('tracks'):

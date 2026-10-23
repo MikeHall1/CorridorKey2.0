@@ -50,6 +50,8 @@ class CorrectionDialog(QDialog):
         self.presented_entry: str | None = None
         self.presented_strength: float | None = None
         self.tracking_anchors: list[str] = []
+        self.diagnostic_view_serial: int | None = None
+        self.cancelled_diagnostic_serial: int | None = None
         self.subject_clicks: list[dict[str, Any]] = []
         self.subject_binding = None
         root = QVBoxLayout(self)
@@ -126,6 +128,7 @@ class CorrectionDialog(QDialog):
         self.tracking_note = QLabel('Sequence tracking: choose same-kind/strength contiguous authored anchors; Start/End and Direction set tracking range. Preview changes no history. Inspect a retained frame before explicit acceptance. Cuts/resets stop the range. Video/trimap tracking unavailable.')
         self.tracking_note.setWordWrap(True)
         root.addWidget(self.tracking_note)
+        self._build_tracking_diagnostics(root)
         self._build_plate_controls(root)
         self._build_subject_controls(root)
         self.table = QTableWidget(0, 5)
@@ -493,6 +496,97 @@ class CorrectionDialog(QDialog):
         row = selected[0].row() if len(selected) == 1 else -1
         return self.entries[row] if 0 <= row < len(self.entries) else None
 
+    def _build_tracking_diagnostics(self, root):
+        toggle = QPushButton('Show spatial tracking diagnostics ▸')
+        toggle.setCheckable(True)
+        root.addWidget(toggle)
+        panel = QWidget()
+        panel.hide()
+        toggle.toggled.connect(panel.setVisible)
+        root.addWidget(panel)
+        layout = QVBoxLayout(panel)
+        self.capture_tracking_diagnostics = QCheckBox('Capture bounded diagnostic maps on next Preview track (off by default)')
+        layout.addWidget(self.capture_tracking_diagnostics)
+        row = QHBoxLayout()
+        self.tracking_diagnostic_kind = QComboBox()
+        self.tracking_diagnostic_kind.addItem('Flow reliability heuristic', 'reliability')
+        self.tracking_diagnostic_kind.addItem('Uncertain fraction', 'uncertainty')
+        self.tracking_diagnostic_opacity = QDoubleSpinBox()
+        self.tracking_diagnostic_opacity.setRange(0, 1)
+        self.tracking_diagnostic_opacity.setDecimals(2)
+        self.tracking_diagnostic_opacity.setValue(.55)
+        row.addWidget(self.tracking_diagnostic_kind)
+        row.addWidget(QLabel('Opacity for next inspection'))
+        row.addWidget(self.tracking_diagnostic_opacity)
+        self._button('Inspect overlay', self.inspect_tracking_diagnostic, row)
+        self._button('Source / authored view', self.load_frame, row)
+        layout.addLayout(row)
+        row = QHBoxLayout()
+        self.tracking_diagnostic_events = QComboBox()
+        row.addWidget(self.tracking_diagnostic_events, 1)
+        self._button('Go to diagnostic frame', self.navigate_tracking_diagnostic, row)
+        self._button('Use captured range', self.use_tracking_diagnostic_range, row)
+        self._button('New correction at shown frame', self.correct_tracking_diagnostic, row)
+        layout.addLayout(row)
+        self.tracking_diagnostic_legend = QLabel('Maps are generated only during an explicitly opted-in tracking preview. Existing saved tracks retain scalar observations, not spatial evidence. Reliability and uncertainty are algorithmic heuristics, not calibrated confidence or proof of occlusion/visual defects. Inspecting maps does not inspect or accept a tracked mask.')
+        self.tracking_diagnostic_legend.setWordWrap(True)
+        layout.addWidget(self.tracking_diagnostic_legend)
+
+    def inspect_tracking_diagnostic(self, frame=None):
+        # Qt clicked passes a boolean; only explicit native local-frame integers
+        # from the bounded captured event list select another frame.
+        selected_frame = frame if type(frame) is int else self.frame.value()
+        if self.request('track_overlay_view', frame=selected_frame,
+                        kind=self.tracking_diagnostic_kind.currentData(),
+                        opacity=self.tracking_diagnostic_opacity.value()):
+            self.diagnostic_view_serial = self.pending
+            self.view_requested_frame = selected_frame
+            self.frame.setValue(selected_frame)
+            return True
+        return False
+
+    def navigate_tracking_diagnostic(self):
+        frame = self.tracking_diagnostic_events.currentData()
+        if type(frame) is not int:
+            self.status.setText('Capture diagnostic maps during Preview track before navigating their frames.')
+            return
+        self.inspect_tracking_diagnostic(frame)
+
+    def use_tracking_diagnostic_range(self):
+        preview = (self.snapshot or {}).get('tracking_preview')
+        if self.pending is not None or self.closing or self.canvas.dirty or preview is None:
+            self.status.setText('Finish work and Commit/Clear draft before selecting the captured range.')
+            return
+        span = preview['request']['range']
+        self.start.setValue(span[0])
+        self.end.setValue(span[1])
+        self.status.setText(f'Selected captured correction range [{span[0]}, {span[1]}); no edit or render submitted.')
+
+    def correct_tracking_diagnostic(self):
+        if self.pending is not None or self.closing or self.canvas.dirty or self.displayed_role != 'diagnostic' or type(self.displayed_frame) is not int:
+            self.status.setText('Inspect a diagnostic frame and finish current work before starting a new correction.')
+            return
+        self.frame.setValue(self.displayed_frame)
+        # new_mask explicitly reloads the real source before native painting.
+        self.new_mask()
+
+    def _present_tracking_diagnostics(self, snapshot):
+        preview = snapshot.get('tracking_preview') or {}
+        diagnostics = preview.get('diagnostics') or {}
+        selected = self.tracking_diagnostic_events.currentData()
+        self.tracking_diagnostic_events.blockSignals(True)
+        self.tracking_diagnostic_events.clear()
+        if diagnostics.get('captured'):
+            for event in diagnostics.get('frame_events', []):
+                self.tracking_diagnostic_events.addItem(f"Local {event['frame']} / source {event['source_frame']} · {event['status']} · maps {'available' if event['available'] else 'unavailable'}", event['frame'])
+            index = self.tracking_diagnostic_events.findData(selected)
+            if index >= 0:
+                self.tracking_diagnostic_events.setCurrentIndex(index)
+            self.tracking_diagnostic_legend.setText(str(diagnostics.get('legend', 'Heuristic tracking diagnostics; not calibrated confidence.')) + f"\nCaptured diagnostic bytes {diagnostics.get('bytes_charged')} / {diagnostics.get('budget_bytes')}. Inspecting diagnostics does not inspect or accept a mask. Source/frame/document provenance is rechecked before display.")
+        else:
+            self.tracking_diagnostic_legend.setText('Spatial maps unavailable. Opt into Capture diagnostic maps, then explicitly Preview track. Existing/saved tracks have scalar observations only; no maps are reconstructed. Current source/render pixels and correction history are unchanged.')
+        self.tracking_diagnostic_events.blockSignals(False)
+
     def add_tracking_anchor(self):
         entry = self.selected()
         if self.pending is not None or entry is None or entry['kind'] not in {'keep', 'remove', 'matte'}:
@@ -504,6 +598,8 @@ class CorrectionDialog(QDialog):
 
     def cancel_operation(self):
         if self.pending is not None:
+            if self.pending == self.diagnostic_view_serial:
+                self.cancelled_diagnostic_serial = self.pending
             self.service.cancel_current.set()
             self.status.setText('Cancellation requested; waiting for the owned operation. Native flow/analysis/decoding may finish first.')
 
@@ -516,7 +612,8 @@ class CorrectionDialog(QDialog):
         entry = self.selected()
         anchors = self.tracking_anchors.copy() or ([entry['id']] if entry is not None else [])
         self.request('track_preview', anchor_ids=anchors, span=[self.start.value(), self.end.value()],
-                     direction=self.direction.currentText(), unreliable_policy=self.tracking_policy.currentText())
+                     direction=self.direction.currentText(), unreliable_policy=self.tracking_policy.currentText(),
+                     capture_diagnostics=self.capture_tracking_diagnostics.isChecked())
 
     def inspect_tracking(self):
         if self.request('track_view', frame=self.frame.value()):
@@ -602,7 +699,7 @@ class CorrectionDialog(QDialog):
         self.canvas.update()
         self.start.setValue(self.frame.value())
         self.end.setValue(self.frame.value() + 1)
-        if self.displayed_role in ('plate', 'subject', 'subject_source') or self.displayed_frame != self.frame.value():
+        if self.displayed_role in ('plate', 'subject', 'subject_source', 'diagnostic') or self.displayed_frame != self.frame.value():
             # Plate inspection may show reference/diagnostic pixels. Painting
             # becomes available only after the actual requested source arrives.
             self.canvas.painting = False
@@ -697,6 +794,7 @@ class CorrectionDialog(QDialog):
         if preview is not None:
             events = ', '.join(f"{row['frame']}:{row['status']}" for row in preview['frames'])
             self.tracking_note.setText(f"Captured tracking request: {preview['request']} · Accept uses this inspected snapshot.\nTracking preview · complete={preview['complete']} · inspected={preview['inspected']} · charged bytes={preview['bytes_charged']}\n{events}\nReliability/occlusion are heuristic; inspect selected frame before explicit acceptance. Missing masks require another anchor or a shorter range.")
+        self._present_tracking_diagnostics(snapshot)
         self._present_plate(snapshot)
         self._present_subject(snapshot, action)
         if snapshot.get('tracking_cleanup_pending'):
@@ -722,15 +820,22 @@ class CorrectionDialog(QDialog):
                 self.status.setText(event['error'] + extra)
                 continue
             action = event.get('action', 'ready')
+            if action == 'track_overlay_view' and event.get('serial') == self.cancelled_diagnostic_serial:
+                self.snapshot = event['snapshot']
+                self._present_tracking_diagnostics(self.snapshot)
+                self.cancelled_diagnostic_serial = None
+                self.diagnostic_view_serial = None
+                self.status.setText('Diagnostic display cancelled; completed late pixels were not presented.')
+                continue
             if action in ('subject_predict', 'subject_clear'):
                 self._clear_subject_overlay()
-            if action in ('view', 'track_view', 'plate_view', 'subject_prepare', 'subject_view'):
+            if action in ('view', 'track_view', 'track_overlay_view', 'plate_view', 'subject_prepare', 'subject_view'):
                 self.snapshot = event['snapshot']
             else:
                 self.populate(event['snapshot'], action)
-            if action in ('view', 'track_view', 'plate_view', 'subject_prepare', 'subject_view'):
+            if action in ('view', 'track_view', 'track_overlay_view', 'plate_view', 'subject_prepare', 'subject_view'):
                 display, overlay = event['view']
-                self.displayed_role = {'plate_view': 'plate', 'track_view': 'tracking', 'subject_prepare': 'subject_source', 'subject_view': 'subject'}.get(action, 'authored')
+                self.displayed_role = {'plate_view': 'plate', 'track_view': 'tracking', 'track_overlay_view': 'diagnostic', 'subject_prepare': 'subject_source', 'subject_view': 'subject'}.get(action, 'authored')
                 self.canvas.set_frame(display.pixels, display.width, display.height, overlay,
                                       overlay_kind=event.get('overlay_kind', 'coverage'))
                 self.canvas.painting = action == 'view' and event.get('overlay_kind') != 'trimap' and not self.closing
@@ -738,10 +843,15 @@ class CorrectionDialog(QDialog):
                     self.displayed_frame = (event['snapshot'].get('subject_preview') or {}).get('frame')
                 else:
                     self.displayed_frame = (event['snapshot'].get('plate_preview') or {}).get('frame') if action == 'plate_view' else self.view_requested_frame
-                role = 'subject source/coarse Keep preview; read-only' if action in ('subject_prepare', 'subject_view') else 'derived clean-plate preview; heuristic guidance, read-only' if action == 'plate_view' else ('derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only')
+                role = 'subject source/coarse Keep preview; read-only' if action in ('subject_prepare', 'subject_view') else 'derived clean-plate preview; heuristic guidance, read-only' if action == 'plate_view' else ('spatial tracking diagnostic; heuristic, read-only, not calibrated confidence or proof of occlusion' if action == 'track_overlay_view' else 'derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only')
                 self.frame_note.setText(f"Displayed selected-frame {self.displayed_frame} (source start {event['snapshot']['document']['source']['start_frame']}) · {display.width}×{display.height} · {role}")
+                if action == 'track_overlay_view':
+                    self.canvas.click_mode = False
+                    self.canvas.click_markers = []
+                    self.frame_note.setToolTip(display.note)
             elif action in ('brush', 'import', 'import_trimap'):
                 self.canvas.clear_draft()
+            self._present_tracking_diagnostics(event['snapshot'])
             self._present_plate(event['snapshot'])
             self._present_subject(event['snapshot'], action)
             if event.get('plate_reference') is not None:

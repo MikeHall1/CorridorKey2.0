@@ -246,3 +246,14 @@ replacement/source/settings/view changes invalidate captured contexts. No previe
 artifact is promoted into export/recovery storage. The initial single-frame
 sequence path explicitly refuses unsupported temporal/hint/correction contexts;
 final labels mean the configured preview recipe, not full-range equivalence.
+
+`tracking_overlays.py` converts actual TrackingCandidate reliability/uncertainty
+bytes into bounded immutable display proxies and verified exclusive raw-map
+receipts. `correction_tracking_editor.py` captures them only when explicitly
+requested in the existing flow iteration, with separate retained-byte accounting.
+Inspection revalidates the original source/document/decode/frame/proxy binding,
+then composites red RGBA on a copied source thumbnail. The ordinary editor service
+returns a distinct diagnostic role; no masks/history/acceptance flags are changed.
+Dirty navigation guards, late-cancel display fencing and source reload before
+painting preserve ownership. Accepted-mask assets survive separate diagnostic
+subdirectory cleanup; missing historical spatial data stays unavailable.

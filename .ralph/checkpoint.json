@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T15:28:57.376169+00:00",
-  "cycles_completed": 40,
+  "created_utc": "2026-10-23T15:45:53.258843+00:00",
+  "cycles_completed": 45,
   "checkpoint_interval": 5,
-  "boundary_reason": "Eighth coherent extension checkpoint: explicit bounded progressive sequence previews, same-owner transient execution, stale fences and retryable cleanup locally verified.",
+  "boundary_reason": "Ninth coherent extension checkpoint: explicitly captured bounded source-aligned spatial tracking overlays and established correction/navigation actions locally verified.",
   "completed": [
     {
       "id": "fresh-repository-review",
@@ -178,7 +178,7 @@
     },
     {
       "id": "EXT-07",
-      "status": "ready",
+      "status": "in_progress",
       "acceptance": "Source-aligned diagnostic maps with provenance/legend/limits and correction/rerender actions; heuristics distinct from measured observations."
     },
     {
@@ -247,9 +247,9 @@
       "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
     }
   ],
-  "next_action": "Capture bounded spatial tracking diagnostic maps during existing explicit tracking preview, expose read-only source-aligned overlays/legend/navigation and established correction actions without new analysis by default.",
-  "last_verification_logs": "benchmark-results/ext06-connected-final",
+  "next_action": "Implement explicit cancellable short-sample machine calibration with controlled cold/warm configurations, exact provenance, measured-only recommendations and no queued-job mutation.",
+  "last_verification_logs": "benchmark-results/ext07-connected-final",
   "product_complete": false,
-  "reviewed_source_identity": "3f5fc42e94b3b4a42775e7fdea218c0767af6db6bab17781e1b644f858d65f53",
-  "local_increment": "Connected progressive image-sequence previews locally verified; unsupported temporal contexts and external GPU/quality acceptance remain pending"
+  "reviewed_source_identity": "c7ef2ce7e733edfa9b5184f2450bb50275448ee6271b77218097a5b0c690de24",
+  "local_increment": "Connected spatial tracking diagnostic overlays locally verified; additional diagnostic roles and representative quality/external acceptance pending"
 }

@@ -312,3 +312,13 @@ and is excluded from durable render history. No existing CLI flag, inference
 precision/colour/backend default or persisted format changes. Initial sequences
 only, no Quick Key/hints/corrections; single-frame temporal state restarts.
 [Workflow and verification limits](progressive-previews.md).
+
+Correction editor **Show spatial tracking diagnostics** is collapsed by default;
+**Capture diagnostic maps on next Preview track** defaults false. Opt-in capture
+reuses existing flow and adds a separate64MiB map/receipt admission budget to the
+existing512MiB tracking-mask budget. Explicit reliability/uncertainty inspection
+and staged opacity (default0.55) affect source-display pixels only. Navigation,
+captured range and new-correction actions use existing safeguards/source reload.
+No CLI/inference flag, correction schema, persisted track semantics or render
+pixel/default change. Saved-track maps remain unavailable. Limits and commands:
+[spatial tracking diagnostics](tracking-overlays.md).
