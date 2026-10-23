@@ -55,8 +55,14 @@ def correction_report(document: CorrectionDocument, document_path, *, runtime_fi
                     'entries_count': len(data['entries']), 'shots_count': len(data['shots']),
                     'authored_frames_count': len(document.frames), 'reset_frames_count': len(document.resets),
                     'tracks_count': len(data.get('tracks', [])),
+                    'guidance_count': len(data.get('guidance', [])),
+                    'guidance_counts_by_kind': {kind: sum(origin['kind'] == kind for origin in data.get('guidance', []))
+                                                for kind in ('clean_plate', 'subject_clicks')},
+                    'guidance_scope': 'Generation observations, resource hashes and bindings remain in the manifest; final guidance is not proof of provider execution or improved matting quality.',
                     'tracks': [_track_summary(track) for track in data.get('tracks', [])],
                     'omitted_fields': ['tracks[].frames', 'tracks[].observations', 'tracks[].binding'] if data.get('tracks') else []}
+    if data.get('guidance'):
+        result['omitted_fields'].append('guidance')
     for key, value in (('document_path', path), ('revision', data['revision'])):
         if result[key] is None:
             result['omitted_fields'].append(key)

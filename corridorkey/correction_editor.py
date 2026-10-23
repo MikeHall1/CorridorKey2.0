@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace
 from itertools import pairwise
 from pathlib import Path
 from typing import Any
@@ -64,6 +65,7 @@ class CorrectionEditor:
             document = CorrectionDocument.parse({'schema_version': 1, 'revision': 0, 'source': self.binding,
                          'shots': [[0, self.binding['frame_count']]], 'entries': []}, parent)
         self.tracking_preview = None
+        self.plate_preview = None
         self.tracking_cleanup_pending: list[Path] = []
         self.tracking_cleanup_warnings: list[str] = []
         self.history = CorrectionHistory(document, max_snapshots=128)
@@ -86,14 +88,18 @@ class CorrectionEditor:
                 'checkpoint_path': str(self.checkpoint_path),
                 'saved_path': str(self.saved_path) if self.saved_path else None,
                 'tracking_preview': self.tracking_summary(),
+                'plate_preview': self.plate_summary(),
                 'tracking_cleanup_pending': [str(path) for path in self.tracking_cleanup_pending],
                 'tracking_cleanup_warnings': self.tracking_cleanup_warnings.copy()}
 
     def _apply(self, data: dict[str, Any], *, preserve_tracks: bool = False) -> None:
         # Authored edits conservatively discard all derivatives; undo retains
         # the exact earlier accepted snapshot and immutable mask assets.
-        if data.get('schema_version') == 3 and not preserve_tracks:
+        if data.get('schema_version', 1) >= 3 and not preserve_tracks:
             data['tracks'] = []
+        if data.get('schema_version') == 4:
+            present = {entry['id'] for entry in data['entries']}
+            data['guidance'] = [origin for origin in data['guidance'] if origin['entry_id'] in present]
         data['revision'] = self.revision + 1
         document = CorrectionDocument.parse(data, self.document.base_dir)
         self._checkpoint(document)
@@ -102,6 +108,7 @@ class CorrectionEditor:
         self.saved_path = None
         if not preserve_tracks:
             self.discard_tracking()
+        self.discard_plate()
 
     def prepare_tracking(self, **parameters):
         from .correction_tracking_editor import prepare_tracking
@@ -130,6 +137,42 @@ class CorrectionEditor:
         data['tracks'] = []
         self._apply(data)
 
+    def prepare_plate(self, **parameters):
+        from .clean_plate_editor import prepare_plate
+        prepare_plate(self, **parameters)
+
+    def plate_view(self, mode='guidance'):
+        from .clean_plate_editor import plate_view
+        return plate_view(self, mode)
+
+    def plate_summary(self):
+        from .clean_plate_editor import plate_summary
+        return plate_summary(self)
+
+    def plate_reference(self):
+        if self.plate_preview is None:
+            return None
+        display = self.plate_preview['reference_display']
+        return replace(display, pixels=display.pixels.copy())
+
+    def accept_plate(self):
+        from .clean_plate_editor import accept_plate
+        accept_plate(self)
+
+    def discard_plate(self):
+        from .clean_plate_editor import discard_plate
+        discard_plate(self)
+
+    def detach_guidance(self, identifier):
+        data = self.document.to_dict()
+        entry = next(entry for entry in data['entries'] if entry['id'] == identifier)
+        if 'guidance_id' not in entry:
+            raise ValueError('Selected entry has no generated guidance origin.')
+        origin_id = entry.pop('guidance_id')
+        data['guidance'] = [origin for origin in data['guidance'] if origin['id'] != origin_id]
+        entry['revision'] = self.revision + 1
+        self._apply(data)
+
     def _checkpoint(self, document: CorrectionDocument) -> None:
         self.check()
         path = self.workspace / f'edit-r{document.to_dict()["revision"]}-{uuid.uuid4().hex}.json'
@@ -150,7 +193,12 @@ class CorrectionEditor:
     def import_trimap(self, path: Path, *, frame: int, strength: float, direction: str, span: list[int]) -> None:
         self._import_raster(path, kind='trimap', frame=frame, strength=strength, direction=direction, span=span)
 
-    def _import_raster(self, path: Path, *, kind: str, frame: int, strength: float, direction: str, span: list[int]) -> None:
+    def _import_raster(self, path: Path, *, kind: str, frame: int, strength: float, direction: str, span: list[int], origin=None) -> None:
+        from .correction_tracking_editor import MAX_CLEANUP_PENDING, _cleanup
+        for pending in list(self.tracking_cleanup_pending):
+            _cleanup(self, pending)
+        if len(self.tracking_cleanup_pending) >= MAX_CLEANUP_PENDING:
+            raise OSError('Private asset cleanup remains blocked; inspect pending cleanup before importing more masks.')
         trimap_asset = None
         if kind == 'trimap':
             from .trimap_refinement import load_trimap_asset
@@ -162,11 +210,17 @@ class CorrectionEditor:
             entry = self._entry(kind, frame, strength, direction, span, path)
         data = self.document.to_dict()
         data['entries'].append(entry)
-        if data['schema_version'] == 3:
+        if data['schema_version'] >= 3:
             data['tracks'] = []
         if kind == 'trimap':
             data['schema_version'] = max(2, data['schema_version'])
         candidate = CorrectionDocument.parse(data, self.document.base_dir)
+        if origin is not None:
+            from .corrections import attach_guidance
+            candidate = attach_guidance(candidate, entry['id'], guidance_id=uuid.uuid4().hex, **origin)
+            candidate.verify_assets(check=self.check)
+            data = candidate.to_dict()
+            entry = next(item for item in data['entries'] if item['id'] == entry['id'])
         rasters = CorrectionRasters(candidate, self.meta, check=self.check)
         rasters.close()
         # Copy exact verified encoded bytes, preserving authored float/uint16 precision.
@@ -175,10 +229,19 @@ class CorrectionEditor:
         if hashlib.sha256(raw).hexdigest() != entry['asset']['sha256']:
             raise ValueError('Imported raster changed before publication.')
         target = self.workspace / 'assets' / (uuid.uuid4().hex + path.suffix.lower())
-        with target.open('xb') as stream:
-            stream.write(raw)
-        entry['asset']['path'] = str(target)
-        self._apply(data)
+        created, previous_checkpoint = False, self.checkpoint_path
+        try:
+            with target.open('xb') as stream:
+                created = True
+                stream.write(raw)
+            entry['asset']['path'] = str(target)
+            self._apply(data)
+        except BaseException:
+            # Never remove an accepted asset or one owned by a successfully
+            # published recovery checkpoint. Failed checkpoint writes own none.
+            if created and self.checkpoint_path == previous_checkpoint and target.resolve() not in self.document.asset_paths():
+                _cleanup(self, target)
+            raise
 
     def commit_brush(self, mask: NDArray[np.uint8], *, kind: str, frame: int, strength: float,
                      direction: str, span: list[int]) -> None:
@@ -255,6 +318,7 @@ class CorrectionEditor:
         self.invalidated = invalidated
         self.saved_path = None
         self.discard_tracking()
+        self.discard_plate()
 
     def redo(self) -> None:
         invalidated = self.history.redo()
@@ -266,6 +330,7 @@ class CorrectionEditor:
         self.invalidated = invalidated
         self.saved_path = None
         self.discard_tracking()
+        self.discard_plate()
 
     def save(self) -> Path:
         if source_identity(self.job.input_path, check=self.check)['sha256'] != self.binding['sha256']:
@@ -298,7 +363,10 @@ class CorrectionEditor:
             elif entry['kind'] != 'reset' and entry['range'][0] <= frame < entry['range'][1]:
                 # Obtain the actual stored coverage through the shared matte operator.
                 isolated = {**entry, 'kind': 'matte', 'strength': 1.0, 'direction': 'both'}
-                candidate = CorrectionDocument.parse({**data, 'entries': [isolated], **({'tracks': []} if data['schema_version'] == 3 else {})}, self.document.base_dir)
+                isolated.pop('guidance_id', None)
+                candidate = CorrectionDocument.parse({**data, 'entries': [isolated],
+                    **({'tracks': []} if data['schema_version'] >= 3 else {}),
+                    **({'guidance': []} if data['schema_version'] == 4 else {})}, self.document.base_dir)
                 rasters = CorrectionRasters(candidate, self.meta, check=self.check)
                 try:
                     mask = rasters.apply(np.zeros(self.meta['native_hw'], dtype=np.float32), entry['frame'])

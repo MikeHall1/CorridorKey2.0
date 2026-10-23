@@ -87,7 +87,10 @@ class DesktopTrackingTests(unittest.TestCase):
         self.dialog.commit()
         self.assertIn('read-only', self.dialog.status.text())
         self.dialog.new_mask()
+        self.assertFalse(self.dialog.canvas.painting)
+        self.until(lambda: self.dialog.pending is None)
         self.assertTrue(self.dialog.canvas.painting)
+        self.assertEqual(self.dialog.displayed_frame, self.dialog.frame.value())
 
     def test_cancellation_retires_operation_and_owner_accepts_next_request(self):
         entered = threading.Event()

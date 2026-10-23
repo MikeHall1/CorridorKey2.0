@@ -5,8 +5,8 @@ import queue
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QTimer, Signal
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QCloseEvent, QImage, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -16,11 +16,14 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
+    QScrollArea,
     QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
 from .correction_canvas import CorrectionCanvas
@@ -105,19 +108,23 @@ class CorrectionDialog(QDialog):
         self.tracking_policy.setToolTip('Flow/photometric reliability is heuristic, not calibrated confidence. Retain approximation explicitly accepts uncertain draft propagation.')
         tracking.addWidget(QLabel('Tracking reliability'))
         tracking.addWidget(self.tracking_policy)
-        for text, callback in [('Add selected anchor', self.add_tracking_anchor),
+        for index, (text, callback) in enumerate([('Add selected anchor', self.add_tracking_anchor),
                                ('Clear anchor list', self.clear_tracking_anchors),
                                ('Preview track', self.preview_tracking),
                                ('Inspect tracked frame', self.inspect_tracking),
                                ('Accept inspected track', lambda: self.request('track_accept')),
                                ('Discard preview', lambda: self.request('track_discard')),
                                ('Clear accepted tracks', lambda: self.request('track_clear')),
-                               ('Cancel operation', self.cancel_operation)]:
+                               ('Cancel operation', self.cancel_operation)]):
+            if index == 3:
+                root.addLayout(tracking)
+                tracking = QHBoxLayout()
             self._button(text, callback, tracking)
         root.addLayout(tracking)
         self.tracking_note = QLabel('Sequence tracking: choose same-kind/strength contiguous authored anchors; Start/End and Direction set tracking range. Preview changes no history. Inspect a retained frame before explicit acceptance. Cuts/resets stop the range. Video/trimap tracking unavailable.')
         self.tracking_note.setWordWrap(True)
         root.addWidget(self.tracking_note)
+        self._build_plate_controls(root)
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(['Kind', 'Frame', 'Range [start,end)', 'Direction', 'Strength'])
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -134,6 +141,180 @@ class CorrectionDialog(QDialog):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.poll)
         self.timer.start(50)
+
+    def _build_plate_controls(self, root):
+        self.plate_toggle = QPushButton('Show clean-plate assistance ▸')
+        self.plate_toggle.setCheckable(True)
+        root.addWidget(self.plate_toggle)
+        self.plate_panel = QWidget()
+        root.addWidget(self.plate_panel)
+        root = QVBoxLayout(self.plate_panel)
+        self.plate_toggle.toggled.connect(self._toggle_plate)
+        self.plate_panel.hide()
+        row = QHBoxLayout()
+        self.plate_reference_path = QLineEdit()
+        self.plate_reference_path.setPlaceholderText('Local empty-plate image or sequence directory')
+        row.addWidget(self.plate_reference_path)
+        self._button('Plate image…', lambda: self.choose_plate(False), row)
+        self._button('Plate sequence…', lambda: self.choose_plate(True), row)
+        self.plate_reference_frame = QSpinBox()
+        self.plate_reference_frame.setRange(0, 99999)
+        row.addWidget(QLabel('Reference absolute index'))
+        row.addWidget(self.plate_reference_frame)
+        self.plate_profile = QComboBox()
+        for text, value in [('sRGB / BT.709', 'srgb'), ('Linear BT.709 / D65', 'linear_bt709_d65'),
+                            ('Linear BT.2020 / D65', 'linear_bt2020_d65')]:
+            self.plate_profile.addItem(text, value)
+        self.plate_profile.setPlaceholderText('Choose reference colour…')
+        self.plate_profile.setCurrentIndex(-1)
+        row.addWidget(QLabel('Declare reference colour'))
+        row.addWidget(self.plate_profile)
+        root.addLayout(row)
+        row = QHBoxLayout()
+        self.plate_samples_path = QLineEdit()
+        self.plate_samples_path.setPlaceholderText('Required native binary known-background mask (0 / maximum)')
+        row.addWidget(self.plate_samples_path)
+        self._button('Background samples…', self.choose_plate_samples, row)
+        self.plate_whole_frame = QCheckBox('Assume entire source frame is known background')
+        self.plate_whole_frame.toggled.connect(lambda checked: self.plate_samples_path.setEnabled(not checked))
+        row.addWidget(self.plate_whole_frame)
+        root.addLayout(row)
+        row = QHBoxLayout()
+        self.plate_alignment = QComboBox()
+        self.plate_alignment.addItem('Declare translation', 'declared')
+        self.plate_alignment.addItem('Estimate translation (heuristic)', 'estimate_translation')
+        row.addWidget(self.plate_alignment)
+        self.plate_dx, self.plate_dy = QDoubleSpinBox(), QDoubleSpinBox()
+        for label, widget in [('Reference → source X px', self.plate_dx), ('Y px', self.plate_dy)]:
+            widget.setRange(-32, 32)
+            widget.setDecimals(2)
+            row.addWidget(QLabel(label))
+            row.addWidget(widget)
+        self.plate_alignment.currentIndexChanged.connect(self._plate_alignment_changed)
+        self.plate_exposure = QCheckBox('Fit scalar exposure (gain 0.25–4)')
+        row.addWidget(self.plate_exposure)
+        self.plate_bg, self.plate_fg = QDoubleSpinBox(), QDoubleSpinBox()
+        for label, widget, value in [('BG residual ≤', self.plate_bg, .04), ('FG residual ≥', self.plate_fg, .35)]:
+            widget.setRange(.001, 100)
+            widget.setDecimals(3)
+            widget.setValue(value)
+            row.addWidget(QLabel(label))
+            row.addWidget(widget)
+        root.addLayout(row)
+        row = QHBoxLayout()
+        self._button('Preview clean plate', self.preview_plate, row)
+        self.plate_mode = QComboBox()
+        for text, mode in [('Rough guidance', 'guidance'), ('Spatial screen field', 'screen_field'),
+                           ('Relative residual', 'residual'), ('Reference', 'reference')]:
+            self.plate_mode.addItem(text, mode)
+        row.addWidget(self.plate_mode)
+        self.plate_inspect = self._button('Inspect plate view', self.inspect_plate, row)
+        self.plate_accept = self._button('Accept inspected guidance', lambda: self.request('plate_accept'), row)
+        self.plate_discard = self._button('Discard plate preview', lambda: self.request('plate_discard'), row)
+        self.detach_guidance_button = self._button('Detach selected guidance origin', self.detach_guidance, row)
+        self.detach_guidance_button.setEnabled(False)
+        self.detach_guidance_button.setToolTip('Deliberately keep the existing mask as authored coverage/classes and remove its generated origin. Reference resources are no longer required; this does not recalculate or repaint the mask.')
+        for button in (self.plate_inspect, self.plate_accept, self.plate_discard):
+            button.setEnabled(False)
+        root.addLayout(row)
+        row = QHBoxLayout()
+        self.plate_thumbnail = QLabel('Reference thumbnail appears after explicit preview')
+        self.plate_thumbnail.setMaximumSize(192, 96)
+        row.addWidget(self.plate_thumbnail)
+        self.plate_note = QLabel('Optional single-frame assistance for image-sequence sources only. Select an explicit reference index and colour declaration. Samples must be known background; the whole-frame assumption can erase foreground. Translation only (32 px per axis), native geometry, bounded pixels/memory. Similar-coloured foreground and shadows are uncertain. Inspect rough guidance before deliberate acceptance as a final-only trimap. No model runs or neural channels; quality benefit unverified.')
+        self.plate_note.setWordWrap(True)
+        self.plate_note.setAlignment(Qt.AlignmentFlag.AlignTop)
+        note_scroll = QScrollArea()
+        note_scroll.setWidgetResizable(True)
+        note_scroll.setMinimumHeight(56)
+        note_scroll.setMaximumHeight(96)
+        note_scroll.setWidget(self.plate_note)
+        row.addWidget(note_scroll, 1)
+        root.addLayout(row)
+
+    def _toggle_plate(self, visible):
+        self.plate_panel.setVisible(visible)
+        self.plate_toggle.setText('Hide clean-plate assistance ▾' if visible else 'Show clean-plate assistance ▸')
+
+    def _plate_alignment_changed(self):
+        declared = self.plate_alignment.currentData() == 'declared'
+        self.plate_dx.setEnabled(declared)
+        self.plate_dy.setEnabled(declared)
+
+    def choose_plate(self, directory):
+        if self.pending is not None or self.canvas.dirty:
+            self.status.setText('Finish current work and Commit/Clear draft before choosing a reference.')
+            return
+        path = (QFileDialog.getExistingDirectory(self, 'Choose local empty-plate sequence') if directory else
+                QFileDialog.getOpenFileName(self, 'Choose local empty-plate image', '', 'Images (*.png *.exr *.jpg *.jpeg)')[0])
+        if path:
+            self.plate_reference_path.setText(path)
+            self.plate_reference_frame.setValue(0)
+
+    def choose_plate_samples(self):
+        if self.pending is not None or self.canvas.dirty:
+            self.status.setText('Finish current work and Commit/Clear draft before choosing samples.')
+            return
+        path, _ = QFileDialog.getOpenFileName(self, 'Known-background samples: native binary mask', '', 'Masks (*.png *.exr)')
+        if path:
+            self.plate_samples_path.setText(path)
+            self.plate_whole_frame.setChecked(False)
+
+    def preview_plate(self):
+        reference = self.plate_reference_path.text().strip()
+        samples = self.plate_samples_path.text().strip()
+        if not reference:
+            self.status.setText('Choose a local reference image or sequence first.')
+            return
+        if self.plate_profile.currentData() is None:
+            self.status.setText('Declare reference colour explicitly before previewing.')
+            return
+        if not samples and not self.plate_whole_frame.isChecked():
+            self.status.setText('Choose native known-background samples or explicitly declare the whole-frame background assumption.')
+            return
+        if self.plate_bg.value() >= self.plate_fg.value():
+            self.status.setText('Background threshold must be below foreground threshold, leaving an unknown band.')
+            return
+        self.request('plate_preview', frame=self.frame.value(), reference_path=Path(reference),
+                     reference_frame=self.plate_reference_frame.value(), reference_mode='sequence' if Path(reference).is_dir() else 'single',
+                     reference_profile=self.plate_profile.currentData(), alignment=self.plate_alignment.currentData(),
+                     translation_xy=(self.plate_dx.value(), self.plate_dy.value()) if self.plate_alignment.currentData() == 'declared' else (0., 0.),
+                     compensate_exposure=self.plate_exposure.isChecked(), samples_path=Path(samples) if samples and not self.plate_whole_frame.isChecked() else None,
+                     whole_frame_samples=self.plate_whole_frame.isChecked(), background_threshold=self.plate_bg.value(), foreground_threshold=self.plate_fg.value())
+
+    def detach_guidance(self):
+        entry = self.selected()
+        if entry is None or 'guidance_id' not in entry:
+            self.status.setText('Select a generated guidance entry to detach its origin; the existing mask is retained.')
+            return
+        self.request('detach_guidance', identifier=entry['id'])
+
+    def inspect_plate(self):
+        self.request('plate_view', mode=self.plate_mode.currentData())
+
+    def _present_plate(self, snapshot):
+        preview = snapshot.get('plate_preview')
+        idle = self.pending is None and not self.closing
+        self.plate_inspect.setEnabled(preview is not None and idle)
+        self.plate_discard.setEnabled(preview is not None and idle)
+        self.plate_accept.setEnabled(preview is not None and preview.get('usable', False) and preview.get('inspected', False) and idle)
+        if preview is None:
+            self.plate_thumbnail.clear()
+            self.plate_thumbnail.setText('No retained plate preview')
+            return
+        diagnostics = preview.get('report', {}).get('diagnostics', {})
+        alignment, exposure = diagnostics.get('alignment', {}), diagnostics.get('exposure', {})
+        counts = diagnostics.get('class_counts', {})
+        request = preview.get('request', {})
+        settings = request.get('settings', request)
+        sample_scope = ('ENTIRE source frame assumed background; foreground may be erased' if request.get('whole_frame_samples') else 'artist binary background samples')
+        self.plate_note.setText(
+            f"Captured source frame {preview.get('source_frame')} (selection {preview.get('frame')}) → reference index {preview.get('reference_frame')} · {preview.get('reference_path')}\n"
+            f"Reference colour {request.get('reference_profile')} · {sample_scope}\n"
+            f"Usable: {preview.get('usable')} · rough guidance inspected: {preview.get('inspected')} · alignment {alignment.get('requested')}, shift {alignment.get('translation_reference_to_source_xy')}, phase response {alignment.get('phase_response')} · exposure gain {exposure.get('gain')}\n"
+            f"Background {counts.get('background', 0)} / unknown {counts.get('unknown', 0)} / foreground {counts.get('foreground', 0)} pixels. "
+            f"{diagnostics.get('reason') or 'Conservative candidate; inspect before acceptance.'}\n"
+            f"Captured thresholds BG {settings.get('background_threshold')} / FG {settings.get('foreground_threshold')}; current controls prepare a new preview. One native frame; translation ≤32 px per axis; pixel/estimated-memory budgets enforced. Translation/photometric heuristics only; similar-coloured foreground may become background. No inference or verified quality benefit.")
 
     def _button(self, text, callback, layout):
         button = QPushButton(text)
@@ -159,7 +340,7 @@ class CorrectionDialog(QDialog):
     def cancel_operation(self):
         if self.pending is not None:
             self.service.cancel_current.set()
-            self.status.setText('Cancellation requested; waiting for the owned operation. Native flow/decoding may finish first.')
+            self.status.setText('Cancellation requested; waiting for the owned operation. Native flow/analysis/decoding may finish first.')
 
     def clear_tracking_anchors(self):
         if self.pending is None:
@@ -205,8 +386,8 @@ class CorrectionDialog(QDialog):
             self.view_requested_frame = self.frame.value()
 
     def commit(self):
-        if self.displayed_role == 'tracking':
-            self.status.setText('Tracked preview is read-only. Load an authored frame or choose New mask before painting/committing.')
+        if self.displayed_role != 'authored':
+            self.status.setText('Derived preview is read-only. Load an authored frame or choose New mask before painting/committing.')
             return
         entry = self.selected()
         if entry is not None and entry['kind'] == 'trimap':
@@ -252,11 +433,18 @@ class CorrectionDialog(QDialog):
             self.kind.setCurrentIndex(0)
         self.canvas.overlay_kind = 'coverage'
         self.canvas.saved_overlay = None
-        self.displayed_role = 'authored'
-        self.canvas.painting = not self.closing
         self.canvas.update()
         self.start.setValue(self.frame.value())
         self.end.setValue(self.frame.value() + 1)
+        if self.displayed_role == 'plate' or self.displayed_frame != self.frame.value():
+            # Plate inspection may show reference/diagnostic pixels. Painting
+            # becomes available only after the actual requested source arrives.
+            self.canvas.painting = False
+            if self.request('view', frame=self.frame.value(), identifier=None):
+                self.view_requested_frame = self.frame.value()
+            return
+        self.displayed_role = 'authored'
+        self.canvas.painting = not self.closing
 
     def save(self):
         self.request('save')
@@ -291,6 +479,7 @@ class CorrectionDialog(QDialog):
         entry = self.selected()
         for button in self.selection_buttons:
             button.setEnabled(entry is not None and self.pending is None and not self.closing)
+        self.detach_guidance_button.setEnabled(entry is not None and 'guidance_id' in entry and self.pending is None and not self.closing)
         self.presented_entry = entry['id'] if entry is not None else None
         self.presented_strength = None
         reset = entry is not None and entry['kind'] == 'reset'
@@ -299,7 +488,7 @@ class CorrectionDialog(QDialog):
             widget.setEnabled(not reset)
         self.kind.setEnabled(not reset and not trimap)
         self.kind.setPlaceholderText('Imported trimap')
-        self.canvas.painting = self.displayed_role != 'tracking' and not trimap and self.pending is None and not self.closing
+        self.canvas.painting = self.displayed_role == 'authored' and not trimap and self.pending is None and not self.closing
         if entry is not None:
             self.frame.setValue(entry['frame'])
             if not reset:
@@ -320,7 +509,7 @@ class CorrectionDialog(QDialog):
         data = snapshot['document']
         self.entries = data['entries']
         self.tracking_anchors = [key for key in self.tracking_anchors if any(e['id'] == key for e in self.entries)]
-        if action in ('brush', 'import', 'import_trimap', 'reset') and self.entries:
+        if action in ('brush', 'import', 'import_trimap', 'reset', 'plate_accept') and self.entries:
             selected = self.entries[-1]['id']
         count = data['source']['frame_count']
         self.frame.setMaximum(count - 1)
@@ -342,6 +531,7 @@ class CorrectionDialog(QDialog):
         if preview is not None:
             events = ', '.join(f"{row['frame']}:{row['status']}" for row in preview['frames'])
             self.tracking_note.setText(f"Captured tracking request: {preview['request']} · Accept uses this inspected snapshot.\nTracking preview · complete={preview['complete']} · inspected={preview['inspected']} · charged bytes={preview['bytes_charged']}\n{events}\nReliability/occlusion are heuristic; inspect selected frame before explicit acceptance. Missing masks require another anchor or a shorter range.")
+        self._present_plate(snapshot)
         if snapshot.get('tracking_cleanup_pending'):
             self.timeline.setText(self.timeline.text() + '\nPrivate preview cleanup pending: ' + str(snapshot['tracking_cleanup_pending']))
             self.timeline.setToolTip('\n'.join(snapshot.get('tracking_cleanup_warnings', [])))
@@ -353,7 +543,7 @@ class CorrectionDialog(QDialog):
             except queue.Empty:
                 break
             self.pending = None
-            self.canvas.painting = self.displayed_role != 'tracking' and not self.closing
+            self.canvas.painting = self.displayed_role == 'authored' and not self.closing
             if event['kind'] == 'error':
                 if event.get('snapshot') is not None:
                     self.populate(event['snapshot'], 'error')
@@ -365,27 +555,33 @@ class CorrectionDialog(QDialog):
                 self.status.setText(event['error'] + extra)
                 continue
             action = event.get('action', 'ready')
-            if action in ('view', 'track_view'):
+            if action in ('view', 'track_view', 'plate_view'):
                 self.snapshot = event['snapshot']
             else:
                 self.populate(event['snapshot'], action)
-            if action in ('view', 'track_view'):
+            if action in ('view', 'track_view', 'plate_view'):
                 display, overlay = event['view']
-                self.displayed_role = 'tracking' if action == 'track_view' else 'authored'
+                self.displayed_role = 'plate' if action == 'plate_view' else ('tracking' if action == 'track_view' else 'authored')
                 self.canvas.set_frame(display.pixels, display.width, display.height, overlay,
                                       overlay_kind=event.get('overlay_kind', 'coverage'))
-                self.canvas.painting = action != 'track_view' and event.get('overlay_kind') != 'trimap' and not self.closing
-                self.displayed_frame = self.view_requested_frame
-                role = 'derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only'
+                self.canvas.painting = action == 'view' and event.get('overlay_kind') != 'trimap' and not self.closing
+                self.displayed_frame = (event['snapshot'].get('plate_preview') or {}).get('frame') if action == 'plate_view' else self.view_requested_frame
+                role = 'derived clean-plate preview; heuristic guidance, read-only' if action == 'plate_view' else ('derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only')
                 self.frame_note.setText(f"Displayed selected-frame {self.displayed_frame} (source start {event['snapshot']['document']['source']['start_frame']}) · {display.width}×{display.height} · {role}")
             elif action in ('brush', 'import', 'import_trimap'):
                 self.canvas.clear_draft()
+            self._present_plate(event['snapshot'])
+            if event.get('plate_reference') is not None:
+                thumbnail = event['plate_reference']
+                pixels = thumbnail.pixels
+                image = QImage(pixels.data, pixels.shape[1], pixels.shape[0], pixels.strides[0], QImage.Format.Format_RGB888).copy()
+                self.plate_thumbnail.setPixmap(QPixmap.fromImage(image).scaled(192, 96, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
             if action == 'save':
                 self.saved.emit(self.job, event['snapshot']['saved_path'])
                 self.status.setText('Immutable snapshot saved: ' + event['snapshot']['saved_path'])
             else:
                 self.status.setText('Ready · ' + action)
-            if action in ('ready', 'brush', 'import', 'import_trimap', 'edit', 'undo', 'redo', 'remove', 'move'):
+            if action in ('ready', 'brush', 'import', 'import_trimap', 'edit', 'undo', 'redo', 'remove', 'move', 'plate_accept'):
                 self.load_frame()
         if self.closing and self.service.done.is_set():
             self.close()

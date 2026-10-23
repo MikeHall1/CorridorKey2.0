@@ -104,9 +104,15 @@ def crop_model_chw_to_output(x: np.ndarray, model_native_hw, pad, output_hw):
     return resize_chw_lanczos(cropped, output_hw)
 
 
-def read_image_rgb(path: str | os.PathLike, *, info=None, alpha_mode="ignore", expected_channels: int | None = None):
+def read_image_rgb(path: str | os.PathLike, *, info=None, alpha_mode="ignore", expected_channels: int | None = None,
+                   encoded_bytes: bytes | None = None):
     path = str(path)
-    img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    if encoded_bytes is None:
+        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    else:
+        if type(encoded_bytes) is not bytes or not encoded_bytes:
+            raise ValueError('Captured encoded image must be nonempty immutable bytes.')
+        img = cv2.imdecode(np.frombuffer(encoded_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
     if img is None:
         raise FileNotFoundError(path)
     if expected_channels is not None:
@@ -270,15 +276,16 @@ def probe_video_meta(video_path: str, *, num_frames: int, shape_quantum: int,
 
 
 def _read_frame_dir_views(path: str, *, exr_linear: bool, precision_log=None, alpha_mode="ignore", witness=None,
-                          source_colour_profile="legacy"):
+                          source_colour_profile="legacy", encoded_bytes: bytes | None = None):
     if source_colour_profile != "legacy":
         from .colour_contract import describe_source_colour
         describe_source_colour(source_colour_profile, scene_linear=exr_linear)
         if witness is not None:
             raise ValueError("Source witness supports only the legacy source colour profile")
     info = {}
+    decode_options = {} if encoded_bytes is None else {"encoded_bytes": encoded_bytes}
     raw = read_image_rgb(path, info=info, alpha_mode=alpha_mode,
-                         expected_channels=3 if witness is not None else None)
+                         expected_channels=3 if witness is not None else None, **decode_options)
     if precision_log is not None and info["decoded_dtype"] not in precision_log:
         precision_log.append(info["decoded_dtype"])
     if exr_linear:

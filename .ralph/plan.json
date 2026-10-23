@@ -67,15 +67,24 @@
     {
       "id": "EXT-03",
       "title": "Clean-plate assistance",
-      "status": "ready",
+      "status": "in_progress",
       "dependencies": [
         "EXT-02"
       ],
       "acceptance": "Reference identity/alignment/exposure diagnostics, reversible inspectable spatial guidance integrated with correction/refinement; no new neural channels.",
       "evidence": [
-        "docs/product-improvements.md"
+        "docs/product-improvements.md",
+        "corridorkey/clean_plate.py",
+        "tests/test_clean_plate.py",
+        "corridorkey/clean_plate_editor.py",
+        "corridorkey/desktop_corrections.py",
+        "corridorkey/native_image_admission.py",
+        "tests/test_desktop_clean_plate.py",
+        "docs/clean-plate-guidance.md",
+        "benchmark-results/ext03-connected-final/source-verification.json",
+        "docs/clean-plate-review.md"
       ],
-      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+      "next_action": "Extend one-frame sequence workflow only with justified real acceptance; video/moving plate/occlusion/pretrained quality acceptance NOT VERIFIED. Continue EXT04 native click workflow locally."
     },
     {
       "id": "EXT-04",
@@ -87,9 +96,14 @@
       "acceptance": "Optional provider and positive/negative iterative clicks, cancellable coarse-mask preview, saved provenance/correction conversion and optional tracked range.",
       "evidence": [
         "docs/product-improvements.md",
-        "docs/subject-guidance-provider.md"
+        "docs/subject-guidance-provider.md",
+        "corridorkey/subject_guidance.py",
+        "tests/test_subject_guidance.py",
+        "corridorkey/guidance_provenance.py",
+        "benchmark-results/ext03-connected-final/source-verification.json",
+        "docs/clean-plate-review.md"
       ],
-      "next_action": "Implement one optional local SAM2image provider with immutable click/provenance contracts; reuse correction import and clean GPUowner handoff, no automatic downloads or multiple bundledmodels."
+      "next_action": "Connect explicit local CPU provider configuration, native source clicks, preview/accept and lifecycle to existing correction owner; actual SAM2 dependencies/checkpoint/model/hardware unavailable, no download/install."
     },
     {
       "id": "EXT-06",

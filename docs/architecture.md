@@ -1,7 +1,7 @@
 # Shared engine
 
-Current review scope and acceptance are recorded in [review-objective.md](review-objective.md)
-and [checkpoint.md](checkpoint.md). The chronological implementation notes below
+Current extension scope and acceptance are recorded in [product-improvements-brief.md](product-improvements-brief.md)
+and [checkpoint.md](checkpoint.md); [review-objective.md](review-objective.md) records the earlier review. The chronological implementation notes below
 retain their original verification limits.
 
 Milestone28 adds a companion completed-cache workflow: pure `ofx_record.cache_spec` admission is shared by the desktop and sealer; `CachePreparation` owns immutable bounded record bytes, background path/native I/O, coalesced progress, cancellation and one terminal result. `desktop_ofx.OfxCachePanel` consumes that result through the existing main poll and close ownership. No Qt objects enter the worker, no model loads during UI import, no new inference implementation is introduced. Publication remains authoritative after commit even if owned-stage unlink fails. Exact channel admission is opt-in for the existing reader and required for cache sealing. The version1 native cache/host contract is unchanged; source-content/time/colour binding remains unfinished.
@@ -194,3 +194,16 @@ and derived dependencies, and runtime admission checks decode/cut bindings.
 [Tracking contracts](tracked-corrections.md). SequenceIndex is a bounded frozen
 path/stat manifest consumed by the existing preview decoder; source preparation
 shares its single queue and lifecycle, without a second decoding owner.
+
+
+Clean-plate assistance runs on the existing correction service owner. The pure
+linear-RGB kernel produces conservative trimap guidance; explicit Inspect/Accept
+uses the existing atomic raster import/history path. Schema4 origins bind local
+references, decoded observations and generation settings while the shared runtime
+continues to apply ordinary corrections. Source decode contracts are checked at
+session preflight and effective runtime boundaries. Generated guidance does not
+add a neural channel. The bounded image-admission helper captures immutable
+encoded bytes after header geometry checks; `video_io` accepts those bytes through
+the same channel/precision/association/color math as its existing path decoder.
+See [clean-plate guidance](clean-plate-guidance.md). Optional segmentation has a
+headless single-owner provider foundation only; no model is loaded at UI import.

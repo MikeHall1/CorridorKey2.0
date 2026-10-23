@@ -63,6 +63,8 @@ class EditorService:
                 try:
                     self.check()
                     view = None
+                    if action == 'plate_view':
+                        overlay_kind = 'trimap' if payload.get('mode', 'guidance') == 'guidance' else 'coverage'
                     if action == 'view':
                         view = model.view(**payload)
                     elif action == 'brush':
@@ -95,18 +97,31 @@ class EditorService:
                         model.discard_tracking()
                     elif action == 'track_clear':
                         model.clear_tracking()
+                    elif action == 'plate_preview':
+                        model.prepare_plate(**payload)
+                    elif action == 'plate_view':
+                        view = model.plate_view(**payload)
+                    elif action == 'plate_accept':
+                        model.accept_plate()
+                    elif action == 'plate_discard':
+                        model.discard_plate()
+                    elif action == 'detach_guidance':
+                        model.detach_guidance(**payload)
                     elif action == 'save':
                         model.save()
                     else:
                         raise ValueError('Unsupported correction editor action.')
                     snapshot = model.snapshot()
                     overlay_kind = 'coverage'
+                    if action == 'plate_view':
+                        overlay_kind = 'trimap' if payload.get('mode', 'guidance') == 'guidance' else 'coverage'
                     if action == 'view':
                         selected = next((e for e in snapshot['document']['entries'] if e['id'] == payload.get('identifier')), None)
                         if selected is not None and selected['kind'] == 'trimap':
                             overlay_kind = 'trimap'
                     self._publish({'kind': 'result', 'serial': serial, 'action': action,
-                                   'snapshot': snapshot, 'view': view, 'overlay_kind': overlay_kind})
+                                   'snapshot': snapshot, 'view': view, 'overlay_kind': overlay_kind,
+                                   'plate_reference': model.plate_reference()})
                 except Exception as exc:
                     logging.getLogger(__name__).exception('Correction editor operation failed')
                     failure: dict[str, Any] = {'kind': 'error', 'serial': serial, 'action': action,
@@ -126,6 +141,7 @@ class EditorService:
             if model is not None:
                 try:
                     model.discard_tracking()
+                    model.discard_plate()
                 except OSError:
                     logging.getLogger(__name__).exception('Could not remove private tracking preview')
             self.done.set()

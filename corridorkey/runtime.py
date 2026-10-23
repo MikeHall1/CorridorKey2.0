@@ -1114,6 +1114,7 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
         from .correction_tracking_context import tracking_cuts, tracking_decode
         correction_document.validate_track_context(
             cuts=tracking_cuts(cfg), decode=tracking_decode(cfg, input_path))
+        correction_document.validate_guidance_context(decode=tracking_decode(cfg, input_path))
         for track in correction_document.to_dict().get('tracks', []):
             if any(track['range'][0] < cut < track['range'][1] for cut in effective_cuts):
                 raise ValueError('Tracked correction crosses an effective cut; regenerate with another anchor/range.')

@@ -209,6 +209,7 @@ class InferenceSession:
                 diagnostics.correction_document.validate_track_context(
                     cuts=tracking_cuts(config), decode=tracking_decode(config, job.input_path))
                 from .correction_reporting import correction_report
+                diagnostics.correction_document.validate_guidance_context(decode=tracking_decode(config, job.input_path))
                 diagnostics.corrections = correction_report(diagnostics.correction_document, config.corrections_path)
                 diagnostics.control.checkpoint("correction_preflight", 1, 1)
             from .output_paths import validate_output_paths

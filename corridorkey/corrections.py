@@ -10,12 +10,25 @@ import struct
 
 from .diagnostics import finite_json_float, write_json_atomic
 from .identities import file_sha256, source_identity
+from . import guidance_provenance
 
 MAX_CORRECTION_BYTES = 4 * 1024 * 1024
 MAX_TRACK_FRAMES = 300
 MAX_TRACK_ANCHORS = 32
 MAX_TRACK_PIXELS = 4 * 1024 * 1024
 MAX_TRACK_BYTES = 512 * 1024 * 1024
+
+
+def guidance_binding(document_data, entry_id, *, kind, resources, parameters, decode, observation):
+    """Path-free generation binding; see guidance_provenance for its contract."""
+    return guidance_provenance.guidance_binding(document_data, entry_id, kind=kind, resources=resources,
+                                               parameters=parameters, decode=decode, observation=observation)
+
+
+def attach_guidance(document, entry_id, *, guidance_id, kind, resources, parameters, decode, observation):
+    """Attach provenance in one detached schema4 document revision."""
+    return guidance_provenance.attach_guidance(document, entry_id, guidance_id=guidance_id, kind=kind,
+                                              resources=resources, parameters=parameters, decode=decode, observation=observation)
 
 
 def _assets(data):
@@ -25,6 +38,9 @@ def _assets(data):
     for track in data.get('tracks', []):
         for row in track['frames']:
             yield row['asset']
+    for origin in data.get('guidance', []):
+        for resource in origin['resources']:
+            yield resource['asset']
 
 
 def _decode_contract(decode):
@@ -332,11 +348,13 @@ class CorrectionDocument:
     @classmethod
     def parse(cls, data, base_dir: str | Path = "."):
         keys = {"schema_version", "revision", "source", "shots", "entries"}
-        if isinstance(data, dict) and data.get('schema_version') == 3:
+        if isinstance(data, dict) and data.get('schema_version') in (3, 4):
             keys.add('tracks')
+        if isinstance(data, dict) and data.get('schema_version') == 4:
+            keys.add('guidance')
         if not isinstance(data, dict) or set(data) != keys:
             raise ValueError("corrections require schema_version, revision, source, shots and entries only")
-        if type(data["schema_version"]) is not int or data["schema_version"] not in (1, 2, 3):
+        if type(data["schema_version"]) is not int or data["schema_version"] not in (1, 2, 3, 4):
             raise ValueError("unsupported correction schema version")
         _integer(data["revision"], "revision")
         source = data["source"]
@@ -364,6 +382,8 @@ class CorrectionDocument:
         for entry in data["entries"]:
             common = {"id", "revision", "frame", "kind"}
             reset = isinstance(entry, dict) and entry.get("kind") == "reset"
+            if data['schema_version'] == 4 and isinstance(entry, dict) and 'guidance_id' in entry and not reset:
+                common.add('guidance_id')
             if not isinstance(entry, dict) or set(entry) != (common if reset else common | {"asset", "strength", "direction", "range"}):
                 raise ValueError("unknown or missing correction fields")
             if not isinstance(entry["id"], str) or not entry["id"] or entry["id"] in seen:
@@ -393,8 +413,12 @@ class CorrectionDocument:
                     or (entry["direction"] == "forward" and span[0] != entry["frame"])
                     or (entry["direction"] == "backward" and span[1] != entry["frame"] + 1)):
                 raise ValueError("correction direction and range disagree")
-        if data['schema_version'] == 3:
+        if data['schema_version'] >= 3:
             _parse_tracks(data)
+        if data['schema_version'] == 4:
+            from .guidance_provenance import parse_guidance
+
+            parse_guidance(data)
         payload = canonical(data)
         if len(payload.encode()) > MAX_CORRECTION_BYTES:
             raise ValueError('correction document exceeds the 4MiB limit')
@@ -423,6 +447,12 @@ class CorrectionDocument:
             if track['binding']['cuts'] != cuts or track['binding']['decode'] != decode:
                 raise ValueError('tracked correction context changed; re-track or explicitly remove tracks')
 
+    def validate_guidance_context(self, *, decode):
+        """Accepted generated rasters require the original live source decoder."""
+        for origin in self.to_dict().get('guidance', []):
+            if origin['decode']['source'] != decode:
+                raise ValueError('guidance source decode changed; regenerate or explicitly detach guidance')
+
     @property
     def frames(self):
         return tuple(sorted({entry["frame"] for entry in self.to_dict()["entries"]
@@ -450,9 +480,12 @@ class CorrectionDocument:
                     raise ValueError('document tracked encoded bytes exceed 512 MiB')
 
     def verify_assets(self, *, check=None):
+        from .guidance_provenance import verify_guidance_resources
+
         data = self.to_dict()
         shape = (data['source']['height'], data['source']['width'])
         self.admit_track_assets(check=check)
+        verify_guidance_resources(data, self.base_dir, check=check)
         for entry in data["entries"]:
             if entry["kind"] == "trimap":
                 from .trimap_refinement import load_trimap_asset
@@ -508,6 +541,12 @@ def invalidated_ranges(before, after):
     first = {e["id"]: e for e in old["entries"]}
     second = {e["id"]: e for e in new["entries"]}
     changed = {key for key in first.keys() | second.keys() if first.get(key) != second.get(key)}
+    old_guidance = {origin['id']: origin for origin in old.get('guidance', [])}
+    new_guidance = {origin['id']: origin for origin in new.get('guidance', [])}
+    changed_guidance = {key for key in old_guidance.keys() | new_guidance.keys()
+                        if old_guidance.get(key) != new_guidance.get(key)}
+    changed.update(table[key]['entry_id'] for table in (old_guidance, new_guidance)
+                   for key in changed_guidance if key in table)
     old_tracks = {track['id']: track for track in old.get('tracks', [])}
     new_tracks = {track['id']: track for track in new.get('tracks', [])}
     changed_tracks = {key for key in old_tracks.keys() | new_tracks.keys() if old_tracks.get(key) != new_tracks.get(key)}

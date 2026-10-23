@@ -31,7 +31,10 @@ MAX_CLEANUP_PENDING = 8
 def _cleanup(editor, directory):
     pending = getattr(editor, 'tracking_cleanup_pending', [])
     try:
-        shutil.rmtree(directory)
+        if directory.is_dir():
+            shutil.rmtree(directory)
+        else:
+            directory.unlink()
     except FileNotFoundError:
         pending = [path for path in pending if path != directory]
     except OSError as exc:
@@ -110,8 +113,11 @@ def prepare_tracking(editor, *, anchor_ids, span, direction, unreliable_policy='
     for entry in entries:
         # Reuse coverage admission/precision without mixing existing track output.
         isolated = {**entry, 'kind': 'matte', 'strength': 1., 'direction': 'both'}
+        isolated.pop('guidance_id', None)
         isolated_data = {**data, 'entries': [isolated]}
-        if isolated_data['schema_version'] == 3:
+        if isolated_data['schema_version'] == 4:
+            isolated_data['guidance'] = []
+        if isolated_data['schema_version'] >= 3:
             isolated_data['tracks'] = []
         rasters = CorrectionRasters(CorrectionDocument.parse(isolated_data, editor.document.base_dir), editor.meta, check=editor.check)
         try:
@@ -166,7 +172,7 @@ def prepare_tracking(editor, *, anchor_ids, span, direction, unreliable_policy='
                  'frames': sorted(rows, key=lambda row: row['frame']),
                  'observations': sorted(summaries, key=lambda row: row['frame'])}
         if complete:
-            candidate_data = {**data, 'schema_version': 3, 'tracks': [*data.get('tracks', []), track]}
+            candidate_data = {**data, 'schema_version': max(3, data['schema_version']), 'tracks': [*data.get('tracks', []), track]}
             CorrectionDocument.parse(candidate_data, editor.document.base_dir)
         old = getattr(editor, 'tracking_preview', None)
         editor.tracking_preview = {'directory': directory, 'document_identity': editor.document.identity,
@@ -189,7 +195,7 @@ def accept_tracking(editor):
     if _source_hash(scan_sequence(editor.job.input_path, check=editor.check), editor.check) != editor.binding['sha256']:
         raise ValueError('Source changed after tracking; preview cannot be accepted.')
     data = editor.document.to_dict()
-    data.update(schema_version=3, tracks=[*data.get('tracks', []), preview['track']])
+    data.update(schema_version=max(3, data['schema_version']), tracks=[*data.get('tracks', []), preview['track']])
     candidate = CorrectionDocument.parse(data, editor.document.base_dir)
     candidate.verify_assets(check=editor.check)
     editor._apply(data, preserve_tracks=True)

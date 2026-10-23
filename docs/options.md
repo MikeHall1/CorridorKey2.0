@@ -265,3 +265,14 @@ cuts/resets are unavailable. Limits, compatibility and validation:
 [tracked corrections](tracked-corrections.md). Source-only sequence Play prepares
 a bounded index off-thread; Refresh source index reinspects membership explicitly.
 Declared sequence FPS remains separate from observed video timestamps.
+
+
+Correction editor **Clean plate** is collapsed by default. Explicit reference
+colour, source/reference index, background sample mask or whole-frame assumption,
+alignment/translation, exposure and BG/FG thresholds affect Preview. Guidance
+inspection is required before Accept; diagnostic views remain read-only. **New
+mask** reloads source pixels before painting after plate inspection or frame
+changes. Schema4 adds generation provenance without changing existing schema1–3
+behavior, inference flags or quality defaults. Bounds, detach semantics, formats
+and validation: [clean-plate guidance](clean-plate-guidance.md). The optional SAM2
+provider foundation is headless; there are no nonfunctional model controls.

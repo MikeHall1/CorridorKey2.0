@@ -5965,6 +5965,250 @@
         "benchmark-results/ext02-tracking-ext05-final/source-verification.json"
       ],
       "resolution": "Final frozen1137CPU tests in each of3headless benchmark repetitions/no skips;355file fullstatic0new vs baseline+actual prior checkpoint; independent review accepted focused fixes. Raw initial failures retained in evidence."
+    },
+    {
+      "id": "HEALTH-PLATE-282",
+      "component": "Cleanplate headless analysis admission",
+      "classification": "pre-acceptance self-review finding",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Filtered valid coverage and eroded all-unknown output could be marked usable.",
+      "root_cause": "Usability admission checked alignment coverage before later filtering and did not require retained class seeds.",
+      "evidence": [
+        "Cleanplate author self-review before integration; deterministic synthetic regressions added."
+      ],
+      "proposed_action": "Refuse unusable filtered/no-seed candidates and finite-unsafe intermediate analysis; preserve original HDR/source pixels.",
+      "acceptance": "Unusable cannot exportguidance; JSONsafe diagnostics; native signed inputs preserved.",
+      "owner": "root; readiness_ui",
+      "verification": [
+        "Author14synthetic testsPASS0.071s -Werror/RuffPyright0; mainindependent14PASS0.038s -Werror; stablekernel67dc9b0ac762ad94691f4837b4c96b9fa7f26a81193fb00607ff47b363257fe6.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ],
+      "resolution": "Headless kernel finding fixed; connected workflow and fullbatch acceptance pending."
+    },
+    {
+      "id": "HEALTH-PLATE-283",
+      "component": "Cleanplate headless analysis admission",
+      "classification": "pre-acceptance self-review finding",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Extreme finite HDR norm/texture/exposure intermediates could overflow and produce misleading finite error or non-JSON-safe diagnostics.",
+      "root_cause": "Intermediate operations needed finite checks before ratio/texture diagnostics, beyond input finite admission.",
+      "evidence": [
+        "Cleanplate author self-review before integration; deterministic synthetic regressions added."
+      ],
+      "proposed_action": "Refuse unusable filtered/no-seed candidates and finite-unsafe intermediate analysis; preserve original HDR/source pixels.",
+      "acceptance": "Unusable cannot exportguidance; JSONsafe diagnostics; native signed inputs preserved.",
+      "owner": "root; readiness_ui",
+      "verification": [
+        "Author14synthetic testsPASS0.071s -Werror/RuffPyright0; mainindependent14PASS0.038s -Werror; stablekernel67dc9b0ac762ad94691f4837b4c96b9fa7f26a81193fb00607ff47b363257fe6.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ],
+      "resolution": "Headless kernel finding fixed; connected workflow and fullbatch acceptance pending."
+    },
+    {
+      "id": "HEALTH-PLATE-284",
+      "component": "Guidance staging cleanup disposition",
+      "classification": "confirmed main pre-acceptance transaction review",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Initial accept_plate finally unlinks staging file after _import_raster may already commit and attempt directory cleanup; cleanuperror could mask committed success or primary importfailure.",
+      "root_cause": "Postcommit staging deletion used raising finally without separate owned cleanup disposition.",
+      "evidence": [
+        "Main source branch review before integration tests, same ownership contract as resolved tracking271/272."
+      ],
+      "proposed_action": "Preserve primary/committed outcome; retain bounded cleanup warning and block further staging for this preview if private file cannot be removed.",
+      "acceptance": "Injected cleanupfailure cannot falsely undo/report committed edit; failedimport preserves error/history and doesnotgrow staging withoutbounds.",
+      "owner": "root",
+      "verification": [
+        "Focused native editor/admission24tests PASS1.101s; independent19tests PASS0.129s with original289\u2013292 reproductions; actualQt20tests PASS3.878s; final complete frozen gate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
+    },
+    {
+      "id": "HEALTH-PROVIDER-285",
+      "component": "Optional local SAM2 adapter admission",
+      "classification": "confirmed independent pre-acceptance fixture reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Optional float32 provider executes with inherited CUDA TF32/relaxed matmul while labelling requested precision float32.",
+      "root_cause": "Autocastdisabled doesnot enforce float32 matmul precision; inherited flags only reported.",
+      "evidence": [
+        "Independent injectedofficial-interface fixture observed allow_tf32True/cudnnTrue/matmulhigh insidepredict; no actualSAM2/GPU."
+      ],
+      "proposed_action": "Refuse CUDA float32 before model use unless strict matmul/TF32 policy holds; do not mutate globalengine flags or silently fallback.",
+      "acceptance": "Deterministic repro refused before model/native operation, no global precision mutation/download/fallback; requested/effective provenance truthful.",
+      "owner": "root; feature_audit; readiness_review",
+      "verification": [
+        "Author17fixturesPASS0.096s/static0; independent17PASS0.111s/static0, frozenb01536fda9d698e5dc3154f11cdfa58752bdcb3153f794ba6b37d2d82c534d90.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ],
+      "resolution": "Independent exact repro accepted; no actual SAM2/GPU acceptance; fullbatch gate pending."
+    },
+    {
+      "id": "HEALTH-PROVIDER-286",
+      "component": "Optional local SAM2 adapter admission",
+      "classification": "confirmed independent pre-acceptance fixture reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Optional provider local config can grow beyond admitted byte bound during dependency imports and still hash/build/predict.",
+      "root_cause": "Initially admitted identity discarded and new postimport identity accepted without re-admitting bounds.",
+      "evidence": [
+        "Independent fixture grows1byteYAML to4,194,305B duringtorchimport and modelbuilder succeeds; analogouscheckpoint2GiB gap."
+      ],
+      "proposed_action": "Pin admitted file identity through imports/read/hash/load and recheck regular/noalias/size using bounded opens and postload fences.",
+      "acceptance": "Deterministic repro refused before model/native operation, no global precision mutation/download/fallback; requested/effective provenance truthful.",
+      "owner": "root; feature_audit; readiness_review",
+      "verification": [
+        "Author17fixturesPASS0.096s/static0; independent17PASS0.111s/static0, frozenb01536fda9d698e5dc3154f11cdfa58752bdcb3153f794ba6b37d2d82c534d90.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ],
+      "resolution": "Independent exact repro accepted; no actual SAM2/GPU acceptance; fullbatch gate pending."
+    },
+    {
+      "id": "HEALTH-PLATE-287",
+      "component": "Cleanplate editor integration first verification",
+      "classification": "pre-acceptance confirmed integration/static finding",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Cleanplate origin settings contain tuple translation_xy and strict primitive validator refuses acceptance; readonly candidate screenfield passed to Torch-backed display helper warns.",
+      "root_cause": "Adapter persisted raw dataclass asdict tuples instead of JSON boundary primitives and omitted owned display copy.",
+      "evidence": [
+        "benchmark-results/ext03-editor-first.txt:5cases/1failure3errors; initialfocusedstatic34Ruff/21Pyrightdiagnostics dominatedsyntax cascade."
+      ],
+      "proposed_action": "Normalize captured request through canonical JSON; copy readonly display input before shared transfer conversion, no suppression or changedpixelmath.",
+      "acceptance": "Origin acceptance/render/source preservation and editor service/Qt tests pass; no readonlytensor warning; focusedstatic0.",
+      "owner": "root",
+      "verification": [
+        "Focused native editor/admission24tests PASS1.101s; independent19tests PASS0.129s with original289\u2013292 reproductions; actualQt20tests PASS3.878s; final complete frozen gate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
+    },
+    {
+      "id": "HEALTH-PLATE-288",
+      "component": "Cleanplate editor integration first verification",
+      "classification": "pre-acceptance confirmed integration/static finding",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Initial editor service wiring has misindented discard_plate from broad text replacement; newhelper Literal arguments and fixture optional/nested-context style diagnostics.",
+      "root_cause": "Mechanical edit inserted cleanup at wrong action boundary; newfunction/typefixture declarations incomplete.",
+      "evidence": [
+        "benchmark-results/ext03-editor-first.txt:5cases/1failure3errors; initialfocusedstatic34Ruff/21Pyrightdiagnostics dominatedsyntax cascade."
+      ],
+      "proposed_action": "Correct exact servicebranch indentation, use validated Literal annotations and explicit fixture narrowing/contexts; preserve all assertions/checkers.",
+      "acceptance": "Origin acceptance/render/source preservation and editor service/Qt tests pass; no readonlytensor warning; focusedstatic0.",
+      "owner": "root",
+      "verification": [
+        "Focused native editor/admission24tests PASS1.101s; independent19tests PASS0.129s with original289\u2013292 reproductions; actualQt20tests PASS3.878s; final complete frozen gate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
+    },
+    {
+      "id": "HEALTH-PLATE-289",
+      "component": "Cleanplate editor independent integration review",
+      "classification": "confirmed independent pre-acceptance fixture reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Three failed checkpoint acceptance retries leave revision0 and3unreferenced copied workspace/assets masks.",
+      "root_cause": "Existing _import_raster writes fresh private target before checkpoint/history and retains it on failure.",
+      "evidence": [
+        "Independent actualCorrectionEditor nativePNG source/plate fixtures;5existingtestsPASS0.503s but targeted fault/bound/alias reproductions expose gaps."
+      ],
+      "proposed_action": "Delete only newly created uncommitted target; preserve primary error and bounded retry ownership if cleanup fails.",
+      "acceptance": "Focused actual failure/mutation/admission regressions pass before coherent fullgate; no originalfiles/histories/checkers changed for green.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "Focused native editor/admission24tests PASS1.101s; independent19tests PASS0.129s with original289\u2013292 reproductions; actualQt20tests PASS3.878s; final complete frozen gate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
+    },
+    {
+      "id": "HEALTH-PLATE-290",
+      "component": "Cleanplate editor independent integration review",
+      "classification": "confirmed independent pre-acceptance fixture reproduction",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Origin generation binding includes sample_mask_path absolute pathname despite hash/ID resource binding.",
+      "root_cause": "Adapter copies display/request-only path into persisted generation settings.",
+      "evidence": [
+        "Independent actualCorrectionEditor nativePNG source/plate fixtures;5existingtestsPASS0.503s but targeted fault/bound/alias reproductions expose gaps."
+      ],
+      "proposed_action": "Exclude pathname from persisted parameters; keep selectedresource ID/contenthash and display-only snapshot locator.",
+      "acceptance": "Focused actual failure/mutation/admission regressions pass before coherent fullgate; no originalfiles/histories/checkers changed for green.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "Focused native editor/admission24tests PASS1.101s; independent19tests PASS0.129s with original289\u2013292 reproductions; actualQt20tests PASS3.878s; final complete frozen gate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
+    },
+    {
+      "id": "HEALTH-PLATE-291",
+      "component": "Cleanplate editor independent integration review",
+      "classification": "confirmed independent pre-acceptance fixture reproduction",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Mutating returned plate_reference pixels changes later reference preview to black.",
+      "root_cause": "Published PreviewFrame shares retained mutable NumPy pixels with editor-owned thumbnail.",
+      "evidence": [
+        "Independent actualCorrectionEditor nativePNG source/plate fixtures;5existingtestsPASS0.503s but targeted fault/bound/alias reproductions expose gaps."
+      ],
+      "proposed_action": "Transfer a detached or immutable bounded reference snapshot; no cross-owner mutation.",
+      "acceptance": "Focused actual failure/mutation/admission regressions pass before coherent fullgate; no originalfiles/histories/checkers changed for green.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "Focused native editor/admission24tests PASS1.101s; independent19tests PASS0.129s with original289\u2013292 reproductions; actualQt20tests PASS3.878s; final complete frozen gate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
+    },
+    {
+      "id": "HEALTH-PLATE-292",
+      "component": "Cleanplate editor independent integration review",
+      "classification": "confirmed independent pre-acceptance fixture reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Valid24x32 referencePNG padded sparsely to64MiB+1 prepares usable beforeacceptance rejects; unknown reference geometry native-decodes before admission.",
+      "root_cause": "Resource admission occurs after hash/native decode; source geometry cannot bound separately selected reference.",
+      "evidence": [
+        "Independent actualCorrectionEditor nativePNG source/plate fixtures;5existingtestsPASS0.503s but targeted fault/bound/alias reproductions expose gaps."
+      ],
+      "proposed_action": "Admit bounded regular encoded payloads and native header geometry before decode; use exact captured payload with shared decoder toclose replacement race. Bound source/reference/sample admission, preserve shared image math.",
+      "acceptance": "Focused actual failure/mutation/admission regressions pass before coherent fullgate; no originalfiles/histories/checkers changed for green.",
+      "owner": "root; readiness_review",
+      "verification": [
+        "Focused native editor/admission24tests PASS1.101s; independent19tests PASS0.129s with original289\u2013292 reproductions; actualQt20tests PASS3.878s; final complete frozen gate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
+    },
+    {
+      "id": "HEALTH-PLATE-293",
+      "component": "Cleanplate Qt authored-pixel ownership",
+      "classification": "confirmed independent actualQt reproduction",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "New mask enabled painting over reference/diagnostic pixels; changed frame controls could also disagree with displayed source.",
+      "root_cause": "Authored role changed locally without source delivery after plate inspection.",
+      "proposed_action": "Queue source view with no selected overlay; retain readonly until delivery.",
+      "acceptance": "All four plate roles and changed-frame tracking case restore correct source before painting.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "benchmark-results/ext03-ui-source-restore.txt retained initial fixture/API and asynchronous expectation failures."
+      ],
+      "verification": [
+        "20actualQt tests PASS3.878s; independent11plate/tracking PASS1.706s; final fullgate pending.",
+        "Final frozen1208CPU PASS77.307s/no skips;367file fullgate0new vs baseline and actual0f894ec. Source mapping 9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae."
+      ]
     }
   ]
 }

@@ -1,57 +1,48 @@
-# Current checkpoint — sequence tracking and source playback, 2026-10-23
+# Current checkpoint — clean-plate guidance, 2026-10-23
 
-Fourth connected increment locally accepted; all ten workflows and full product
+Fifth connected increment locally accepted; all ten workflows and full product
 acceptance remain incomplete. Authority: [extension brief](product-improvements-brief.md).
 
-[Tracked corrections](tracked-corrections.md) now connect artist anchors and
-forward/backward/both native motion to background Preview, read-only Inspect,
-explicit Accept and history. Schema3 keeps authored assets and stores separate
-float32 EXR final constraints, ordered once with source/anchor/decode/boundary
-provenance and heuristic diagnostics. Undo/save/reopen/invalidation, cancellation,
-failed publication, derived dependency guards and bounded cleanup are tested.
+The correction editor now has explicit native sequence plate Preview/Inspect/Accept,
+reference colour/mapping, background samples, translation/exposure settings and
+spatial screen-field/residual views. Accepted native trimaps have schema4 local
+reference and decoded observation provenance, reversible history and protected
+assets. Source/reference bounds precede native decode through captured immutable
+bytes; shared decoding math and inference defaults are preserved.
 
-Source-only sequence Play prepares a bounded frozen natural-order path/stat
-index on the existing decoder, independent of renders/models/queue. Reads use
-exact paths without per-frame directory scans. Explicit refresh, source offsets,
-loops, pause/resume, stale preparation and nonneutral EXR colour are tested.
-Video/VFR, photo backgrounds and persistent export readers/cache remain pending.
+Optional SAM2 has a lazy headless provider/session foundation with bounded input,
+resource lease, generation fencing and explicit precision. No provider was
+installed/downloaded/executed and no nonfunctional provider controls are exposed.
+Click UI and actual optional-model acceptance remain pending.
 
-Independent reviews accepted kernel, schema, editor/UI/runtime and playback.
-Findings267–281 include typed fixtures, anchor/cleanup ownership, read-only canvas,
-persisted observation and snapshot aliasing, source metadata union narrowing,
-confirmed-root-exit sampling, report-envelope overflow and failed-operation cleanup
-visibility. Root-exit RSS remains unavailable; PIDreuse/denial/unknown discovery
-and final descendant/group verification remain failclosed. Near-limit schema1/3
-manifests now fit terminal records through bounded summaries referencing full local
-provenance. No baseline/checker/environment/venv changes or model/media downloads.
+Independent reviews accepted kernel, schema, editor, UI, provider and shared CPU
+runtime tests. Findings282–293 are resolved, including finite/filtered analysis,
+cleanup/publication ownership, mutation/precision fences, detached snapshots,
+path-free bindings and pre-decode admission. New mask now restores actual source
+before painting after reference/diagnostic inspection or frame-control changes.
+Main distinct review: [clean-plate-review.md](clean-plate-review.md). Initial failed
+focused evidence is retained; no checker/baseline/env/venv changes.
 
-Final headless benchmark **3×1137CPU tests PASS/no skips**:
-77.876/75.657/75.751s unittest durations; median full CLI process76.496377s.
-These are CPU test orchestration timings, not inference performance. The initial
-sandbox run failed15localhost permission cases per repetition and spanned test
-additions; it is not an accepted frozen baseline. The first fullgate exposed the
-root-exit race and5new type findings; raw failures remain recorded. Final rerun
-uses unchanged benchmark defaults and the required local-fixture execution context.
+Final **1208CPU tests PASS77.307s/no skips**. Full367Python-file compilation,
+imports, dependencies, static regression and whitespace checks PASS. Zero new
+diagnostics against baseline AND actual preceding checkpoint; existing519Ruff/
+684Pyright errors17warnings remain. Static005/nativeQt126 stay open.
+Exact frozen Python mapping: `9a79f09b77ebfc1509e49ece3456599036aa4278afbe3c16414e3195ed2155ae`.
+Evidence: `benchmark-results/ext03-connected-final/`. Prior unchanged-driver
+headless benchmark3×1137CPU repetitions is reused for its applicable scope; no
+redundant repetitions or new inference-performance claim. Actual toy-runtime
+pairs cover full/Quick×bothmemorypaths with unchanged neural channels/evaluations
+and expected final-only alpha. These are correctness fixtures, not real quality.
 
-355Python-file compile/import/dependency/static/whitespace checks PASS,0new vs
-baseline and actual prior checkpoint. Existing519Ruff/684Pyright errors17warnings
-remain; static005/nativeQt126 remain open. Exact reviewed frozen source identity:
-`bfab1efbd403904f270f05adcfcaa46cd1a0885b031cd9827ae1380994d9d4a4`.
-Raw source/full verification: `benchmark-results/ext02-tracking-ext05-final/`.
-The three benchmark full suites cover the unchanged final source, so no redundant
-fourth complete suite was run. Main distinct self-review covers both briefs,
-ownership, serialization, compatibility, source/time/colour and quality contracts.
+Actual pretrained CUDA, representative moving plates/hair/occlusion/quality footage,
+optional model execution, native Windows and Resolve SDK/viewer/export remain
+NOT VERIFIED. No full acceptance, speedup or production quality benefit claimed.
 
-Actual pretrained CUDA, representative motion/occlusion/quality footage, optional
-segmentation model, native Windows and Resolve SDK/viewer/export remain
-NOT VERIFIED. No full acceptance or speed/quality improvement is claimed.
+Prior0f894eccc7f8a8ca0f8c9b9a5d0c7c202d13063c was normally pushed and confirmed
+to MikeHall1/CorridorKey2.0 branch review/corridorkey-audit-20261023. This
+checkpoint publication follows in ignored local receipt
+`benchmark-results/ext03-connected-publication.json`.
 
-Prior ae381bb9668e266fa2bf8078ad9ddca8f48af0ed normally pushed and confirmed to
-MikeHall1/CorridorKey2.0 branch review/corridorkey-audit-20261023. This checkpoint's
-exact publication identity follows in local ignored receipt
-`benchmark-results/ext02-tracking-ext05-publication.json`.
-
-Next: optional clean-plate assistance and strict generated-guidance reference
-provenance/invalidation; continue other incomplete features. Next-batch work stayed
-outside the repository during verification. Five cycles remains a checkpoint
-interval; no competing supervisor was launched.
+Next: connected optional subject clicks with explicit owner/resource handoff,
+then remaining progressive previews/overlays/calibration/portability and host work.
+Five cycles remains a checkpoint interval; no competing supervisor was launched.

@@ -1,8 +1,8 @@
 # Optional click guidance: provider investigation
 
-EXT-04 remains unimplemented. No provider/model was installed, downloaded or
-executed. This is an official-source investigation, not latency/VRAM/quality or
-platform acceptance.
+EXT-04 now has a headless optional-provider foundation, not a connected click UI.
+No provider/model was installed, downloaded or executed. Official-source research
+and deterministic provider fixtures are not latency/VRAM/quality or platform acceptance.
 
 Recommend one optional **SAM2.1 image provider**, initially with a deliberately
 selected local tiny checkpoint/configuration. Its image API directly accepts
@@ -63,3 +63,25 @@ but post-processing differs and must be explicit. CPU tests must inject a fixtur
 provider labelled **provider-interface test; no SAM2 inference executed**. They
 must cover click ordering/clear/refine, coordinate mapping, cancellation/ownership,
 stale results, unavailable dependencies, embedding bounds and save/import/undo.
+
+
+The stdlib-only `subject_guidance` interface owns one immutable source-frame
+snapshot, embedding/result/logit payloads and generation. It rejects concurrent
+work, fences stale results and defers provider reset until native work retires.
+Explicit byte/pixel bounds and a resource lease apply to operations. Cleanup
+uncertainty prevents reuse. The lazy local SAM2 adapter uses only deliberately
+selected config/checkpoint files; it never installs or downloads dependencies.
+Files are pinned and bounded before optional imports and rechecked around loading.
+Config is limited to4MiB and checkpoint to2GiB. A pre-existing global Hydra
+context refuses rather than changing another owner's configuration. Float32 is
+the default; inherited CUDA TF32/non-highest matmul precision refuses without
+changing global settings. BF16 must be selected explicitly.
+
+Seventeen deterministic tests cover source/generation changes, positive/negative
+clicks and iterative logits, cancellation, lease/reset ownership, file mutation
+and precision drift. They do not execute SAM2. No provider controls are exposed
+until the connected owner can establish the resource handoff; an idle inference
+worker may still retain its GPU model. Accepted schema4 masks are ordinary
+corrections and do not need provider weights to render. Click UI, native-coordinate
+inspection/acceptance, integration with tracking and actual optional-model runtime
+acceptance remain pending.
