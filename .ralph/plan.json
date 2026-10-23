@@ -49,9 +49,16 @@
         "tests/test_desktop_photo_background.py",
         "docs/photo-backgrounds.md",
         "docs/photo-backgrounds-review.md",
-        "benchmark-results/ext05-photo-connected-final/source-verification.json"
+        "benchmark-results/ext05-photo-connected-final/source-verification.json",
+        "corridorkey/preview_exports.py",
+        "tests/test_preview_exports.py",
+        "tests/test_export_playback_pipeline.py",
+        "tests/test_desktop_export_playback.py",
+        "docs/export-playback-indexes.md",
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
       ],
-      "next_action": "Initial session-only RGB photo composite workflow locally verified; nativeexact geometry/profile/work limits explicit and native4Kphoto unsupported. Continue bounded reusable foreground/alpha export sequence indexes; video/VFR/native-target/display quality acceptance remains pending."
+      "next_action": "Bounded playback-only source/foreground/alpha indexes locally verified with explicit Refresh and native4K decoder compatibility. Video/VFR, persistent codec readers and actual native/display/performance acceptance remain pending."
     },
     {
       "id": "EXT-02",
@@ -937,7 +944,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Implement bounded reusable foreground/alpha sequence indexes for export playback on the existing loader, preserving source-offset A/B, native geometry/colour and explicit refresh/stale ownership; continue remaining feature contexts and supported Resolve preparation.",
+  "next_action": "Implement the bounded supported-OFX upstream capture and shared-engine companion preparation increment after native/interface feasibility review; preserve previous cache and leave actual Resolve acceptance unverified.",
   "objective_source": "docs/product-improvements-brief.md",
-  "current_checkpoint_evidence": "benchmark-results/ext05-photo-connected-final/source-verification.json"
+  "current_checkpoint_evidence": "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
 }

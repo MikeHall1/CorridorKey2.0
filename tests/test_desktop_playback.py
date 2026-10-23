@@ -162,7 +162,7 @@ class DesktopPlaybackTests(unittest.TestCase):
         with patch('corridorkey.desktop_loader.preview', side_effect=gated_preview):
             try:
                 self.controls.play()
-                self.assertTrue(entered.wait(2))
+                self.until(entered.is_set)
                 pending = self.controls.pending_serial
                 self.window.frame.setValue(1)
                 self.window.request_preview()
@@ -193,7 +193,7 @@ class DesktopPlaybackTests(unittest.TestCase):
         with patch('corridorkey.desktop_loader.preview', side_effect=gated_preview):
             try:
                 self.controls.play()
-                self.assertTrue(entered.wait(2))
+                self.until(entered.is_set)
                 self.window.view.setCurrentText('Source')
                 self.controls.play()
                 self.clock()
@@ -211,7 +211,8 @@ class DesktopPlaybackTests(unittest.TestCase):
     def test_current_decode_error_still_stops_and_reports(self):
         with patch('corridorkey.desktop_loader.preview', side_effect=ValueError('current decode failure')):
             self.controls.play()
-            self.until(lambda: self.controls.pending_serial is None)
+            self.until(lambda: not self.controls.preparing and self.controls.pending_serial is None
+                       and 'current decode failure' in self.controls.status.text())
         assert self.controls.engine is not None
         self.assertFalse(self.controls.engine.playing)
         self.assertIn('current decode failure', self.controls.status.text())

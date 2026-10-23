@@ -153,3 +153,12 @@ identity and metadata committed with visible pixels. 1434CPU/406file frozen
 fullgate passes,0new diagnostics. Limits/unsupported colour and4K contexts remain
 explicit; no render changes or native/GPU/quality acceptance claim.
 See [workflow](photo-backgrounds.md) and [review](photo-backgrounds-review.md).
+
+
+EXT-05 export playback now prepares bounded reusable source/foreground/matte
+indexes through the existing loader, preserving source-time A/B and native pixels.
+Repeated reads avoid directory rescans; membership changes require explicit Refresh.
+Frozen 1456CPU/410file gate and independent/main reviews pass, zero new
+static diagnostics. Native4K export decoder fixtures do not establish throughput;
+video/VFR/native/GPU/quality acceptance remain pending.
+[Workflow](export-playback-indexes.md), [review](export-playback-indexes-review.md).

@@ -71,7 +71,8 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
             background: tuple[float, float, float] | None = None, max_side: int = 1280,
             expected_count: int | None = None, expected_hw: tuple[int, int] | None = None,
             source_colour_profile: str = 'legacy', sequence: SequenceIndex | None = None,
-            background_image: PreparedBackground | None = None) -> PreviewFrame:
+            background_image: PreparedBackground | None = None,
+            alpha_sequence: SequenceIndex | None = None) -> PreviewFrame:
     from .color_utils import linear_to_srgb, srgb_to_linear
 
     if type(max_side) is not int or max_side < 1:
@@ -99,7 +100,7 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
             raise ValueError('Export alpha must be coverage in [0,1].')
         rgb = np.repeat(alpha, 3, axis=2)
     elif alpha_path is not None:
-        alpha_rgb, alpha_count, _ = read_frame(alpha_path, index)
+        alpha_rgb, alpha_count, _ = read_frame(alpha_path, index, sequence=alpha_sequence)
         if alpha_count != count or alpha_rgb.shape[:2] != (height, width):
             raise ValueError('Foreground and alpha exports must have matching geometry/frame count.')
         alpha = alpha_rgb[:, :, :1]

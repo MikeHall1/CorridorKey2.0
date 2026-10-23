@@ -18,6 +18,11 @@ from PySide6.QtWidgets import (
 
 from .desktop_comparison import common_range
 from .playback import FrameRequest, Playback
+from .preview_exports import (
+    ExportRequest,
+    PreparedExportIndexes,
+    capture_export_request,
+)
 from .preview_sequence import PreparedSequence
 from .session import JobRequest
 
@@ -44,8 +49,9 @@ class PlaybackControls(QWidget):
         self.displayed_seconds: float | None = None
         self.binding: tuple[object, ...] | None = None
         self.source_sequence: PreparedSequence | None = None
+        self.export_indexes: PreparedExportIndexes | None = None
         self.preparation_serial: int | None = None
-        self.preparation_context: tuple[int, JobRequest] | None = None
+        self.preparation_context: tuple[int, JobRequest | ExportRequest] | None = None
         self.navigation_generation = 0
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -56,7 +62,7 @@ class PlaybackControls(QWidget):
         pause = QPushButton('Pause')
         pause.clicked.connect(self.pause)
         row.addWidget(pause)
-        refresh = QPushButton('Refresh source index')
+        refresh = QPushButton('Refresh sequence indexes')
         refresh.clicked.connect(self.refresh_source)
         row.addWidget(refresh)
         self.loop = QCheckBox('Loop source range')
@@ -144,6 +150,19 @@ class PlaybackControls(QWidget):
                 self.engine.seek(min(max(index, lower), upper - 1))
                 self.binding = binding
             self.selected_id = owner.selected()
+            request = capture_export_request(view, mode=mode, reference=reference, reference_mode=owner.reference_mode or mode)
+            if self.export_indexes is None or self.export_indexes.request.identity != request.identity:
+                context = (self.navigation_generation, request)
+                if self.preparing and self.preparation_context == context:
+                    return
+                self.pause()
+                self.export_indexes = None
+                self.preparation_context = context
+                self.preparation_serial = owner.loader.submit(prepare_exports=request)
+                owner.preview_serial = self.preparation_serial
+                self.status.setText('Preparing bounded source/foreground/alpha sequence indexes off-thread; no pixels cached or render settings changed.')
+                return
+            self.engine.bind_export_indexes(self.export_indexes)
             owner.preview_serial = -1
             self.engine.play()
             self.tick()
@@ -177,21 +196,37 @@ class PlaybackControls(QWidget):
         self.status.setText('Preparing local source playback: at most 100,000 directory entries/frames and 32 MiB of indexed path bytes. Native image decode memory is unchanged; no pixel cache.')
 
     def accept_preparation(self, serial, frame, error):
-        if serial != self.preparation_serial:
-            return isinstance(frame, PreparedSequence)  # retire an obsolete metadata result
+        metadata = isinstance(frame, (PreparedSequence, PreparedExportIndexes))
+        if self.preparation_serial is None or serial < self.preparation_serial:
+            return metadata
+        expected_serial = self.preparation_serial
         context = self.preparation_context
         self.preparation_serial, self.preparation_context = None, None
+        if serial != expected_serial:
+            if context is not None:
+                self.status.setText('Sequence preparation superseded; choose Play explicitly to prepare again.')
+            return metadata  # Unrelated photo/still terminals must continue through normal routing.
         if context is None or context[0] != self.navigation_generation or self.workspace.closing:
             return True
         if error is not None:
-            self.status.setText('Source preparation failed: ' + error)
+            self.status.setText('Sequence preparation failed: ' + error)
             return True
-        if not isinstance(frame, PreparedSequence) or frame.job != context[1]:
-            self.status.setText('Source preparation returned a mismatched snapshot; no playback started.')
-            return True
-        self.source_sequence = frame
         try:
-            self._start_source(frame)
+            if isinstance(context[1], ExportRequest):
+                if not isinstance(frame, PreparedExportIndexes) or frame.request.identity != context[1].identity:
+                    raise ValueError('Export preparation returned a mismatched snapshot; no playback started.')
+                if self.engine is None:
+                    raise ValueError('Playback binding retired during export preparation.')
+                self.engine.bind_export_indexes(frame)
+                self.export_indexes = frame
+                self.workspace.preview_serial = -1
+                self.engine.play()
+                self.tick()
+            else:
+                if not isinstance(frame, PreparedSequence) or frame.job != context[1]:
+                    raise ValueError('Source preparation returned a mismatched snapshot; no playback started.')
+                self.source_sequence = frame
+                self._start_source(frame)
         except (ValueError, TypeError, OSError, RuntimeError) as exc:
             self.pause()
             self.status.setText(str(exc))
@@ -231,7 +266,7 @@ class PlaybackControls(QWidget):
             self.workspace.loader.cancel(self.preparation_serial)
             self.preparation_context = None
             self.workspace.preview_serial = -1
-            self.status.setText('Source preparation cancelled; any native read must finish before the owned decoder exits.')
+            self.status.setText('Sequence preparation cancelled; any native read must finish before the owned decoder exits.')
         if self.engine is None:
             return
         self.engine.pause()
@@ -253,7 +288,10 @@ class PlaybackControls(QWidget):
 
     def refresh_source(self):
         self.navigate()
-        self.status.setText('Frozen source index cleared. Select Source and Play to inspect current local sequence membership again; no render settings changed.')
+        self.export_indexes = None
+        if self.engine is not None:
+            self.engine.export_indexes = None
+        self.status.setText('Frozen source/export indexes cleared. Play explicitly to inspect current sequence membership again; no render settings changed.')
 
     def selection_changed(self):
         if not self.workspace._updating_diagnostic_rows and self.workspace.selected() != self.selected_id:
@@ -329,7 +367,7 @@ class PlaybackControls(QWidget):
             if self.source_sequence is not None:
                 self.source_sequence = None
                 self.binding = None
-            self.status.setText('Playback decode failed: ' + error + ' Select Play to prepare the source again if needed.')
+            self.status.setText('Playback decode failed: ' + error + ' Refresh sequence indexes explicitly after checking changed or missing files; no automatic retry.')
         else:
             self._status('Playing' if self.engine.playing else 'Paused / range end')
         return valid

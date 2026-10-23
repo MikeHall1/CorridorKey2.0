@@ -87,6 +87,16 @@ class WorkerProcessTests(unittest.TestCase):
     def test_actual_hard_child_exit_marks_job_lost_and_explicit_restart_is_new_generation(self):
         client = self.client()
         generation = client.generation
+        if os.name != 'nt':
+            # Restart requires proven descendant discovery before the leader
+            # exits. Keep the ready fixture idle until that prerequisite holds;
+            # first discovery after a hard exit correctly remains fail-closed.
+            with client.kill_lock:
+                client._capture_descendants()
+            self.assertIsNotNone(client.containment)
+            assert client.containment is not None
+            self.assertGreater(client.containment.complete_samples, 0)
+            self.assertIsNone(client.containment.failure)
         request_id = client.submit(self.job('crash', {'exit': True}))
         self.wait(client, 'lost', request_id)
         client.process.wait(timeout=3)

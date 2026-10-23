@@ -185,7 +185,7 @@ class DesktopPhotoTests(unittest.TestCase):
         with patch('corridorkey.desktop_loader.preview', side_effect=blocked):
             self.window.playback.play()
             try:
-                self.assertTrue(entered.wait(3))
+                self.until(entered.is_set)
                 original = self.window.playback.pending_serial
                 self.assertIsNotNone(original)
                 panel = self.panel()

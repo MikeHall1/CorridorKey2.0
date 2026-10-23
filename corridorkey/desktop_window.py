@@ -65,6 +65,7 @@ from .desktop_state import (
 )
 from .desktop_viewport import PreviewViewport, ViewportState
 from .preview_background import BackgroundRecipe, PreparedBackground
+from .preview_exports import PreparedExportIndexes
 from .preview_sequence import PreparedSequence
 from .session import JobRequest
 from .worker_client import WorkerClient
@@ -1502,10 +1503,11 @@ class DesktopWindow(QMainWindow):
         except queue.Empty:
             return
         playback_valid = self.playback.complete_loader(serial, error)
-        if self.accept_background(serial, frame, error) or isinstance(frame, PreparedBackground):
+        # Every terminal acknowledges old decode/preparation ownership before
+        # routing metadata. Metadata never enters the pixel publication branch.
+        if self.playback.accept_preparation(serial, frame, error) or isinstance(frame, (PreparedSequence, PreparedExportIndexes)):
             return
-        # Preparation metadata, including retired generations, never contains pixels.
-        if self.playback.accept_preparation(serial, frame, error) or isinstance(frame, PreparedSequence):
+        if self.accept_background(serial, frame, error) or isinstance(frame, PreparedBackground):
             return
         if serial != self.preview_serial or playback_valid is False:
             return

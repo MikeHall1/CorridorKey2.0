@@ -7452,6 +7452,184 @@
         "benchmark-results/ext05-photo-connected-final/source-verification.json"
       ],
       "resolution": "Reviewed explicit session-only photo preview pipeline, sole-loader ownership and visible-frame pin provenance locally accepted by frozen completeCPU/static gate,0new findings. Native Windows/managed display/GPU/quality/Resolve remain NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-EXPORT-351",
+      "component": "Export request cached identity initialization",
+      "classification": "Authoractualcaptureprobe beforefix/fulltestexecution",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "ExportRequest.__post_init__ calls asdict(self) before initFalse identityfieldinitialized, raisingAttributeError onallrequestcaptures.",
+      "root_cause": "Dataclassserializationincludes declaredbutnotyetassignedderivedidentity field.",
+      "proposed_action": "Build explicit canonicalpayload fromvalidatedview/mode/reference/reference_mode/limits, cacheSHAonlyafterpayloadvalidation; class/set/forgedcontractregressions.",
+      "acceptance": "NoIOcapture returnsstablecachedidentity, equivalentrequests match, class/malformedfieldsrefuse; focusedcore/staticpass.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Authorread-only captureprobe AttributeError ExportRequest object hasnoattribute identity beforefix."
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-EXPORT-352",
+      "component": "Export controller new import grouping",
+      "classification": "AuthorinitialfocusedRuff1 I001 beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Newthree-name preview_exports importneedsformatter-requiredmultiline block.",
+      "root_cause": "Newintegrationimport draftedbeforefocusedlintorganization.",
+      "proposed_action": "Wraponlyownedimportblock; preservechecks/behavior.",
+      "acceptance": "OwnedRuff/Pyright andfocusedpipeline casespass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "InitialRuffI001 desktop_playback.py importblock, remainingownedfilesclean; no runtimeyets."
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-EXPORT-353",
+      "component": "Export Qt newfixture import grouping",
+      "classification": "MaininitialfocusedRuff1 I001 beforefix; no runtime/importsyet",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "New os/localpreview importblock lacksseparator.",
+      "root_cause": "Draftfixture importgroup beforefocusedlintorganization.",
+      "proposed_action": "Fixonlynewfixtureseparator; meaningfulactualQt andstaticverification.",
+      "acceptance": "NewQt6 andtouchedstaticpass.",
+      "owner": "root",
+      "evidence": [
+        "RuffI001 tests/test_desktop_export_playback.py:41."
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-EXPORT-354",
+      "component": "Export limits invalid class fixture type boundary",
+      "classification": "AuthorinitialPyright1 deliberateclassargument diagnostic beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Negativefixture passesExportIndexLimitsCLASS into typedlimits API withoutAnyinvalidcallerboundary.",
+      "root_cause": "Checker correctlyrejects deliberatelymalformedcaller input usedtotest runtimeTypeError.",
+      "proposed_action": "Explicit invalid_limits:Any boundary, preserveproductiontypedAPI/runtimeclassrefusal no suppression.",
+      "acceptance": "Core10fixturecases/staticpass withclass/instance contractverified.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "AuthorPyright test_preview_exports.py:83 beforefix; productionRuff/Pyright0."
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-EXPORT-355",
+      "component": "Export pipeline atomic pair fixture unpacking",
+      "classification": "Author31focused29PASS2newtestERROR0.502s beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Two newfixtures callpreview_pair(**options) whilebundleoptionsshapeis {pair:{a,b}}, causingunexpectedkeywordpair.",
+      "root_cause": "Newtest didnot unwrap agreedgenericloader optionsshape.",
+      "proposed_action": "Unwrap options[pair] inonlytwofixtures; productloader alreadycorrect.",
+      "acceptance": "31focusedpipeline cases pass; atomicA/Bpixels/mapping assertionspreserved.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "/private/tmp/export-pipeline-first.log; ownedRuff/Pyright0.",
+        "Independent22case run overlapped author355testonlyedits;2knownpairunwraperrors+main356wordassertion. Not accepted frozenverification; superseded byauthor31PASS0.447s andindependentfinal16PASS0.806s afterexplicittestfreeze. No productionfinding; coordinationrecordretained."
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-EXPORT-356",
+      "component": "Export Qt coverage-refusal fixture wording",
+      "classification": "Mainactual6Qt5PASS1FAIL1.623s beforefix; independentreproducedsamefixtureassertion",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Addedframescorrectlyignored untilRefresh thenrendercoveragemismatchrefuses, butnewfixture expects literal count whileactualactionableerrornames framecoverage.",
+      "root_cause": "Newtest assumesunpromisederrorterm despitecorrectcache/refusal/sourcebehavior.",
+      "proposed_action": "Assertactualcoverage-refusal meaning whilepreserving cacheNone/changedfiles/frozenbeforeRefresh checks; no productionchange.",
+      "acceptance": "6newactualQt pass withfailureandoldindexsemantics retained.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext05-export-focused/main-qt-initial.txt; actual Frozen source-global/export-local frame coverage differs from completedview."
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-EXPORT-357",
+      "component": "Existing decoder ownership fixture waits after asynchronous export preparation",
+      "classification": "Actualexpanded33Qt30PASS3FAIL12.253s plus sourcephasewait review beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Twoexistingnative-decoder fixtures andphoto343fixture blockGUIwith entered.wait immediatelyafterPlay, preventingnewoffthreadindexpreparationterminal frombeingacceptedandsubmittingactualgateddecode. Existingcurrentdecodeerrorwait also canfinishwhilepreparingbecausepending_serial initiallyNone.",
+      "root_cause": "FixtureassumedPlay immediatelysubmits pixels; newexplicitpreparationphase needsQt event-driven barrier beforedecoderentry/terminalassertion.",
+      "proposed_action": "Useexistingevent-driven until(entered.is_set) inthreeaffectedcases, retainrealgateddecode/pendingowner/sourcepixels asserts; currenterrorpredicate awaitsnotpreparing plusactualerror, no mocks/suppression.",
+      "acceptance": "Expanded33Qt cases pass withactualnative inflight ownership assertions preserved; source/photo compatibility andstaleerror behavior verified.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext05-export-focused/main-expanded-qt.txt; 3entered.wait failures, remaining30PASS."
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-WORKER-358",
+      "component": "Hard-crash restart fixture discovery precondition",
+      "classification": "Frozen full gate1456CPU104.244s one existing ERROR; new export cases/static pass",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Immediate hard-exit fixture races lazy descendant capture; discovery can start while leader exits and correctly becomes permanently NOT VERIFIED, making unconditional restart assertion nondeterministic.",
+      "root_cause": "Existing test assumes verified ownership discovery before deliberate immediate os._exit; actual worker correctly fails closed when first discovery loses root. No export code on failing path.",
+      "proposed_action": "Independent root-cause review; fence successful initial native descendant discovery while ready fixture remains alive before deliberate hard exit. Preserve actual crash/lost/newgeneration assertions and production failclosed behavior.",
+      "acceptance": "Focused actual worker/ownership tests and complete stable gate pass, with independently reviewed discovery barrier and no production cleanup weakening.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext05-export-connected-final/check-0.txt",
+        "RuntimeError: cannot restart while owned worker cleanup is unverified: Stress root exited before initial descendant discovery"
+      ],
+      "verification": [
+        "docs/export-playback-indexes-review.md",
+        "benchmark-results/ext05-export-focused/",
+        "benchmark-results/ext05-export-connected-final-fixed/source-verification.json"
+      ],
+      "resolution": "Independent stable review plus main distinct review and complete frozen CPU/static gate accepted the bounded export playback pipeline and test-only discovery ordering barrier. Production cleanup remains fail-closed; external acceptance remains NOT VERIFIED."
     }
   ]
 }

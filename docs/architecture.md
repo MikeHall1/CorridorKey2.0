@@ -297,3 +297,17 @@ on open, fence superseded selection/late results, and wait for loader close.
 Displayed metadata commits with accepted pixels so static pins retain the visible
 frame/photo identity even while a later frame is pending. No engine/export path
 or saved job format changes. [Workflow/limits](photo-backgrounds.md).
+
+
+## Reusable export playback metadata
+
+`preview_exports.py` captures immutable validated RenderView/mode requests without
+I/O. The existing PreviewLoader prepares deduplicated bounded source/FG/alpha
+indexes and cached identities. Playback attaches only matching generation/context
+metadata and retains source-global/output-local mapping; separate alpha indexes
+feed the same native preview decoder and colour path. Repeated frame reads avoid
+directory rescans. Sampled file/root stat fences reject ordinary mutation; explicit
+Refresh controls membership. One bundle and the existing single pending loader
+retain bounded references; no pixel cache, new thread or model owner. Common
+terminal acknowledgement precedes metadata routing, including superseded photo
+results. [Workflow/limits](export-playback-indexes.md).

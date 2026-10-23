@@ -351,3 +351,15 @@ Use checkerboard clears live photo selection. No render defaults, precision,
 writer options or queued jobs change. Combined work limits admit1080p but not
 native4K; no ICC/OCIO/EXIF automation or implicit resize/profile fallback. See
 [workflow/limits](photo-backgrounds.md) and [review](photo-backgrounds-review.md).
+
+
+## Export playback sequence indexes
+
+Play sequence prepares bounded metadata off-thread on the existing loader and
+reuses it across frames, seek and resume. Refresh sequence indexes replaces the
+former Refresh source index label; internal refresh_source alias remains. New
+files are ignored until explicit Refresh; changed captured files pause playback.
+No automatic reindex or geometry/colour/precision fallback. Manual still decoding
+is unchanged. Aggregate defaults: six directories,100,000 entries/frames,32MiB
+path bytes,64MiB estimated metadata; these are not a hard RSS cap or native decode
+pixel limit. [Workflow and validation](export-playback-indexes.md).

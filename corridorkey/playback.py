@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .desktop_comparison import RenderView, common_range
+from .preview_exports import PreparedExportIndexes
 
 
 @dataclass(frozen=True)
@@ -87,11 +88,24 @@ class Playback:
         self.timing_evidence = timing_evidence
         self.mode, self.background = mode, background
         self.background_image = background_image
+        self.export_indexes: PreparedExportIndexes | None = None
         self.reference_mode = reference_mode or mode
         self.start, self.end = start, end
         self.frame = start
         self.playing = False
         self._reset(now)
+
+    def bind_export_indexes(self, indexes: PreparedExportIndexes) -> None:
+        """Attach off-thread metadata without resetting the caller's timeline."""
+        if not isinstance(indexes, PreparedExportIndexes):
+            raise TypeError('Playback requires prepared export index metadata.')
+        if self.playing or (self.pending is not None and self.pending.generation == self.generation):
+            raise ValueError('Pause and fence the current decode before replacing export indexes.')
+        request = indexes.request
+        if (request.view != self.view or request.reference != self.reference or request.mode != self.mode
+                or (request.reference_mode or request.mode) != self.reference_mode):
+            raise ValueError('Prepared export indexes belong to another playback binding.')
+        self.export_indexes = indexes
 
     def _reset(self, now: float) -> None:
         self.generation += 1
@@ -168,9 +182,12 @@ class Playback:
             self.dropped_opportunities += advanced
             return None
         self.dropped_opportunities += max(0, advanced - 1)
-        options = self.view.options(self.mode, self.frame, self.background, background_image=self.background_image)
-        if self.reference is not None:
-            options = {'pair': {'a': self.reference.options(self.reference_mode, self.frame, self.background, background_image=self.background_image), 'b': options}}
+        if self.export_indexes is not None:
+            options = self.export_indexes.options_for(self.frame, background=self.background, background_image=self.background_image)
+        else:
+            options = self.view.options(self.mode, self.frame, self.background, background_image=self.background_image)
+            if self.reference is not None:
+                options = {'pair': {'a': self.reference.options(self.reference_mode, self.frame, self.background, background_image=self.background_image), 'b': options}}
         self.serial += 1
         request = FrameRequest(self.serial, self.generation, self.source_identity,
                                self.frame, self.frame / self.view.fps, options)
