@@ -82,6 +82,63 @@ class DesktopBenchmarkTests(unittest.TestCase):
         self.until(lambda: 'test_fixture' in self.window.benchmark.baseline.toPlainText())
         self.assertEqual(self.window.benchmark.report.text(), str(task.report_path))
 
+    def test_feasibility_inspection_is_background_and_target_changes_analysis_only(self):
+        import threading
+        from unittest.mock import patch
+
+        from tests.test_feasibility import inference_fixture
+        panel = self.window.benchmark
+        source = self.root / 'inference-report.json'
+        source.write_text(json.dumps(inference_fixture()))
+        original = source.read_bytes()
+        from corridorkey.desktop_benchmark import read_report
+        threads = []
+        def read(path, **kwargs):
+            threads.append(threading.current_thread())
+            return read_report(path, **kwargs)
+        with patch('corridorkey.desktop_benchmark.read_report', side_effect=read):
+            panel.inspect(source)
+            self.until(lambda: 'offline_fps' in panel.feasibility_view.toPlainText())
+            projection = json.loads(panel.feasibility_view.toPlainText())
+            self.assertEqual(projection['target_fps'], 24)
+            self.assertEqual(projection['samples'][0]['offline_fps'], 24)
+            panel.target_fps.setValue(48)
+            panel.update_feasibility()
+            self.until(lambda: '"target_fps": 48' in panel.feasibility_view.toPlainText())
+            self.assertIn('below_target', panel.feasibility_view.toPlainText())
+            self.assertIn('20.833', panel.frame_budget.text())
+        self.assertTrue(threads)
+        self.assertTrue(all(t is not threading.current_thread() for t in threads))
+        self.assertEqual(source.read_bytes(), original)
+        self.assertIsNone(panel.task)
+        from PySide6.QtWidgets import QTabWidget
+        tabs = panel.findChild(QTabWidget)
+        assert tabs is not None
+        self.assertIn('Feasibility', [tabs.tabText(i) for i in range(tabs.count())])
+
+    def test_failed_pair_raw_and_baseline_survive_optional_feasibility_failure(self):
+        from unittest.mock import patch
+
+        from tests.test_benchmark_report import PairedReportTests
+        panel = self.window.benchmark
+        report = PairedReportTests().report(False)
+        report['status'] = 'failed'
+        report['pairs'][0]['samples']['baseline'] = {'rejected_report_repr': 'nonfinite report'}
+        source = self.root / 'failed-pair.json'
+        source.write_text(json.dumps(report))
+        panel.inspect(source)
+        self.until(lambda: 'rejected_report_repr' in panel.report_view.toPlainText())
+        self.assertIn('NOT VERIFIED', panel.feasibility_view.toPlainText())
+        self.assertIn('"offline_fps": null', panel.feasibility_view.toPlainText())
+        with patch('corridorkey.desktop_benchmark.project_feasibility', side_effect=ValueError('projection test failure')):
+            panel.inspect(source)
+            self.until(lambda: 'projection test failure' in panel.feasibility_view.toPlainText())
+            self.assertIn('rejected_report_repr', panel.report_view.toPlainText())
+            self.assertIn('Actual local report loaded', panel.status.text())
+            panel.inspect(source, 'baseline')
+            self.until(lambda: 'rejected_report_repr' in panel.baseline.toPlainText())
+            self.assertIn('Baseline loaded independently', panel.status.text())
+
     def test_active_render_rejects_benchmark_then_benchmark_blocks_new_render(self):
         self.fixture('wait')
         source = self.root / 'source.json'
