@@ -6680,6 +6680,248 @@
         "docs/tracking-overlays-review.md"
       ],
       "resolution": "Fixture uses actualCorrectionEditor and explicitoptionalpostconditions;5actualQtPASS1.732s/static0, independent17QtPASS4.149s; final1348CPU/no-skips390filefullgatePASS0newstatic."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-316",
+      "component": "Calibration default model-selection admission",
+      "classification": "Independent concrete source control-flow review before integration execution",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Validdefault-assets plan is alwaysrefused: dialog normalizesNone to AssetSelection(repositoryroot), parentstillcompares againstNone.",
+      "root_cause": "Captured effective selection andparent raw sentinel useddifferentrepresentations.",
+      "proposed_action": "Compare normalized effective default selections whilepreserving explicitselectionchange refusal; actualdefault-start integrationregression.",
+      "acceptance": "Defaultselectionplan reachesverifiedownerhandoff; changedexplicitselectionrefuseswithoutstartingtask.",
+      "owner": "root; readiness_review",
+      "evidence": [
+        "Independent read-only review of DesktopWindow.start_calibration/poll vs CalibrationDialog captured_selection/begin contracts."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-317",
+      "component": "Calibration timer handoff failure reporting",
+      "classification": "Independent concrete source control-flow review before integration execution",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Parentpoll calls dialog.begin(plan) withoutcatching declaredvalidation/factory/threadstartup errors; a startfailure can escapeQt timer afterpendingplanremoved.",
+      "root_cause": "Asynchronous processing-ownertransition lacks APIerrorboundary atfinalhandoff.",
+      "proposed_action": "Catch knownbegin errors, preserveanyalreadyretainedtask andreportreject_start actionablefailure withoutnewowner retry.",
+      "acceptance": "Injectedfactory/startfailure surfacesstatus andneveruncaughtTimerexception orautomaticretry/secondowner.",
+      "owner": "root; readiness_review",
+      "evidence": [
+        "Independent read-only review of DesktopWindow.start_calibration/poll vs CalibrationDialog captured_selection/begin contracts."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-318",
+      "component": "Calibration mainwindow newfixture initial static verification",
+      "classification": "Focused firstRuff2 diagnostics before remediation; no mainwindow sourceRuff finding",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Newparentownershipfixture has unusedPathimport andmissingthirdparty/localimportseparator; runtime/typeverification stillpendingcorefreeze.",
+      "root_cause": "Newfixture imports were draftedbeforefocusedstaticcheck.",
+      "proposed_action": "Removeunusedimport/formatfocusedblock andverifyrealparentownershipscenarios withoutweakeningchecks.",
+      "acceptance": "FocusednewfixtureRuff/Pyright andactualQtparenttests pass; retaininitialfailureclassification.",
+      "owner": "root",
+      "evidence": [
+        "FocusedRuff F401 tests/test_desktop_window_calibration.py:8 and I001:106."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-319",
+      "component": "Calibration dialog cleanupblocker/shutdown reporting",
+      "classification": "Authorobserved initial7Qt run6PASS/1failure plus22newfixture/UI typefindings; authorclassifiedandfixedbeforecoordinatorledgerupdate",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "shutdown.cancel replaces workeruncleanup blocker withgenericcancellationstatus even thoughownedworkercontainment remainsunverified.",
+      "root_cause": "Cancellationstatus formatter didnotprioritize retainedcleanup_error; first typepass also lackedexplicitunionnarrowing.",
+      "proposed_action": "Retainvisibleprocesscleanupblocker throughoutcancel/shutdown andstrictnarrowing; rerunfocusedcases andindependentreview aftercorefreeze; preservefailedrawlogs.",
+      "acceptance": "Taskdone+cleanup_error remainsvisible andshutdownFalse; source/queue unchanged; fullfocused/static pass.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "Author reports initial7UIrun6PASS/1cleanupstatusfailure andPyright22; rawlogsrequestedbeforefinalacceptance."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-320",
+      "component": "Calibration clean idle shutdown visibility",
+      "classification": "AuthoractualQt1testFAIL0.113s beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Visibleidle calibrationdialog.shutdown returnsTrue butdialog remainsvisible aftereventprocessing.",
+      "root_cause": "Retirementbool wasreturned without hiding cleanownedtop-leveldialog.",
+      "proposed_action": "Hideonlyafterverifiedcompletecleanretirement; keepunverifiedworkerownerretained, preserveclose cancellationstatus.",
+      "acceptance": "Cleanidle shutdownhides actualdialog; active/unverifiedcleanupstillretained andparentwaits.",
+      "owner": "root; feature_audit; readiness_ui; readiness_review",
+      "evidence": [
+        "Author1actualQt test_clean_idle_shutdown_hides_visible_dialog show\u2192shutdownTrue\u2192isVisibleTrue; productionunchangedbeforeclassification."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-321",
+      "component": "Calibration actual-record source/writer comparability",
+      "classification": "Main actualpurefunction syntheticmetadata contradiction reproduction beforefix; noGPUexecuted",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "_metrics accepts record with unrelatedinput/output, writer crf999 and observedsourceIn999/FPS1 despite requestedIn1/FPS24, marking metadata neural_gpu_verifiedTrue.",
+      "root_cause": "Comparability checked requested/effectiveconfig+framecount butomitted jobsource/output/writer andobservedtimerange/FPS admission.",
+      "proposed_action": "Require exact recordinput/output/writer vsimmutablejob; validate actualsourceIn/count/FPS/nativegeometry andrequestedcoverage; retaincontradictoryrecords excluded andnot recommend. Validatehardwaredescription/countertypes whereused.",
+      "acceptance": "Independentbadsource/writer/offset/FPS fixtures refuse beforeeligibleclassification; actualCPUworkerrecord remainsacceptedfixture-only.",
+      "owner": "root; feature_audit; readiness_ui; readiness_review",
+      "evidence": [
+        "Main syntheticrecord nohardware with correctconfig/framecount butwrong input/output/writer/observedstart/fps accepted _metrics neural_gpu_verifiedTrue."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-322",
+      "component": "Calibration partial workspace initialization reporting",
+      "classification": "Main actualTemporaryDirectory+CalibrationTask fault reproduction beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Freshreportdirectory succeeds, scratchdirectory creation fails; task retains1empty reportdirectory butsnapshot retained_paths={} and onlyartifacterror.",
+      "root_cause": "Freshdirectory initialization occurredbefore retained-path publication/error boundary.",
+      "proposed_action": "Publish/retain firstownedroot beforesecondallocation orsafeownedemptycleanup; preserveoriginalerror andanycleanupfailure exactpaths, no process-liveclaim.",
+      "acceptance": "Injectedsecondmkdirfailure exposesretainedroot orcleansonlyownedemptyroot; workerfactorynevercalled andartifacterror sourcepreservation correct.",
+      "owner": "root; feature_audit; readiness_ui; readiness_review",
+      "evidence": [
+        "Mainactualfixture: retained_report_directories1,reported_retained_paths{},artifact_error OSError synthetic scratch initialization failure; no worker launched."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-323",
+      "component": "Sparse Quick Key calibration neural-work eligibility",
+      "classification": "Independent confirmed runtime/control-flow source review beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "QuickKey is an allowedprofile butneuraleligibility requires completed_prediction_frames>=all frames_submitted; real sparse CUDA anchors10/output120 alwaysvetoed asfixture/unknown.",
+      "root_cause": "Neural-work framecounter wasmisinterpreted as fulloutputcoverage, alreadychecked separately.",
+      "proposed_action": "Mode-aware positive actualneural-work evidence with strictcounter/device/types andexplicitfixtureFalseveto; preservefulloutputcoverage andquality/approximationlabeling.",
+      "acceptance": "Synthetic clearlylabelled sparseQuickKeyactual-recordshape10/120 eligiblewhile0/malformed/fixtureFalse rejected; fullratechecksremain strict andGPUexecutionacceptance stillNOTVERIFIED withoutactualhardware.",
+      "owner": "root; feature_audit; readiness_review",
+      "evidence": [
+        "Runtime.write_prediction_batches increments completed_prediction_frames for Stage2evaluated frames only; _metrics current>=frame_count criterion; no tests/hardwareexecutedforreview."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-324",
+      "component": "Calibration unchanged unavailable prerequisite retry policy",
+      "classification": "Main confirmeddriver source control-flow review beforefix; noGPUprobe executed",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "failedworker/model-load events becomeordinaryValueError andloop continues allprofile/cold/warm/repetition combinations, retrying unchangedmissingCUDA/modelinitialization orworkerstartup prerequisites.",
+      "root_cause": "Driver doesnotdistinguish globalworker/model initialization unavailable fromconfiguration-dependent runtimefailures orremember excludedcohorts.",
+      "proposed_action": "Afterverifiedretirement stopmatrix onworkerconstructor/globalmodel-load unavailable; preservefirstrecord/checkpoint andexplicitnotrun exclusions. Forcase-dependentfailure optionallyskipfurtherinvalidcohorttrials withreason insteadofautomaticretries whileallowingdifferentconfigurations.",
+      "acceptance": "Explicitfakeunavailableworker/model-load fixtures provefactory/loadattempt1,noadditionalautomaticmodelowner, reportfailure/rawrecord retained; profiledependentOOM canexclude case andcontinueotherprofiles onlyafterverifiedretirement.",
+      "owner": "root; feature_audit; readiness_review",
+      "evidence": [
+        "Source run_job turns failed/cancelled/rejected/lost intoValueError; outertrialcontinues unless CancelledError/KeyboardInterrupt/TimeoutError/ArtifactBudgetError/OSError. Globalmodel_load failure notclassified."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-325",
+      "component": "Calibration report not-run exclusion display",
+      "classification": "Author advisory confirmed by main source comparison beforefix",
+      "status": "resolved",
+      "severity": "low",
+      "priority": "P2",
+      "problem": "Report inspection drops per-group not_run exclusion_reason emitted by global-prerequisite failfast; generic unavailable appears despite recorded exact reason.",
+      "root_cause": "Dialog report projection predates new explicit not_run exclusion field.",
+      "proposed_action": "Read bounded exclusion_reason fallback in existing off-thread projection and extend actual report inspection regression.",
+      "acceptance": "Inspected not_run group displays exact reason without GUI full-record traversal or job changes.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "desktop_calibration.py report failures projection vs calibration_task.py not_run schema source comparison."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
+    },
+    {
+      "id": "HEALTH-CALIBRATION-326",
+      "component": "Calibration live scratch byte accounting",
+      "classification": "Independent deterministic disappearing regular descendant reproduction beforefix",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Soft bytebudget sampling can raise FileNotFoundError on an ordinary native temporary descendant removed between scandir and admission, cancelling otherwise healthy processing.",
+      "root_cause": "Live scratch traversal treats expected descendant retirement as a fatal root/artifact failure.",
+      "proposed_action": "Tolerate vanished descendants only while preserving root absence, symlink/alias, count and size refusal; deterministic regression.",
+      "acceptance": "Disappearing regular descendants do not abort accounting; missing root and unsafe entries still refuse.",
+      "owner": "root; feature_audit; readiness_review",
+      "evidence": [
+        "Independent source trace and captured scandir entries then unlink native-temp before _size(root,1024) raises FileNotFoundError; no foreign content or symlinks."
+      ],
+      "verification": [
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-focused/",
+        "benchmark-results/ext08-connected-final/source-verification.json"
+      ],
+      "resolution": "Connected reviewed workflow fixes accepted locally by frozen fullCPU/static gate,0new diagnostics; actual pretrainedCUDA/quality/Windows/Resolve acceptance remains NOT VERIFIED."
     }
   ]
 }

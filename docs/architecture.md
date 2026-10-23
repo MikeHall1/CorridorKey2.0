@@ -257,3 +257,16 @@ returns a distinct diagnostic role; no masks/history/acceptance flags are change
 Dirty navigation guards, late-cancel display fencing and source reload before
 painting preserve ownership. Accepted-mask assets survive separate diagnostic
 subdirectory cleanup; missing historical spatial data stays unavailable.
+
+
+## Machine calibration ownership
+
+`calibration.py` supplies Qt-free immutable verified plans, controlled profile and
+workload admission, measured-only summaries, duration assumptions and validity.
+`calibration_task.py` owns one WorkerClient at a time, explicit warmup/cold/warm
+trials, cancellation/containment, retained raw records and committed reports.
+`desktop_calibration.py` performs inventory/hash/report I/O on an owned thread and
+uses bounded timer snapshots. DesktopWindow retires progressive/editor ownership
+before task creation, blocks competing processing, and waits for verified cleanup
+on close. No queue mutation or automatic recommendation application is exposed.
+See [calibration](calibration.md) for evidence scopes and unsupported contexts.

@@ -35,10 +35,12 @@ from PySide6.QtWidgets import (
 )
 
 from .asset_inventory import AssetSelection
+from .calibration import CalibrationPlan
 from .desktop_assets import AssetsPanel
 from .desktop_benchmark import BenchmarkPanel
 from .desktop_bridge import DesktopBridge
 from .desktop_cache import CacheMaintenancePanel
+from .desktop_calibration import CalibrationDialog
 from .desktop_comparison import RenderView, common_range, completed_view
 from .desktop_corrections import CorrectionDialog
 from .desktop_diagnostic_ranges import DiagnosticRangesPanel
@@ -95,6 +97,8 @@ class DesktopWindow(QMainWindow):
         self.portable_project: PortableProjectDialog | None = None
         self.portable_application_records: list[dict[str, Any]] = []
         self.pending_queue_root: Path | None = None
+        self.calibration: CalibrationDialog | None = None
+        self.pending_calibration: CalibrationPlan | None = None
         self.asset_selection: AssetSelection | None = None
         self.resource_request: str | None = None
         self._diagnostic_binding: tuple[Any, ...] | None = None
@@ -181,6 +185,7 @@ class DesktopWindow(QMainWindow):
         backend_bar = QHBoxLayout()
         backend_bar.addWidget(self.backend, 1)
         self._button('Progressive preview…', lambda: self.progressive.show(), backend_bar)
+        self._button('Calibrate performance…', self.open_calibration, backend_bar)
         self._button('Resources…', self.resources.show, backend_bar)
         layout.addLayout(backend_bar)
         self.queue_label = QLabel('Queue: session only · choose Queue history to create/open durable storage')
@@ -533,8 +538,8 @@ class DesktopWindow(QMainWindow):
         try:
             if self.readiness.prepared is None or job != self.readiness.prepared or self.readiness.submitted_id is not None:
                 raise ValueError('Prepare and review a fresh short-render snapshot before submission.')
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-                raise ValueError('Wait for benchmark, queue activation or shutdown before rendering.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark, calibration, queue activation or shutdown before rendering.')
             if len(self.jobs) >= 128:
                 raise ValueError('Queue history is full. Clear finished jobs before submitting more.')
             if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
@@ -552,6 +557,8 @@ class DesktopWindow(QMainWindow):
     def enqueue(self):
         self.progressive.suspend_for_export()
         try:
+            if self.calibration_processing:
+                raise ValueError('Calibration owns processing; cancel it and wait for verified worker cleanup before rendering.')
             if self.pending_queue_root is not None:
                 raise ValueError('Wait for queue workspace activation.')
             if self.benchmark.busy:
@@ -1027,8 +1034,8 @@ class DesktopWindow(QMainWindow):
     def submit_recovery(self, payload):
         self.progressive.suspend_for_export()
         try:
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-                raise ValueError('Wait for current benchmark/queue/shutdown before recovery submission.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for current benchmark/calibration/queue/shutdown before recovery submission.')
             if self.bridge.journal_workspace is None:
                 raise ValueError('Create/activate a durable queue workspace before submitting recovery.')
             if len(self.jobs) >= 128:
@@ -1057,12 +1064,12 @@ class DesktopWindow(QMainWindow):
 
     def activate_assets(self, selection: AssetSelection):
         try:
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-                raise ValueError('Wait for benchmark/queue/shutdown before changing assets.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark/calibration/queue/shutdown before changing assets.')
             if not self.bridge.done.is_set():
                 raise ValueError('Stop worker and wait for shutdown before using different assets.')
             self.poll()
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None or not self.bridge.done.is_set():
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None or not self.bridge.done.is_set():
                 raise ValueError('Processing ownership changed; wait before changing assets.')
             if self.bridge.failure is not None:
                 raise ValueError('Previous worker cleanup failed: ' + self.bridge.failure)
@@ -1097,7 +1104,7 @@ class DesktopWindow(QMainWindow):
             except (ValueError, OSError) as exc:
                 self.queue_panel.status.setText(str(exc))
                 return
-        if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
+        if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
             self.queue_panel.status.setText('Wait for current processing/shutdown before changing queue workspace.')
             return
         if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
@@ -1129,6 +1136,9 @@ class DesktopWindow(QMainWindow):
             self._open_editor(Path(path))
 
     def _open_editor(self, existing: Path | None = None):
+        if self.calibration_processing:
+            self.error('Calibration owns processing; wait for verified retirement before opening the correction editor.')
+            return
         if self.closing:
             return
         if self.editor is not None and (not self.editor.service.done.is_set() or self.editor.canvas.dirty):
@@ -1167,13 +1177,15 @@ class DesktopWindow(QMainWindow):
             self.error(exc)
 
     def stop_worker(self):
+        if self.calibration_processing and self.calibration is not None:
+            self.cancel_calibration()
         self.bridge.stop()
         self.statusBar().showMessage('Stopping worker; active work may leave partial outputs')
 
     def request_resources(self):
         try:
-            if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-                raise ValueError('Wait for benchmark/queue/shutdown before sampling the worker.')
+            if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+                raise ValueError('Wait for benchmark/calibration/queue/shutdown before sampling the worker.')
             if self.resource_request is not None:
                 raise ValueError('Wait for the outstanding worker snapshot or stop its connection explicitly.')
             self.resource_request = self.bridge.send('status', {})
@@ -1182,8 +1194,8 @@ class DesktopWindow(QMainWindow):
             self.resources.status.setText(str(exc))
 
     def new_worker(self):
-        if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
-            self.error('Wait for benchmark/shutdown completion before starting another worker.')
+        if self.closing or self.benchmark.busy or self.calibration_processing or self.pending_queue_root is not None:
+            self.error('Wait for benchmark/calibration/shutdown completion before starting another worker.')
             return
         if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
             self.error('Previous benchmark cleanup is unverified; another processing owner cannot start.')
@@ -1204,8 +1216,74 @@ class DesktopWindow(QMainWindow):
         self.bridge = DesktopBridge(self.bridge.factory, journal_workspace=self.bridge.journal_workspace)
         self.statusBar().showMessage('New worker connection; previous jobs will not be resubmitted')
 
+    @property
+    def calibration_processing(self):
+        panel = self.calibration
+        if self.pending_calibration is not None or (panel is not None and panel.waiting):
+            return True
+        if panel is None or panel.task is None:
+            return False
+        return not panel.task.done.is_set() or bool(panel.task.snapshot().get('cleanup_error'))
+
+    def open_calibration(self):
+        if self.closing:
+            return
+        if self.calibration is not None:
+            if self.calibration.isVisible() or self.calibration.busy or self.calibration_processing:
+                self.calibration.show()
+                self.calibration.raise_()
+                return
+            self.calibration.shutdown()
+            self.calibration.deleteLater()
+        try:
+            job = self.job(preview_only=True)
+        except (ValueError, OSError, TypeError):
+            job = None
+        self.calibration = CalibrationDialog(job, self, frame=self.frame.value(), selection=self.asset_selection)
+        self.calibration.run_requested.connect(self.start_calibration)
+        self.calibration.cancel_requested.connect(self.cancel_calibration)
+        self.calibration.show()
+
+    def start_calibration(self, plan):
+        panel = self.calibration
+        if panel is None:
+            return
+        try:
+            if not isinstance(plan, CalibrationPlan) or plan is not panel.prepared_plan:
+                raise ValueError('Verify and review the displayed immutable calibration plan before starting.')
+            effective_selection = self.asset_selection or AssetSelection(Path(__file__).resolve().parents[1])
+            if panel.captured_selection != effective_selection:
+                raise ValueError('Selected model assets changed; capture and verify a new calibration plan.')
+            if self.closing or self.pending_calibration is not None or self.pending_queue_root is not None or self.pending_benchmark is not None or self.benchmark.busy or self.benchmark.io_busy:
+                raise ValueError('Wait for benchmark, queue activation or shutdown before calibration.')
+            if any(state['status'] not in TERMINAL for state in self.jobs.values()):
+                raise ValueError('Finish or cancel queued renders/recovery before calibration.')
+            if self.editor is not None and not self.editor.service.done.is_set():
+                raise ValueError('Close the correction editor before calibration; preserve any dirty draft first.')
+            if self.readiness.io_busy or self.assets.io_busy or self.ofx_cache.io_busy or self.cache_panel.io_busy or self.queue_panel.io_busy or self.recovery.io_busy:
+                raise ValueError('Wait for existing background file/check operations before calibration.')
+            if panel.task is not None and (not panel.task.done.is_set() or panel.task.snapshot().get('cleanup_error')):
+                raise ValueError('Previous calibration worker retirement is not verified.')
+            if self.benchmark.task is not None and self.benchmark.task.snapshot()['cleanup_error']:
+                raise ValueError('Previous benchmark worker cleanup is not verified.')
+            if self.bridge.cleanup_error is not None or (self.bridge.done.is_set() and self.bridge.failure is not None):
+                raise ValueError('Resident worker cleanup failed: ' + str(self.bridge.cleanup_error or self.bridge.failure))
+            self.progressive.suspend_for_export()
+            self.playback.pause()
+            self.pending_calibration = plan
+            panel.waiting = True
+            panel.status.setText('Stopping the resident worker and retiring progressive previews before calibration…')
+            self.bridge.stop()
+        except (ValueError, OSError, TypeError) as exc:
+            panel.reject_start(str(exc))
+
+    def cancel_calibration(self):
+        self.pending_calibration = None
+        if self.calibration is not None:
+            self.calibration.cancel()
+
     def start_benchmark(self, manifest: Path, parent: Path):
-        if self.closing or self.benchmark.busy or self.benchmark.io_busy or self.pending_queue_root is not None:
+        if self.closing or self.benchmark.busy or self.benchmark.io_busy or self.calibration_processing or self.pending_queue_root is not None:
             self.benchmark.status.setText('Processing/shutdown is already in progress.')
             return
         if any(state['status'] not in TERMINAL for state in self.jobs.values()):
@@ -1227,6 +1305,8 @@ class DesktopWindow(QMainWindow):
         self.benchmark.status.setText('Benchmark cancellation requested; waiting for owned process cleanup.')
 
     def poll(self):
+        if self.calibration is not None:
+            self.calibration.poll()
         self.readiness.poll()
         self.diagnostic_ranges.poll()
         self.benchmark.refresh()
@@ -1291,6 +1371,16 @@ class DesktopWindow(QMainWindow):
                     self.queue_label.setText('Opening durable queue: ' + str(root))
                 else:
                     self.queue_panel.status.setText('Queue activation refused: ' + str(self.bridge.failure or 'application closing'))
+            if self.pending_calibration is not None and not self.progressive.busy:
+                plan, self.pending_calibration = self.pending_calibration, None
+                if self.calibration is not None:
+                    if self.bridge.failure is None and self.bridge.cleanup_error is None and not self.closing:
+                        try:
+                            self.calibration.begin(plan)
+                        except (ValueError, OSError, RuntimeError, TypeError) as exc:
+                            self.calibration.reject_start('Calibration start failed; no automatic retry: ' + str(exc))
+                    else:
+                        self.calibration.reject_start('Resident worker shutdown was not verified or workspace is closing: ' + str(self.bridge.cleanup_error or self.bridge.failure or 'closing'))
             if self.pending_benchmark is not None:
                 request, self.pending_benchmark = self.pending_benchmark, None
                 self.benchmark.waiting = False
@@ -1349,6 +1439,8 @@ class DesktopWindow(QMainWindow):
         self.playback.pause()
         self.loader.stopping.set()
         progressive_done = self.progressive.shutdown()
+        self.pending_calibration = None
+        calibration_done = self.calibration is None or self.calibration.shutdown()
         self.bridge.stop()
         self.cancel_benchmark()
         self.benchmark.dossier_panel.close()
@@ -1364,7 +1456,7 @@ class DesktopWindow(QMainWindow):
         if portable_done and self.portable_project is not None:
             self.retain_portable_application(self.portable_project)
         editor_done = self.editor is None or self.editor.service.done.is_set()
-        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and not self.loader.thread.is_alive():
+        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and calibration_done and not self.loader.thread.is_alive():
             self.timer.stop()
             event.accept()
         else:

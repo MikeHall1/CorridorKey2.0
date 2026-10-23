@@ -138,3 +138,10 @@ always retires ownership, while only current-generation errors stop/report.
 Thirteen real-decoder cases cover these paths, including paused buffering and
 old Alpha failure followed by valid newer Source pixels. Independent final
 review passes13cases2.603s with no remaining blocker in this increment.
+
+
+EXT-08 now has connected explicit sequence/profile calibration: metadata → budgeted
+Verify → Start, exclusive worker transition, cold/warm sample measurements, raw
+reports, failures/exclusions and measured-only recommendations. Final frozen
+1385CPU/397file gate passes,0newstatic; actual CUDA/quality/Windows/Resolve remain NOT VERIFIED.
+See [workflow and evidence limits](calibration.md).

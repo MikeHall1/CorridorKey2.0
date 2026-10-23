@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-10-23T15:45:53.258843+00:00",
-  "cycles_completed": 45,
+  "created_utc": "2026-10-23T16:22:35.396361+00:00",
+  "cycles_completed": 50,
   "checkpoint_interval": 5,
-  "boundary_reason": "Ninth coherent extension checkpoint: explicitly captured bounded source-aligned spatial tracking overlays and established correction/navigation actions locally verified.",
+  "boundary_reason": "Tenth coherent extension checkpoint: explicit controlled sequence calibration with exclusive processing ownership locally verified.",
   "completed": [
     {
       "id": "fresh-repository-review",
@@ -183,7 +183,7 @@
     },
     {
       "id": "EXT-08",
-      "status": "ready",
+      "status": "in_progress",
       "acceptance": "Explicit cancellable cold/warm configuration measurements, identity/expiry, failures and recommendations/duration uncertainty with no implicit job changes."
     },
     {
@@ -247,9 +247,9 @@
       "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
     }
   ],
-  "next_action": "Implement explicit cancellable short-sample machine calibration with controlled cold/warm configurations, exact provenance, measured-only recommendations and no queued-job mutation.",
-  "last_verification_logs": "benchmark-results/ext07-connected-final",
+  "next_action": "Implement strict foreign path-flavour all-collected portable package inspection/application with lexical archival validation and explicit native destination rebinding; continue remaining feature contexts and supported host preparation.",
+  "last_verification_logs": "benchmark-results/ext08-connected-final",
   "product_complete": false,
-  "reviewed_source_identity": "c7ef2ce7e733edfa9b5184f2450bb50275448ee6271b77218097a5b0c690de24",
-  "local_increment": "Connected spatial tracking diagnostic overlays locally verified; additional diagnostic roles and representative quality/external acceptance pending"
+  "reviewed_source_identity": "e8afba7b05b57a2ab665427d4462bc0864ba3a08d5d96a79a6a051346926c5f4",
+  "local_increment": "Connected sequence/profile calibration locally verified; actual CUDA/sample/quality and external acceptance remain pending"
 }

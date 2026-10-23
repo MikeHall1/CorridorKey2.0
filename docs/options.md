@@ -322,3 +322,12 @@ captured range and new-correction actions use existing safeguards/source reload.
 No CLI/inference flag, correction schema, persisted track semantics or render
 pixel/default change. Saved-track maps remain unavailable. Limits and commands:
 [spatial tracking diagnostics](tracking-overlays.md).
+
+
+## Optional machine calibration
+
+Calibrate performance… opens an explicit metadata → budgeted Verify → Start workflow.
+No render defaults or aliases change. Profiles cover scale, temporal window/stride,
+Stage 2 batching, explicit memory/cache and Quick Key settings; recommendations
+never change jobs. Sequence-only; hints/corrections/video and auto-VRAM/stage
+profiling are explicitly refused. See [workflow, limits and verification](calibration.md).

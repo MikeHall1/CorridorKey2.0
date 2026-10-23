@@ -165,15 +165,26 @@
     {
       "id": "EXT-08",
       "title": "Machine-specific calibration",
-      "status": "ready",
+      "status": "in_progress",
       "dependencies": [
         "EXT-01"
       ],
       "acceptance": "Explicit cancellable cold/warm configuration measurements, identity/expiry, failures and recommendations/duration uncertainty with no implicit job changes.",
       "evidence": [
-        "docs/product-improvements.md"
+        "docs/product-improvements.md",
+        "corridorkey/calibration.py",
+        "corridorkey/calibration_task.py",
+        "corridorkey/desktop_calibration.py",
+        "corridorkey/desktop_window.py",
+        "tests/test_calibration.py",
+        "tests/test_calibration_task.py",
+        "tests/test_desktop_calibration.py",
+        "tests/test_desktop_window_calibration.py",
+        "docs/calibration.md",
+        "docs/calibration-review.md",
+        "benchmark-results/ext08-connected-final/source-verification.json"
       ],
-      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+      "next_action": "Initial sequence calibration locally verified; actual CUDA repeated cold/warm reports, representative quality and external target acceptance NOT VERIFIED. Video/hints/corrections and live physical/environment expiry binding unsupported. Continue native-safe foreign portable packages."
     },
     {
       "id": "EXT-09",
@@ -912,7 +923,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Implement explicit cancellable short-sample machine calibration with controlled cold/warm configurations, exact provenance, measured-only recommendations and no queued-job mutation.",
+  "next_action": "Implement strict foreign path-flavour all-collected portable package inspection/application with lexical archival validation and explicit native destination rebinding; continue remaining feature contexts and supported host preparation.",
   "objective_source": "docs/product-improvements-brief.md",
-  "current_checkpoint_evidence": "benchmark-results/ext01-guided-accepted/source-verification.json"
+  "current_checkpoint_evidence": "benchmark-results/ext08-connected-final/source-verification.json"
 }
