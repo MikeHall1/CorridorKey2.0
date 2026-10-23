@@ -39,7 +39,7 @@ class Engine(Protocol):
 
 
 class SharedEngine:
-    """Normal jobs share one lazy model; recovery requests own fresh batch sessions.
+    """Render/preview jobs share one model; recovery owns fresh batch sessions.
 
     Closing the normal session before recovery avoids relabelling resident old
     weights with newly fingerprinted assets. Recovery already owns batch lifetime.
@@ -54,7 +54,7 @@ class SharedEngine:
     def run(self, request, cancellation, progress):
         self.record = None
         payload = request.payload()
-        if request.action == 'render':
+        if request.action in ('render', 'preview'):
             if self.session is None:
                 self.session = InferenceSession(weights=self.weights, package_root=self.root, asset_root=self.asset_root)
             try:
@@ -63,6 +63,8 @@ class SharedEngine:
                 if self.session.last_result is not None:
                     self.record = self.session.last_result.to_dict()
                 raise
+        if request.action != 'recover':
+            raise ValueError('Shared engine supports render, preview and recovery only')
         self.close()
         from .batch import load_jobs
         from .recovery import cuda_environment, run_recoverable
@@ -127,7 +129,7 @@ class WorkerCore:
     def dispatch(self, request: Request):
         payload = request.payload()
         with self.condition:
-            if request.action in ('render', 'recover'):
+            if request.action in ('render', 'preview', 'recover'):
                 code = ('duplicate_id' if request.request_id in self.seen else
                         'stopping' if self.closing else 'restart_required' if len(self.seen) >= self.max_requests else
                         'queue_full' if len(self.pending) >= self.capacity else None)

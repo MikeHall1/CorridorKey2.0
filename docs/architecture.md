@@ -232,3 +232,17 @@ summaries and retains late committed results without applying them. Main applies
 only a strictly validated acknowledged snapshot, preserving queue/model owners.
 See [portable projects](portable-projects.md); cross-path-flavour support remains
 unsupported and model runtime compatibility remains unverified.
+
+Progressive preview scheduling is Qt-independent in `progressive_preview.py`:
+immutable context/stage/attempt identities, bounded priority work, one retained
+owner and exact-provenance thumbnail cache. `preview_execution.py` captures
+strict original jobs/source/model metadata, admits selected encoded/native frames
+and creates fresh per-request workspaces without importing neural models.
+The desktop panel submits the dedicated transient `preview` action through its
+existing DesktopBridge/WorkerCore/SharedEngine/InferenceSession. It serializes
+preparation, native terminal observation, thumbnail decode and verified cleanup;
+exports cancel/disable preview admission and keep their original recipes. Worker
+replacement/source/settings/view changes invalidate captured contexts. No preview
+artifact is promoted into export/recovery storage. The initial single-frame
+sequence path explicitly refuses unsupported temporal/hint/correction contexts;
+final labels mean the configured preview recipe, not full-range equivalence.

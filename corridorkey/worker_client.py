@@ -102,7 +102,7 @@ class WorkerClient:
         with self.condition:
             if self.closed or self.failure is not None or self.eof:
                 raise WorkerLost(self.failure or 'worker is closed')
-            if action in ('render', 'recover'):
+            if action in ('render', 'preview', 'recover'):
                 if request_id in self.seen:
                     raise ValueError('request id already used in this generation')
                 if len(self.outstanding) >= self.capacity + 1:
@@ -116,7 +116,7 @@ class WorkerClient:
                 self.outgoing.put_nowait(frame)
         except queue.Full as exc:
             with self.condition:
-                if action in ('render', 'recover'):
+                if action in ('render', 'preview', 'recover'):
                     self.outstanding.discard(request_id)
                     self.seen.discard(request_id)
             raise BufferError('client outbound queue is full') from exc
@@ -143,6 +143,10 @@ class WorkerClient:
 
     def submit(self, job, *, request_id=None):
         return self.send('render', {'job': job_to_wire(job)}, request_id=request_id)
+
+    def submit_preview(self, job, *, request_id=None):
+        """Run an explicit preview job through the same sequential model owner."""
+        return self.send('preview', {'job': job_to_wire(job)}, request_id=request_id)
 
     def cancel(self, target, reason='cancelled by client'):
         return self.send('cancel', {'target': target, 'reason': reason})

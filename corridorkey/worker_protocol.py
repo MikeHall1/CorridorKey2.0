@@ -113,9 +113,9 @@ def parse_request(value):
     action, payload = value['action'], value['payload']
     if not isinstance(action, str) or not isinstance(payload, dict):
         raise TypeError('worker action/payload types differ')
-    if action == 'render':
+    if action in ('render', 'preview'):
         if set(payload) != {'job'}:
-            raise ValueError('render requires one shared job')
+            raise ValueError(f'{action} requires one shared job')
         payload = {'job': job_to_wire(job_from_wire(payload['job']))}
     elif action == 'recover':
         if set(payload) - {'batch', 'workspace', 'max_cache_bytes', *RECOVERY_FLAGS}:

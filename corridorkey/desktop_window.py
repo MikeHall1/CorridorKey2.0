@@ -47,6 +47,7 @@ from .desktop_ofx import OfxCachePanel
 from .desktop_playback import PlaybackControls
 from .desktop_portable_project import PortableProjectDialog
 from .desktop_preview import PreviewPair
+from .desktop_progressive import ProgressivePreviewPanel
 from .desktop_queue import QueuePanel
 from .desktop_readiness import ReadinessPanel
 from .desktop_recovery import RecoveryPanel
@@ -128,6 +129,7 @@ class DesktopWindow(QMainWindow):
         self.readiness = ReadinessPanel(self)
         self.readiness.run_requested.connect(self.submit_readiness)
         self._build()
+        self.progressive = ProgressivePreviewPanel(self)
         self.source.textChanged.connect(self.playback.navigate)
         self.config.textChanged.connect(self.playback.navigate)
         for field in (self.source, self.output, self.first_hint, self.full_hint):
@@ -178,6 +180,7 @@ class DesktopWindow(QMainWindow):
         self.backend.setWordWrap(True)
         backend_bar = QHBoxLayout()
         backend_bar.addWidget(self.backend, 1)
+        self._button('Progressive preview…', lambda: self.progressive.show(), backend_bar)
         self._button('Resources…', self.resources.show, backend_bar)
         layout.addLayout(backend_bar)
         self.queue_label = QLabel('Queue: session only · choose Queue history to create/open durable storage')
@@ -526,6 +529,7 @@ class DesktopWindow(QMainWindow):
                             first_hint=self.first_hint.text(), full_hint=self.full_hint.text(), profile=self.profile.isChecked())
 
     def submit_readiness(self, job):
+        self.progressive.suspend_for_export()
         try:
             if self.readiness.prepared is None or job != self.readiness.prepared or self.readiness.submitted_id is not None:
                 raise ValueError('Prepare and review a fresh short-render snapshot before submission.')
@@ -546,6 +550,7 @@ class DesktopWindow(QMainWindow):
             self.readiness.status.setText(str(exc))
 
     def enqueue(self):
+        self.progressive.suspend_for_export()
         try:
             if self.pending_queue_root is not None:
                 raise ValueError('Wait for queue workspace activation.')
@@ -1020,6 +1025,7 @@ class DesktopWindow(QMainWindow):
         self.populate_job(job, output_parent=str(Path(job.output_dir).parent))
 
     def submit_recovery(self, payload):
+        self.progressive.suspend_for_export()
         try:
             if self.closing or self.benchmark.busy or self.pending_queue_root is not None:
                 raise ValueError('Wait for current benchmark/queue/shutdown before recovery submission.')
@@ -1232,6 +1238,8 @@ class DesktopWindow(QMainWindow):
         self.recovery.poll()
         changed = False
         for event in self.bridge.poll():
+            if self.progressive.observe(event):
+                continue
             if self.resource_request is not None and event.get('request_id') == self.resource_request:
                 self.resources.observe(event)
                 self.resource_request = None
@@ -1340,6 +1348,7 @@ class DesktopWindow(QMainWindow):
         self.closing = True
         self.playback.pause()
         self.loader.stopping.set()
+        progressive_done = self.progressive.shutdown()
         self.bridge.stop()
         self.cancel_benchmark()
         self.benchmark.dossier_panel.close()
@@ -1355,7 +1364,7 @@ class DesktopWindow(QMainWindow):
         if portable_done and self.portable_project is not None:
             self.retain_portable_application(self.portable_project)
         editor_done = self.editor is None or self.editor.service.done.is_set()
-        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and not self.loader.thread.is_alive():
+        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and not self.loader.thread.is_alive():
             self.timer.stop()
             event.accept()
         else:

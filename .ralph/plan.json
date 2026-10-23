@@ -118,15 +118,26 @@
     {
       "id": "EXT-06",
       "title": "Progressive preview refinement",
-      "status": "ready",
+      "status": "in_progress",
       "dependencies": [
         "EXT-05"
       ],
       "acceptance": "Explicit budgeted priority scheduling, draft/refined/final/stale states, newest-request fences and provenance-compatible reuse; exports preserve requested quality.",
       "evidence": [
-        "docs/product-improvements.md"
+        "docs/product-improvements.md",
+        "corridorkey/progressive_preview.py",
+        "corridorkey/preview_execution.py",
+        "corridorkey/desktop_progressive.py",
+        "corridorkey/worker_core.py",
+        "tests/test_progressive_preview.py",
+        "tests/test_preview_execution.py",
+        "tests/test_worker_preview.py",
+        "tests/test_desktop_progressive.py",
+        "docs/progressive-previews.md",
+        "docs/progressive-previews-review.md",
+        "benchmark-results/ext06-connected-final/source-verification.json"
       ],
-      "next_action": "Implement next locally feasible acceptance scenario; external execution never inferred from fixtures."
+      "next_action": "Initial explicit image-sequence progressive workflow locally verified through same engine owner. Video/QuickKey/hints/corrections/context-preserving range support and actualGPUlatency/VRAM/quality acceptance remain unsupported/unverified. Continue spatial tracking overlays EXT07."
     },
     {
       "id": "EXT-07",
@@ -892,7 +903,7 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Implement connected explicitly controlled progressive preview scheduling with bounded resources, captured settings and stale-result fences.",
+  "next_action": "Capture bounded spatial tracking diagnostic maps during existing explicit tracking preview, expose read-only source-aligned overlays/legend/navigation and established correction actions without new analysis by default.",
   "objective_source": "docs/product-improvements-brief.md",
   "current_checkpoint_evidence": "benchmark-results/ext01-guided-accepted/source-verification.json"
 }

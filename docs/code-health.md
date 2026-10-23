@@ -194,3 +194,12 @@ rehashes all379files against frozen mapping2c083cea9dd36d7d4718bca9c700873c0d8c8
 Findings297–305 resolved; existing005/nativeQt126 stayopen. Explicit dataclass
 instance/class and heterogeneous-set contracts inspected; no checker/baseline or
 environment changes. Evidence ext09-connected-final/, portable-projects-review.md.
+
+Eighth extension checkpoint:1323CPU tests PASS91.578s/no skips;386Python files,
+full compile/import/requirements/VCS/dependency/whitespace/static regression gate
+PASS.0new fingerprints vs unchanged baseline AND actual priorf387223; retained
+519Ruff/684Pyright errors17warnings, not static-clean. Independent scheduler,
+execution and actualQt reviews + main distinct review resolve306–314. Frozen
+mapping3f5fc42e94b3b4a42775e7fdea218c0767af6db6bab17781e1b644f858d65f53,
+logs ext06-connected-final/. Initial failedQt/static evidence retained.005/nativeQt126
+remain open; no checker/baseline/environment changes or GPU/quality/host claims.

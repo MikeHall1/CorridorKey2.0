@@ -299,3 +299,16 @@ Apply requires separate output/scratch; desktop preview frame maximum stays1e9
 and larger portable frame values refuse rather than clamp. Native path flavour
 only initially; no model/cache/environment collection or compatibility claim.
 See [bounds, provenance and validation](portable-projects.md).
+
+Desktop **Progressive preview…** adds an explicitly enabled, transient inference
+workflow; default off and opening performs no I/O/model work. Capture/start uses
+the current job, explicitly selected scratch and Alpha/Foreground/composite view.
+Optional draft defaults unchecked, scale0.5 (must be below captured model_scale);
+idle surrounding refinement defaults checked. Core scheduler limits and workspace
+bounds are fixed explicit admission policies, not hardware memory caps. Normal
+exports retain their settings and disable previews. Worker protocol `preview`
+accepts the same strict job wire as `render`, shares the same sequential session,
+and is excluded from durable render history. No existing CLI flag, inference
+precision/colour/backend default or persisted format changes. Initial sequences
+only, no Quick Key/hints/corrections; single-frame temporal state restarts.
+[Workflow and verification limits](progressive-previews.md).

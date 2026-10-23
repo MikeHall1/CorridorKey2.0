@@ -136,8 +136,8 @@ class DesktopBridge:
                         action, payload, request_id = self.commands.get_nowait()
                     except queue.Empty:
                         break
-                    if action in {'render', 'recover'}:
-                        if self.store is not None:
+                    if action in {'render', 'preview', 'recover'}:
+                        if self.store is not None and action != 'preview':
                             self.store.prepare(request_id, action, payload)
                         self._publish({'kind': 'cancelled', 'request_id': request_id,
                                        'payload': {'reason': 'Desktop stopped before dispatch', 'executed': False}})

@@ -6468,6 +6468,196 @@
         "benchmark-results/ext09-connected-final/source-verification.json"
       ],
       "resolution": "Resolved in reviewed connected portable project batch; native path flavour only. Existing nativeQt126/static005 remain open."
+    },
+    {
+      "id": "HEALTH-PREVIEW-306",
+      "component": "Progressive preview integration and failure ownership",
+      "classification": "Main source/API integration self-review and first focused lint before execution",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Initial new panel used provisional scheduler method/state names, retained too much metadata for16KiB artifacts, treated superseded preparation as fatal, and could discard ownership after cleanup errors; first Ruff also found importformat and two unlogged broad background-boundary handlers.",
+      "root_cause": "New asynchronous glue was authored before final kernel interfaces and terminal/cleanup contracts were stabilized.",
+      "proposed_action": "Align exact API, bounded artifact summaries, generation-aware cancellation, retain failedcleanup roots with explicit retry, log backgroundexceptions without globaldiagnostic suppression; verify actualQt lifecycle and CPUchild integration before acceptance.",
+      "acceptance": "Latest seek/refinement, source/settings/model invalidation, explicit cancel/close and retrycleanup retain boundedownership; no queuedexports/form/source mutation; complete applicablegate passes.",
+      "owner": "root",
+      "evidence": [
+        "Initial main panel source self-review; focusedRuff3 findings before remediation."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-307",
+      "component": "Transient preview preparation cleanup ownership",
+      "classification": "Main source control-flow review before initial integration execution",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "job_for failure after workspace allocation calls cleanup without preserving primary exception or structured workspace; simultaneous cleanup failure can mask primary and lose retryable owned root from caller.",
+      "root_cause": "Preparation returned no value on exception, but private artifact lifetime crossed failure boundary without structured retained ownership.",
+      "proposed_action": "Preserve primary error and expose immutable/typed retained-workspace metadata when cleanup is not verified; main panel retains root and offers retry while preventing newwork/parent teardown claims.",
+      "acceptance": "Injected preparefault plus cleanupfault reports both with root, no unknownartifactloss, retrycleanup retires ownership; no source/export mutation.",
+      "owner": "root; readiness_ui",
+      "evidence": [
+        "Source job_for exceptBaseException workspace.cleanup(); main prepare-error _retire initially discards result metadata."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-308",
+      "component": "Progressive capture cancellation generation",
+      "classification": "Independent source asynchronous control-flow review before execution",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Late successful capture can be accepted after Disable then Reenable because checkbox is checked again although original capture token was cancelled.",
+      "root_cause": "Initial capture event admission only checked enabled/currentclosing state, without preserving operationtoken/generation through delivery.",
+      "proposed_action": "Carry original cancellation token with terminal IO event; capture accepts only uncancelled currentcontext result. Add deterministic blockedlatecapture test.",
+      "acceptance": "Late obsolete capture after disable/reenable creates no scheduler/inference/workspace; only explicit newCapture can start.",
+      "owner": "root; feature_audit",
+      "evidence": [
+        "Independent read-only panel review of capture event branch and invalidate token retirement."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-309",
+      "component": "Progressive panel first integration verification",
+      "classification": "Observed actualQt7case suite failure and focusedPyright14 diagnostics before remediation",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "6/7newactualQt tests pass; preservationcomparison mismatches lexical /var fixture keys against normalized /private/var request keys despite identical filehashes. Pyright reports4 productionoptionalowner guards and10fixture optional/heterogeneousdict assertions.",
+      "root_cause": "Fixture paths were captured before canonical request normalization; newly authored control flow did not explicitly narrow optional scheduler/request/result/token states for typedcontracts.",
+      "proposed_action": "Use canonical sourcepath snapshot without weakening fullhash preservation comparison, add meaningful production ownerguards beforecheck/complete and fixture instance assertions/typedJSONdict; no ignore/suppression/checker changes.",
+      "acceptance": "7actualQt cases pass/no skips -Werror; touchedfilesstatic0; retainoriginalfailedlogs.",
+      "owner": "root",
+      "evidence": [
+        "benchmark-results/ext06-integration-initial/ui-tests.txt",
+        "benchmark-results/ext06-integration-initial/ui-pyright.txt"
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-310",
+      "component": "Preview captured source cache identity",
+      "classification": "Independent actual local regression reproduction on frozen execution source before batch acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Equal-size source replacement with restoredmtime is rejected by existing source.check viactime, but recapture produces same contextidentity and could admit oldthumbnail via schedulerbind cache.",
+      "root_cause": "Captured source_ctimes were checked but omitted from context/provenance digest.",
+      "proposed_action": "Include complete admitted source metadata identity (including ctime) in immutable context provenance/sourceidentity; independent adversarial regression retains oldcache only for trulyidenticalcontext.",
+      "acceptance": "Recapture changed pixels with equalencodedsize/restoredmtime produces newcontext and cannotreuse oldcachedthumbnail.",
+      "owner": "root; readiness_ui; readiness_review",
+      "evidence": [
+        "Independent actual129byte PNG100\u2192101 replacement with restoredmtime yields identical recipe.context.identity."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-311",
+      "component": "Preview workspace final directory cleanup retry",
+      "classification": "Independent actual local regression reproduction on frozen execution source before batch acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Finalroot rmdir failure after ownershipmarker deletion leaves root withoutmarker; laterretry permanentlyfails marker FileNotFoundError even whenrmdirfaultremoved.",
+      "root_cause": "Marker retirement was not represented in cleanupowner state after partialsuccessful cleanup.",
+      "proposed_action": "Retain or safelyrestore exactmarkerproof on finalrmdirfailure, or retainverifiedretired-markerstate boundtooriginalroot inode; do not reconstructownership ofunrelatedroot.",
+      "acceptance": "Injected finalrmdirfailure thenretry safelyreleases sameownedemptyroot; replacedroot/unexpectedentries remainrefused.",
+      "owner": "root; readiness_ui; readiness_review",
+      "evidence": [
+        "Independent actualprivateworkspace with patched finalroot Path.rmdir refusal leaves .preview-owner absent; subsequentcleanup fails."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-312",
+      "component": "Preview late capture invalid editor admission",
+      "classification": "Independent source control-flow/UI state review before integration acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Capture success predicate calls _key outside error boundary; invalid mainJSON entered during capture raises directly from Qt timer and loses result without actionablestatus.",
+      "root_cause": "Asynchronous capture completion checked mutable editor outside normal typederrorhandling.",
+      "proposed_action": "Guard capture-key validation and report failedadmission before scheduler/model dispatch.",
+      "acceptance": "Blockedcapture plus invalidJSON produces actionablefailure with unchangedinvalidform/no inference.",
+      "owner": "root; readiness_ui; feature_audit; readiness_review",
+      "evidence": [
+        "Independent stable source review; pending deterministic regression before acceptance."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-313",
+      "component": "Preview marker budget admission",
+      "classification": "Independent source control-flow/UI state review before integration acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Public workspace API can admit1bytecleanupbudget smaller than fixed32byteownermarker, producing freshroot impossibleto cleanup underitsownquota.",
+      "root_cause": "Positive-only quota admission omitted mandatory metadata size.",
+      "proposed_action": "Refuse impossible markerbudget beforemkdir and test no artifact.",
+      "acceptance": "Submarkersize budgets fail beforecreating root; validboundarycan cleanup.",
+      "owner": "root; readiness_ui; feature_audit; readiness_review",
+      "evidence": [
+        "Independent stable source review; pending deterministic regression before acceptance."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
+    },
+    {
+      "id": "HEALTH-PREVIEW-314",
+      "component": "Preview stale display identity",
+      "classification": "Independent source control-flow/UI state review before integration acceptance",
+      "status": "resolved",
+      "severity": "medium",
+      "priority": "P1",
+      "problem": "Invalidation andrecapture can leaveprevioussource/settingspixels while status namesnewpendingcontext andtooltipstilloldfinal.",
+      "root_cause": "Display widget lifetime was not explicitlyfenced alongwith schedulercache generations.",
+      "proposed_action": "Hide oldpixels/clearoldtooltip oncontextinvalidation/newcapture/seek pending; renderonlyacceptedvalidatedsnapshot withsourceidentitylabels.",
+      "acceptance": "Afterchangingcontext orseeking, oldpixelscannotappearunmarkedascurrent; pending/stale messaging tested.",
+      "owner": "root; readiness_ui; feature_audit; readiness_review",
+      "evidence": [
+        "Independent stable source review; pending deterministic regression before acceptance."
+      ],
+      "verification": [
+        "16schedulerPASS plus independentreview;19executionPASS plus independent19PASS0.304s;36worker-relatedPASS9.801s;8actualQtPASS5.272s and independent8PASS5.049s; touchedRuff/Pyright0.",
+        "benchmark-results/ext06-connected-final/source-verification.json"
+      ],
+      "resolution": "Reviewed connected preview workflow fixes accepted locally by1323CPU/no-skips frozen386file fullgate,0newstatic vsbaseline andactualf387223; unsupportedcontexts/externalacceptance remain explicit."
     }
   ]
 }
