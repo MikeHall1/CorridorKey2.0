@@ -18,14 +18,17 @@ from corridorkey.output_paths import raw_clip_name
 from corridorkey.portable_project import (
     ProjectInspection,
     ProjectPlan,
+    _metadata,
     inspect_project,
     inventory_package,
     inventory_project,
     plan_project,
     publish_project,
 )
+from corridorkey.project_collection import admit_file
 from corridorkey.session import JobRequest
 from corridorkey.worker_protocol import job_to_wire
+from tests.test_project_collection import windows_file_clocks
 
 
 class PortableProjectTests(unittest.TestCase):
@@ -50,6 +53,14 @@ class PortableProjectTests(unittest.TestCase):
 
     def plan(self, job=None, collect_ids=()):
         return plan_project(job or self.job, 1, collect_ids=collect_ids, read_budget=10**7, copy_budget=10**7)
+
+    def test_windows_clock_domains_metadata_reader(self):
+        path = self.root / 'metadata.json'
+        path.write_bytes(b'{"value":1}')
+        with windows_file_clocks():
+            pin = admit_file(path)
+            self.assertEqual(_metadata(pin, 128, None), b'{"value":1}')
+            self.assertEqual(admit_file(path).fingerprint, pin.fingerprint)
 
     def test_metadata_preview_no_payload_hash_missing_precise_and_models_unverified(self):
         with patch('corridorkey.portable_project.read_file', side_effect=AssertionError('no payload read')):

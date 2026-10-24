@@ -18,6 +18,7 @@ from typing import Any
 
 from .control import ProgressEvent
 from .diagnostics import finite_json_float, json_value
+from .identities import verify_file_observation
 from .local_json import _depth, _pairs
 from .session import JobRequest
 
@@ -99,11 +100,13 @@ def _observation(path, check):
 def _read_lines(path, count, check) -> Iterator[dict[str, Any]]:
     path = _safe(path)
     flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
+    path_before = path.stat()
     digest, size, previous = hashlib.sha256(), 0, -1
     with os.fdopen(os.open(path, flags), 'rb') as stream:
         before = os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size > MAX_TRACE_BYTES:
             raise ValueError('Trace requires a bounded regular single-link file.')
+        verify_file_observation(path, path_before, before, before)
         while True:
             _check(check)
             raw = stream.readline(min(MAX_LINE_BYTES + 1, MAX_TRACE_BYTES - size + 1))
@@ -125,8 +128,7 @@ def _read_lines(path, count, check) -> Iterator[dict[str, Any]]:
                 raise ValueError('Trace frames must be unique and chronological.')
             previous = frame
             yield row
-        if _stat(before) != _stat(os.fstat(stream.fileno())) or _stat(before) != _stat(path.stat()):
-            raise ValueError('Trace changed during inspection.')
+        verify_file_observation(path, path_before, before, os.fstat(stream.fileno()))
     yield {'_receipt': {'path': str(path), 'sha256': digest.hexdigest(), 'bytes': size}}
 
 

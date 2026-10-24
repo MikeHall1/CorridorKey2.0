@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .identities import verify_file_observation
+
 os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
 
 MAX_ENCODED_BYTES = 256 * 1024**2
@@ -55,9 +57,10 @@ def _read(path, check):
         before = os.fstat(fd)
         lexical = os.lstat(path)
         if (not stat.S_ISREG(before.st_mode) or before.st_nlink != 1
-                or stat.S_ISLNK(lexical.st_mode) or _identity(before) != _identity(lexical)
+                or stat.S_ISLNK(lexical.st_mode)
                 or getattr(lexical, 'st_file_attributes', 0) & 0x400):
             raise ValueError('trimap must be a regular single-link file without aliases')
+        verify_file_observation(path, lexical, before, before)
         if not 0 < before.st_size <= MAX_ENCODED_BYTES:
             raise ValueError('trimap encoded byte limit exceeded or file empty')
         chunks, remaining = [], before.st_size
@@ -72,8 +75,7 @@ def _read(path, check):
             remaining -= len(block)
         if os.read(fd, 1) or _identity(os.fstat(fd)) != _identity(before):
             raise ValueError('trimap changed during read')
-        if _identity(os.lstat(path)) != _identity(before):
-            raise ValueError('trimap path changed during read')
+        verify_file_observation(path, lexical, before, os.fstat(fd))
         return b''.join(chunks), digest.hexdigest()
     finally:
         os.close(fd)

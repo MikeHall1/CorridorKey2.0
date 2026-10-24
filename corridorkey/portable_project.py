@@ -26,6 +26,7 @@ from typing import Any
 
 from .corrections import MAX_CORRECTION_BYTES, CorrectionDocument
 from .diagnostics import finite_json_float
+from .identities import verify_file_observation
 from .portable_paths import (
     archive_job,
     archived_path,
@@ -39,6 +40,7 @@ from .project_collection import (
     assert_pin,
     check_now,
     cleanup_owned,
+    fingerprint,
     fresh_directory,
     read_file,
     real_path,
@@ -85,11 +87,14 @@ def _metadata(pin: FilePin, maximum: int, check: Check | None) -> bytes:
     if pin.size > maximum:
         raise ValueError('Metadata byte limit exceeded')
     assert_pin(pin)
+    path_before = Path(pin.path).lstat()
+    if fingerprint(path_before) != pin.fingerprint:
+        raise ValueError('Metadata changed before read')
     fd = os.open(pin.path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
-    from .project_collection import fingerprint
     try:
-        if fingerprint(os.fstat(fd)) != pin.fingerprint:
-            raise ValueError('Metadata changed before read')
+        before = os.fstat(fd)
+        fingerprint(before)
+        verify_file_observation(pin.path, path_before, before, before)
         blocks, remaining = [], pin.size
         while remaining:
             check_now(check)
@@ -98,8 +103,9 @@ def _metadata(pin: FilePin, maximum: int, check: Check | None) -> bytes:
                 raise ValueError('Metadata shrank during read')
             blocks.append(block)
             remaining -= len(block)
-        if os.read(fd, 1) or fingerprint(os.fstat(fd)) != pin.fingerprint:
+        if os.read(fd, 1):
             raise ValueError('Metadata changed during read')
+        verify_file_observation(pin.path, path_before, before, os.fstat(fd))
         assert_pin(pin)
         return b''.join(blocks)
     finally:

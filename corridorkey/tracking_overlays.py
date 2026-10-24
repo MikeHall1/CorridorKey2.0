@@ -396,7 +396,10 @@ def write_bundle(bundle: OverlayBundle, owned_preview_dir: Path, *, remaining_bu
                 created.append((path, (opened.st_dev, opened.st_ino)))
                 stream.write(layer.payload)
                 stream.flush()
-                pin = FilePin(str(path), fingerprint(os.fstat(stream.fileno())), row['sha256'])
+            observed = real_path(path, directory=False).lstat()
+            if (observed.st_dev, observed.st_ino) != (opened.st_dev, opened.st_ino):
+                raise ValueError('Created overlay leaf was replaced; admission refused')
+            pin = FilePin(str(path), fingerprint(observed), row['sha256'])
             read_file(pin, check=check)
             verified_pins.append(pin)
         for pin in verified_pins:

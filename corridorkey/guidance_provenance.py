@@ -9,6 +9,8 @@ import os
 import stat
 from pathlib import Path
 
+from .identities import verify_file_observation
+
 MAX_GUIDANCE = 32
 MAX_RESOURCES = 300
 MAX_RESOURCE_BYTES = 64 * 1024 * 1024
@@ -239,8 +241,8 @@ def verify_guidance_resources(data, base_dir, *, check=None):
         digest, remaining = hashlib.sha256(), info.st_size
         flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_BINARY', 0)
         with os.fdopen(os.open(path, flags), 'rb') as stream:
-            if _identity(os.fstat(stream.fileno())) != _identity(info):
-                raise ValueError('guidance resource changed before hashing')
+            opened = os.fstat(stream.fileno())
+            verify_file_observation(path, info, opened, opened)
             while remaining:
                 if check is not None:
                     check()
@@ -249,7 +251,8 @@ def verify_guidance_resources(data, base_dir, *, check=None):
                     raise ValueError('guidance resource truncated while hashing')
                 digest.update(chunk)
                 remaining -= len(chunk)
-            if stream.read(1) or _identity(os.fstat(stream.fileno())) != _identity(info):
+            if stream.read(1) or _identity(os.fstat(stream.fileno())) != _identity(opened):
                 raise ValueError('guidance resource changed while hashing')
+            verify_file_observation(path, info, opened, os.fstat(stream.fileno()))
         if _identity(_admit(path)) != _identity(info) or digest.hexdigest() != expected:
             raise ValueError('guidance resource changed or hash mismatch')

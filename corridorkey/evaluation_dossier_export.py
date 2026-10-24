@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from .control import CancelledError, ProgressEvent
+from .identities import verify_file_observation
 
 MAX_BYTES = (1 << 63) - 1
 NOTICE = ('Human review pending. Assignment labels are concealed; embedded media metadata '
@@ -76,12 +77,14 @@ def _view_contract(row):
 
 
 def _copy_media(source: Path, destination: Path, expected: dict, check):
+    path_before = source.stat()
     flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     fd = os.open(source, flags)
     with os.fdopen(fd, 'rb') as incoming:
         before = os.fstat(incoming.fileno())
         if not stat.S_ISREG(before.st_mode) or before.st_size != expected['bytes']:
             raise ValueError('Review media is not a regular file of the captured size.')
+        verify_file_observation(source, path_before, before, before)
         digest, remaining = hashlib.sha256(), before.st_size
         with destination.open('xb') as outgoing:
             while remaining:
@@ -97,10 +100,10 @@ def _copy_media(source: Path, destination: Path, expected: dict, check):
             outgoing.flush()
             os.fsync(outgoing.fileno())
         after = os.fstat(incoming.fileno())
-        if (_identity(before) != _identity(after) or _identity(after) != _identity(source.stat())
-                or digest.hexdigest() != expected['sha256']):
+        final = verify_file_observation(source, path_before, before, after)
+        if digest.hexdigest() != expected['sha256']:
             raise ValueError('Review media changed or differs from measured media.')
-    return _identity(after)
+    return _identity(final)
 
 
 
@@ -112,10 +115,12 @@ def _sealed(destination, marker, files):
                 return False
         for row in files:
             path = destination / row['path']
+            path_before = path.stat()
             with path.open('rb') as stream:
                 info = os.fstat(stream.fileno())
                 if not stat.S_ISREG(info.st_mode) or info.st_size != row['bytes']:
                     return False
+                verify_file_observation(path, path_before, info, info)
                 digest, remaining = hashlib.sha256(), row['bytes']
                 while remaining:
                     block = stream.read(min(remaining, 1024 * 1024))
@@ -125,9 +130,7 @@ def _sealed(destination, marker, files):
                     remaining -= len(block)
                 if stream.read(1) or digest.hexdigest() != row['sha256']:
                     return False
-                if (_identity(info) != _identity(os.fstat(stream.fileno())) or
-                        _identity(info) != _identity(path.stat())):
-                    return False
+                verify_file_observation(path, path_before, info, os.fstat(stream.fileno()))
         return True
     except (OSError, ValueError, TypeError, KeyboardInterrupt, SystemExit):
         return False

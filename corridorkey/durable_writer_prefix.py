@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .durable_context import BoundModelCache
+from .identities import verify_file_observation
 from .recovery_identity import ReplayIdentity, canonical
 from .recovery_store import (
     CacheCapacity,
@@ -265,8 +266,12 @@ class DurableWriterPrefix(BoundModelCache):
         descriptor = os.open(path, flags)
         try:
             opened = os.fstat(descriptor)
-            if _stamp(opened) != _stamp(before) or not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1:
+            if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1:
                 raise CacheInvalid('writer EXR changed before durable receipt')
+            try:
+                verify_file_observation(path, before, opened, opened)
+            except ValueError as exc:
+                raise CacheInvalid('writer EXR changed before durable receipt') from exc
             if sync:
                 os.fsync(descriptor)
             value = hashlib.sha256()
@@ -279,8 +284,13 @@ class DurableWriterPrefix(BoundModelCache):
                 value.update(block)
                 remaining -= len(block)
                 self.stats['receipt_bytes_hashed' if sync else 'restored_verification_bytes'] += len(block)
-            if os.read(descriptor, 1) or _stamp(os.fstat(descriptor)) != _stamp(before) or _stamp(_regular(path)) != _stamp(before):
+            if os.read(descriptor, 1) or _stamp(os.fstat(descriptor)) != _stamp(opened):
                 raise CacheInvalid('writer EXR changed during receipt')
+            try:
+                verify_file_observation(path, before, opened, os.fstat(descriptor))
+            except ValueError as exc:
+                raise CacheInvalid('writer EXR changed during receipt') from exc
+            _regular(path)
         finally:
             os.close(descriptor)
         return {'bytes': before.st_size, 'sha256': value.hexdigest()}

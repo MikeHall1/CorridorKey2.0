@@ -1,7 +1,9 @@
 """Actual tracking candidates and bounded proxy IO; no quality confidence claim."""
 import json
+import os
 import tempfile
 import unittest
+from contextlib import contextmanager
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from typing import Any
@@ -28,6 +30,27 @@ from corridorkey.tracking_overlays import (
     verify_binding,
     write_bundle,
 )
+from tests.test_project_collection import windows_file_clocks
+
+
+@contextmanager
+def finalize_overlay_writes(finalize):
+    original = Path.open
+
+    @contextmanager
+    def opened(path, *args, **kwargs):
+        overlay = path.name.startswith('overlay-') and path.suffix == '.u8' and args == ('xb',)
+        before = None
+        with original(path, *args, **kwargs) as stream:
+            yield stream
+            if overlay:
+                before = os.fstat(stream.fileno())
+        if overlay:
+            assert before is not None
+            finalize(path, before)
+
+    with patch.object(Path, 'open', opened):
+        yield
 
 
 def candidate():
@@ -91,6 +114,53 @@ class TrackingOverlayTests(unittest.TestCase):
         self.assertEqual(rendered.legend['kind'],'uncertainty')
         with self.assertRaises(ValueError):
             render_layer(bundle,'occlusion_ground_truth')
+
+    def test_windows_clock_domains_write_path_pins_and_read_bundle(self):
+        bundle = build()
+        with windows_file_clocks():
+            receipt = write_bundle(bundle, self.root, remaining_budget=64 * 1024**2)
+            self.assertEqual(read_bundle(receipt, self.root, expected_binding=bundle.binding), bundle)
+
+    def test_windows_close_finalizes_mtime_before_overlay_pin_admission(self):
+        bundle = build()
+        finalized = []
+
+        def finalize(path, before):
+            raw = path.read_bytes()
+            os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns + 10000000))
+            self.assertEqual((path.stat().st_dev, path.stat().st_ino, path.stat().st_size),
+                             (before.st_dev, before.st_ino, before.st_size))
+            self.assertEqual(path.read_bytes(), raw)
+            finalized.append(path)
+
+        with windows_file_clocks(), finalize_overlay_writes(finalize):
+            receipt = write_bundle(bundle, self.root, remaining_budget=64 * 1024**2)
+            self.assertEqual(read_bundle(receipt, self.root, expected_binding=bundle.binding), bundle)
+        self.assertEqual(len(finalized), len(bundle.maps))
+
+    def test_postclose_overlay_replacement_and_wrong_payload_remain_refused(self):
+        for kind in ('replacement', 'payload'):
+            with self.subTest(kind=kind):
+                root = self.root / kind
+                root.mkdir()
+                retained = []
+
+                def finalize(path, before, kind=kind, root=root, retained=retained):
+                    if kind == 'replacement':
+                        replacement = root / 'replacement'
+                        replacement.write_bytes(path.read_bytes())
+                        replacement.replace(path)
+                        retained.append(path)
+                    else:
+                        path.write_bytes(b'x' * before.st_size)
+
+                with windows_file_clocks(), finalize_overlay_writes(finalize), self.assertRaises(ValueError):
+                    write_bundle(build(), root, remaining_budget=64 * 1024**2)
+                if kind == 'replacement':
+                    self.assertEqual(list(root.iterdir()), retained)
+                    self.assertEqual(retained[0].read_bytes(), build().maps[0].payload)
+                else:
+                    self.assertEqual(list(root.iterdir()), [])
 
     def test_private_receipt_roundtrip_exact_and_aggregate_budget_admission(self):
         bundle = build()

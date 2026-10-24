@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from .control import JobControl
+from .identities import verify_file_observation
 
 
 class GuidanceUnavailable(RuntimeError):
@@ -395,11 +396,14 @@ class LocalSAM2Provider:
             return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
         hashes = []
         for path, expected_identity in zip((self.config, self.checkpoint), identities, strict=True):
+            path_before = path.lstat()
+            if identity(path_before) != expected_identity:
+                raise ValueError('Local SAM2 asset changed before identity hashing.')
             digest = hashlib.sha256()
             flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_BINARY', 0)
             with os.fdopen(os.open(path, flags), 'rb') as stream:
-                if identity(os.fstat(stream.fileno())) != expected_identity:
-                    raise ValueError('Local SAM2 asset changed before identity hashing.')
+                opened = os.fstat(stream.fileno())
+                verify_file_observation(path, path_before, opened, opened)
                 remaining = expected_identity[2]
                 while remaining:
                     control.check()
@@ -409,8 +413,9 @@ class LocalSAM2Provider:
                         raise ValueError('Local SAM2 asset truncated during identity hashing.')
                     remaining -= len(chunk)
                     digest.update(chunk)
-                if stream.read(1) or identity(os.fstat(stream.fileno())) != expected_identity:
+                if stream.read(1) or identity(os.fstat(stream.fileno())) != identity(opened):
                     raise ValueError('Local SAM2 asset changed during identity hashing.')
+                verify_file_observation(path, path_before, opened, os.fstat(stream.fileno()))
             hashes.append(digest.hexdigest())
         try:
             with hydra.initialize_config_dir(config_dir=str(self.config.parent), version_base='1.2'):

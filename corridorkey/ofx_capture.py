@@ -16,12 +16,14 @@ import re
 import struct
 import unicodedata
 from collections.abc import Callable
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
 from .config import InferenceConfig, WriterConfig
 from .diagnostics import finite_json_float, json_value
+from .identities import verify_file_observation
 from .ofx_record import cache_spec
 from .portable_paths import native_destination
 from .project_collection import (
@@ -137,14 +139,19 @@ def _raw(pin: FilePin, check: Check) -> bytes:
     return raw
 
 
+@contextmanager
 def _open(pin: FilePin):
     assert_pin(pin)
-    descriptor = os.open(pin.path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
-    stream = os.fdopen(descriptor, 'rb')
-    if fingerprint(os.fstat(stream.fileno())) != pin.fingerprint:
-        stream.close()
+    path_before = Path(pin.path).lstat()
+    if fingerprint(path_before) != pin.fingerprint:
         raise ValueError('Capture changed before descriptor admission')
-    return stream
+    descriptor = os.open(pin.path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+    with os.fdopen(descriptor, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        fingerprint(before)
+        verify_file_observation(pin.path, path_before, before, before)
+        yield stream
+        verify_file_observation(pin.path, path_before, before, os.fstat(stream.fileno()))
 
 
 def _frames(pin: FilePin, data, check: Check):
@@ -169,7 +176,7 @@ def _frames(pin: FilePin, data, check: Check):
             if digest != data['source_digests'][index]:
                 raise ValueError('Captured source-witness digest differs from actual pixels')
             yield index, raw
-        if stream.read(1) or fingerprint(os.fstat(stream.fileno())) != pin.fingerprint:
+        if stream.read(1):
             raise ValueError('Capture grew or changed during payload read')
     assert_pin(pin)
     if whole.hexdigest() != data['payload']['sha256']:
@@ -547,7 +554,7 @@ def attachment_receipt(prepared: PreparedCapture, record: dict[str, Any], cache:
                 digest.update(block)
             if digest.digest() != table[index * 64:index * 64 + 32]:
                 raise ValueError('Sealed cache output frame content identity differs')
-        if stream.read(1) or fingerprint(os.fstat(stream.fileno())) != pin.fingerprint:
+        if stream.read(1):
             raise ValueError('Sealed cache changed during verification')
     assert_pin(pin)
     assert_pin(record_pin)

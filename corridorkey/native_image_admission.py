@@ -17,6 +17,8 @@ from dataclasses import dataclass, field
 from itertools import pairwise
 from pathlib import Path
 
+from .identities import verify_file_observation
+
 MAX_ENCODED_BYTES = 64 * 1024**2
 MAX_HEADER_BYTES = 1024**2
 MAX_PIXELS = 4 * 1024**2
@@ -61,8 +63,9 @@ def _read(path, max_bytes, check):
     fd = os.open(path, flags)
     try:
         before = os.fstat(fd)
-        if _identity(before) != _identity(initial) or not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+        if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
             raise ValueError('Image changed before pinned read.')
+        verify_file_observation(path, initial, before, before)
         blocks, remaining = [], before.st_size
         digest = hashlib.sha256()
         while remaining:
@@ -76,11 +79,12 @@ def _read(path, max_bytes, check):
         check()
         if os.read(fd, 1) or _identity(os.fstat(fd)) != _identity(before):
             raise ValueError('Image changed/grew during pinned read.')
-        if _identity(_lexical(path)) != _identity(before):
+        final = verify_file_observation(path, initial, before, os.fstat(fd))
+        if _identity(_lexical(path)) != _identity(final):
             raise ValueError('Image path replaced during pinned read.')
         for parent in path.parents:
             _lexical(parent)
-        return b''.join(blocks), digest.hexdigest(), _identity(before)
+        return b''.join(blocks), digest.hexdigest(), _identity(final)
     finally:
         os.close(fd)
 

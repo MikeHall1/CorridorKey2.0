@@ -37,6 +37,7 @@ from corridorkey.output_paths import output_layout
 from corridorkey.project_collection import FilePin
 from corridorkey.source_witness import SourceWitness
 from corridorkey.video_io import read_image_rgb
+from tests.test_project_collection import windows_file_clocks
 
 
 def capture_fixture(root: Path, *, host_start=-17, frames=None):
@@ -122,6 +123,10 @@ class OfxCaptureTests(unittest.TestCase):
     def prepared(self, **options):
         return materialize_capture(self.plan(), scratch_parent=self.scratch, output_dir=self.output,
                                    config=InferenceConfig(exr_dtype='float'), **options)
+
+    def test_windows_clock_domains_capture_frames_and_sealed_attachment(self):
+        with windows_file_clocks():
+            self.test_actual_record_source_witness_seal_and_receipt_map_signed_host_time()
 
     def test_metadata_inventory_and_zero_budget_never_reads_payload(self):
         with patch('corridorkey.ofx_capture._frames', side_effect=AssertionError('metadata only')):
