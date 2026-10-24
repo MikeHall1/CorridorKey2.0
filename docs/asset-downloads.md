@@ -1,6 +1,10 @@
 # Deliberate model asset downloads
 
-The workflow is locally verified with tiny owned HTTP fixtures and the actual Qt interface. Production Hugging Face/CDN, real weights and Windows behavior remain unverified.
+The explicit downloader resolves original publisher metadata, pins revisions and
+checks every declared file length/checksum before publishing a complete local tree.
+Download size comes from the reviewed plan (the currently verified README asset set
+was about5.08GB), not a hardcoded budget. Download completion does not prove model
+compatibility, GPU quality or Windows behavior.
 
 Open **Local assets… → Download model assets…**. Opening reads the offline publisher catalog only. **Resolve online plan** explicitly requests bounded publisher metadata and exact byte sizes. It does not download model weights. Review the publishers, licence links, pinned revisions, local file paths, checksums and total payload bytes. The C-RADIO snapshot includes local Python code that the runtime will load only during later explicit model use.
 
@@ -38,10 +42,23 @@ python -m corridorkey.asset_download download --plan /existing/parent/new-plan.j
 
 `catalog` is offline. `plan` (alias `resolve`) performs metadata requests. `download` fetches the reviewed payload only when explicitly invoked. Saving a plan requires a fresh file and never overwrites an existing one. JSON terminal results report actual destination, usability, payload/file counts, partial files, error/warning and scope. Packaged dispatch uses `--corridorkey-module corridorkey.asset_download` in place of `python -m corridorkey.asset_download`. The original `scripts/download_weights.py` flags and behavior remain available as a source companion.
 
-## Verification scope
+## Verification
 
-`benchmark-results/m34-generated-summary.json` records actual Qt catalog → metadata plan → checked fresh download → explicit selection using an owned tiny local HTTP publisher fixture. All fixed public URLs are mapped to127.0.0.1 by a test-only injected transport; the RVM checksum is replaced with a tiny fixture oracle inside that process. No remote publisher/model data is requested. The workflow preserves existing asset bytes, leaves presence validation unready until requested, submits no jobs and refuses a new download inside the selected tree before file/network I/O.
+Run the existing asset-download and desktop download tests for generated localhost
+fixtures; the latter need the optional Qt test stack and offscreen mode. They do not
+transfer real model files. For actual local assets, use the existing non-executing audit:
 
-Loopback server binding requires a sandbox exception; automatic review approved the isolated local test commands. This does not authorize downloading real weights. Production downloads, actual pretrained compatibility, Windows packaging, GPU performance and Resolve acceptance remain separate unfinished requirements.
+```sh
+python -m corridorkey.asset_audit audit --asset-root /path/to/downloaded-root
+```
 
-Final integrated verification:645 tests/no skips in45.313s,252 Python files, complete imports/dependency/compile/whitespace and no-new-static gate pass. Existing static findings remain. Independent final review and main integration review accepted fixes189–196; exact source/config/environment identities and scope are in `benchmark-results/m34-verification-summary.json`, with gate archive `benchmark-results/m34-final/`. Native Qt lifetime issue126 remains open; passing fixtures do not establish its root cause.
+The complete root contains `weights/` and `vfms/`, plus `asset-download.json`.
+Select that root explicitly in Local assets; do not pass its checkpoint filename as
+the asset tree. Check and Use are distinct; queued jobs are never retargeted silently.
+Keep model files in ignored asset locations and retain publisher licences/notices.
+
+The structural auditor does not execute tensors, pickle or publisher Python. An opaque
+legacy MoGe checkpoint can have verified transfer bytes while its format/model remains
+UNVERIFIED. RVM uses the existing legacyMD5 checksum plus an observedSHA256, not a
+publisher signature. Explicit unsupported/error results must not be reported as GPU
+compatibility or professional-quality acceptance.

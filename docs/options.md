@@ -229,7 +229,7 @@ uses explicit absolute In and 1–120 frames (default8) in a fresh unique output
 **Run displayed snapshot** submits only after review. Quality/backend/precision
 remain requested; supplied cuts/resets rebase, moved first hints and correction
 subranges refuse rather than silently change meaning. No new inference defaults
-or CLI aliases. See [scope and pending acceptance](product-improvements.md).
+or CLI aliases. See [desktop workflow and limitations](desktop.md).
 
 Desktop **Play sequence / Pause** requires a selected completed source image
 sequence/EXR render with recorded declared timing. Optional loop source In/Out
@@ -346,7 +346,7 @@ The all-collected Windows/POSIX schema2 reader extension is locally verified. It
 absolute output/scratch destinations for foreign Apply; native package destination
 behavior is unchanged. Partial/reference-only foreign packages and direct foreign
 publication refuse. EXR retains unused encoder references; foreign absolute video
-encoders refuse without replacement. See [scope and review](portable-foreign-review.md).
+encoders refuse without replacement. See [portable-project limitations](portable-projects.md).
 
 
 ## Photo composite previews
@@ -357,7 +357,7 @@ assumed sRGB PNG/JPEG or scene-linear BT.709/D65 EXR and exact native geometry.
 Use checkerboard clears live photo selection. No render defaults, precision,
 writer options or queued jobs change. Combined work limits admit1080p but not
 native4K; no ICC/OCIO/EXIF automation or implicit resize/profile fallback. See
-[workflow/limits](photo-backgrounds.md) and [review](photo-backgrounds-review.md).
+[workflow/limits](photo-backgrounds.md).
 
 
 ## Export playback sequence indexes
@@ -374,7 +374,7 @@ pixel limit. [Workflow and validation](export-playback-indexes.md).
 
 ## Audit-remediation admission changes (2026-10-24)
 
-No new processing control or precision/backend default. Legacy tensor/dict checkpoints load with restricted `weights_only=True`; executable/custom-object legacy payloads refuse. Runtime-format checkpoints must omit frozen `foundations.*` state and use separate validated assets/stats. Incomplete MoGe state, invalid enabled-model statistics and unavailable video FPS now refuse instead of silently substituting. Batch outputs cannot overwrite another admitted job’s sources/hints/corrections/model assets. Model inventory rejects linked/reparse children. See [compatibility and proof](audits/remediation-status.md).
+No new processing control or precision/backend default. Legacy tensor/dict checkpoints load with restricted `weights_only=True`; executable/custom-object legacy payloads refuse. Runtime-format checkpoints must omit frozen `foundations.*` state and use separate validated assets/stats. Incomplete MoGe state, invalid enabled-model statistics and unavailable video FPS now refuse instead of silently substituting. Batch outputs cannot overwrite another admitted job’s sources/hints/corrections/model assets. Model inventory rejects linked/reparse children. See [verification policy](code-health.md).
 
 ### Source-bound shot profiles
 

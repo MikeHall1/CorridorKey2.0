@@ -25,4 +25,4 @@ Only complete successful matched finite samples produce aggregate times and spee
 
 The final report is created exclusively: an existing output file is preserved. Raw sample reports may be large; the existing bounded desktop report inspector refuses oversized data rather than silently truncating it. Private sample workspace destinations are diagnostic artifacts whose lifetime is limited to the run; use normal renders for retained production exports. Keep reports/media local. No assets/dependencies are downloaded or installed.
 
-CK-BEN-03 in [acceptance](acceptance.md) remains in progress until representative NVIDIA/weight/footage runs and associated quality evidence are available. Existing independently recorded baseline inspection remains supported.
+Target validation remains incomplete until representative NVIDIA/weight/footage runs and associated quality evidence are available. Existing independently recorded baseline inspection remains supported.

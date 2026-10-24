@@ -1,9 +1,6 @@
 # Spatial tracking diagnostics
 
-The earlier two-map increment was locally verified:1348CPU tests PASS91.069s/no skips,
-390Python files/full compilation/import/dependency/static regression/whitespace
-gate PASS,0new diagnostics. Existing519Ruff/684Pyright errors17warnings remain.
-[Review and evidence](tracking-overlays-review.md). The correction editor's
+The correction editor's
 **Show spatial tracking diagnostics** section is collapsed by default. Its
 **Capture diagnostic maps on next Preview track** checkbox defaults off. Explicit
 Preview track reuses maps from the existing flow computation; enabling capture

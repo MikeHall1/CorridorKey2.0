@@ -352,6 +352,25 @@ class DesktopWindowTests(unittest.TestCase):
         self.assertTrue(self.window.jobs[request_id]['event']['payload']['outputs_may_be_partial'])
         self.assertFalse(self.window.bridge.commands.qsize())
 
+    def test_crash_records_are_consumed_when_cleanup_blocks_new_worker(self):
+        source = self.root / 'source.json'
+        source.write_text('{"exit":true}')
+        self.window.update_settings({'output_format': 'exr'})
+        self.window.set_source(str(source))
+        self.window.output.setText(str(self.root))
+        self.window.enqueue()
+        request_id = next(iter(self.window.jobs))
+        bridge = self.window.bridge
+        self.assertTrue(bridge.done.wait(10))
+        bridge.cleanup_error = 'Fixture owned cleanup could not be verified'
+        self.window.new_worker()
+        self.assertEqual(self.window.jobs[request_id]['status'], 'lost')
+        self.assertTrue(self.window.jobs[request_id]['event']['payload']['outputs_may_be_partial'])
+        self.assertIs(self.window.bridge, bridge)
+        self.assertIn('cleanup is unverified', self.window.statusBar().currentMessage())
+        self.assertFalse(bridge.commands.qsize())
+        self.assertFalse(bridge.poll())
+
     def test_synchronized_exports_follow_actual_source_offsets_and_reject_stale_pairs(self):
         import cv2
         import numpy as np

@@ -1,234 +1,42 @@
-# Continuous code health — milestone 9
+# Verification and static regression checks
 
-Current checkpoint32:481-source compile/import/dependency/static gate passes with0new fingerprints versus actual checkpoint31 and legacy.510 Ruff/678 Pyright errors+17 warnings remain;1 existing import-order finding resolved, not a clean-static or performance claim. Exact raw reports: `benchmark-results/product-next/batch23-health/`, summary `batch23-summary.json`.
+## Environment
 
-The current audit and [product extension](product-improvements-brief.md) use the task and issue ledgers; the milestone review notes below are historical evidence. Read the current ledgers and checkpoint at each resume. Keep pre-existing static findings distinct from runtime defects and new regressions; CPU checks do not establish GPU, quality or Resolve acceptance.
+Use Python3.12 and the declared runtime/development manifests. Select the appropriate
+Torch build separately as documented in the [README](../README.md); CPU verification
+does not enable CUDA inference. The runtime requires NumPy>=1.26,<2. Install the
+optional desktop test stack for Qt tests; keep desktop/build dependencies separate
+from headless requirements. Do not alter an active environment merely to run checks.
 
-## Reproducible local environment
-
-The existing user `.venv` is preserved. Python 3.13/NumPy 2 test environments do not satisfy `numpy>=1.26,<2`. This run provisioned Python **3.12.15** and `/private/tmp/corridorkey-compatible-venv` with NumPy **1.26.4**, OpenCV **4.11.0.86**, upstream-pinned Torch **2.9.1**/torchvision **0.24.1** and the unchanged runtime requirements, including the exact utils3d Git commit. All declared package imports and selected shared-engine imports passed; no model was instantiated. Installed dependency consistency, declared specifiers and VCS identity checks passed. Actual package freeze: [cpu-macos-py312.txt](environments/cpu-macos-py312.txt).
-
-`requirements-dev.txt` adds only Ruff **0.17.1** and Pyright **1.1.414** for the requested repeatable CLI checks. They were installed in isolated environments; uv **0.13.4** provisioned the interpreter/dependencies. No runtime bounds were relaxed and no user environment packages were upgraded. To reproduce on a suitable Python 3.12 environment, install upstream Torch/torchvision, `requirements.txt` and `requirements-dev.txt`; the frozen Mac CPU set is evidence for this host, not a CUDA installation recipe. Temporary environments may disappear and require recreation.
+## Commands
 
 ```sh
-/private/tmp/corridorkey-compatible-venv/bin/python scripts/code_health.py \
-  --output-dir benchmark-results/code-health
-python3 scripts/ralph_loop.py verify \
-  --python /private/tmp/corridorkey-compatible-venv/bin/python
+QT_QPA_PLATFORM=offscreen OPENCV_IO_ENABLE_OPENEXR=1 python -m unittest discover -s tests -v
+python scripts/code_health.py --output-dir benchmark-results/code-health
+python scripts/verify.py --python /path/to/python
 ```
 
-## Actual static baseline and regression gate
-
-No owned checker configuration existed. Ruff default settings and Pyright with Python 3.12 plus the selected compatible interpreter were used without broad ignores or suppressed diagnostics. Initial nonignored scope: **100 Python files**, zero syntax errors. The compatible pre-change baseline contains **524 Ruff findings**, **830 Pyright errors and 17 warnings**. The older NumPy 2 environment produced 835 errors/23 warnings; do not compare environments as source improvements.
-
-The original Pyright `is_dataclass/asdict` error was actually reproduced and fixed. Serializer tests plus new code-health/alpha-evaluation modules pass focused Ruff/Pyright. The full repository remains **not static-clean**. Complete findings remain in ignored raw reports; `.ralph/static-baseline.json` records message/path/rule/severity fingerprints and occurrence counts from the pre-change baseline. Line movement alone does not hide/add findings; duplicate occurrences and severity changes count. The baseline is never refreshed automatically.
-
-`scripts/code_health.py` checks every existing Git-tracked or nonignored untracked Python source (including hidden paths), discovered with null-delimited `git ls-files`; no ripgrep installation is required, AST syntax, selected runtime imports, requirements/VCS origins, installed dependency consistency and both full-repository checkers. It writes raw diagnostics and `health.json` separately. A successful result means available prerequisites, valid syntax/imports/dependencies and **no new static findings**, while `static_clean` explicitly remains false for the known backlog. Missing tools are **NOT VERIFIED** and fail the comparison. Interpreter/tool versions must match the recorded baseline; an environment change requires deliberate investigation. Reports with known findings are not described as a clean lint/type pass. Ralph verification now invokes this gate alongside tests, compilation and whitespace checks.
-
-Initial post-fix comparison: **523 Ruff findings, 826 Pyright errors/17 warnings, zero new findings**. The current final scope includes new code/tests; see `.ralph/runs/manual-check/code-health/health.json` for exact final counts. Persistent classifications and root-cause evidence are in `.ralph/issues.json`. The broader backlog remains HEALTH-STATIC-005 and needs individual triage; no mass formatting/refactor was performed. Documented false positives include F821 closures invoked before later cell deletion and B023 factories invoked synchronously before advancing the loop; they remain visible without ignore directives.
-
-Pylance editor diagnostics are **NOT VERIFIED**; CLI Pyright was actually run. At milestone9 JS/TS/native diagnostics were NOT APPLICABLE because no owned source/build manifest was found. Milestone27 adds native C++ OFX code with actual strict Clang compile/ABI/host-suite/address/undefined checks; CMake/MSVC/Windows/Resolve remain NOT VERIFIED. Real CUDA, model/foundation weights, permitted reference footage and Resolve SDK/host acceptance remain external.
-
-## Explicit setup and discovery failures
-
-MoGe native-SDPA setup errors propagate as model-load failures; the loader no longer silently continues with potentially partially modified attention blocks. Interactive clip/sequence enumeration likewise propagates scan errors instead of accepting a partial inventory. These are failure-reporting changes, not a new backend, precision mode or measured inference improvement. Real pretrained/GPU and target-platform validation remain required.
-
-## Serialization contract
-
-`json_value` copies finite JSON primitives, dataclass **instances**, dict/list/tuple/set/frozenset and pathlib `Path` recursively. Unsupported objects/classes raise TypeError; nonfinite values/keys and stringified-key collisions raise ValueError. Supported dictionary keys remain stringified scalar/Path values; unsupported custom keys are rejected. Containers must be acyclic; cycles are unsupported and are not converted into references.
-
-Homogeneous numeric/string sets keep natural ordering. Other supported sets use canonical JSON text as the sort key, including nested tuples/frozen dataclass values. This is deterministic ordering, not a numeric ordering for heterogeneous values. Existing output-setting string sets retain their ordering. Unsupported inputs fail before atomic report publication, preserving an existing destination. Eight tests cover instances/classes, nesting, mixed/structured sets, multiple hash seeds, finite values, collisions and failed atomic writes. Current callers use configuration instances and diagnostic data; no legitimate production class-input failure is claimed.
-
-## Resume
-
-At each run start inspect changed scope, the environment and applicable verification evidence. Reuse trustworthy passing baselines for unchanged state; establish a fresh full baseline when missing or invalidated. Select the next actionable task from the current ledger and checkpoint. Five implementation/verification cycles form a checkpoint interval, not a stopping limit; continue safe actionable work while execution resources permit. Milestone-8 historical baseline remains in the archived checkpoint and ignored reports; current results supersede its unavailable-tool status.
-
-
-Milestone10 continuation begins from a freshly executed184-test/105-file baseline with the same compatible environment, tools and reviewed static baseline. Streaming/media/benchmark adapter tests and strict no-new-diagnostic comparison continue each cycle; no baseline refresh, ignores, dependency changes or checker weakening were introduced. New findings are classified before fixes as HEALTH-STREAM-009 through HEALTH-MEDIA-016, including manifest typing/numeric bounds, test fixture canonical paths/writer API, actual FPS field binding, stable reference identities/status separation and native decoder errors. Exact final counts/logs are in the current checkpoint and `.ralph/runs/manual-check/`.
-
-
-Milestone11 starts from a fresh207-test/111-file baseline. New colour math/stream/media/export paths use the same isolated compatible environment and pinned checkers. HEALTH-COLOUR-017/018 classify and fix precise test contracts before checker remediation; HEALTH-COLOUR-019 records reproduced numerical/API defects before fixes (aggregate overflow, canonical masks, epsilon bounds and masked arithmetic). No static baseline refresh, dependency upgrades, ignores or checker weakening. Current checkpoint/manual verification records final counts.
-
-
-Milestone12 begins with fresh227-test/117-file verification using unchanged compatible tools/dependencies. Temporal work classifies typing issues as HEALTH-TEMPORAL-020/021 and reproduced singleton/snapshot/consistency-metadata defects as HEALTH-TEMPORAL-022 before fixes. New modules/tests are checked with actual Ruff/Pyright; complete repository reports retain the known backlog without baseline refresh, global suppression or checker weakening. Final results are in the current checkpoint/manual verification.
-
-
-Milestone13 begins from fresh249-test/123-file checks in the unchanged compatible environment. Recovery uses standard-library hashing/SQLite/filesystem primitives and the existing session/export adapters; no new dependencies or backend fallback. HEALTH-RECOVERY-023 through029 record crash-stage ownership, test typing/callback evidence, complete-record/path/size validation and actual loaded-model asset binding before fixes. Exact final verification lives in the current checkpoint/manual reports. The existing static backlog remains visible; no baseline refresh, ignore directives or checker weakening.
-
-
-Milestone14 final verification:297 tests PASS/no skips;134 source files,0 AST errors, selected runtime imports, declared requirements/VCS/dependency consistency, compilation and whitespace PASS. Ruff520 findings and Pyright822 errors/17 warnings remain;0 new diagnostic fingerprints against the unchanged reviewed baseline. This is not static-clean. Focused durable/recovery modules and new identity/adapter/runner tests have0 Ruff/Pyright findings. HEALTH-ENV-030 and HEALTH-FEATURE/TYPE/TEST-031–036 record invocation, integration, fixture typing and the reproduced post-lookup payload race before remediation. B023 closure warning008 is now explicitly bound/resolved. A cycle2 broad check overlapped integration edits; its failures are retained and superseded by successful cycle3/final gates, not claimed as a passing independent cycle2 baseline. Final evidence: `.ralph/runs/manual-check/verification.json`, `benchmark-results/m14-final-verification.txt`. Pylance editor, CUDA/weights/quality, Windows storage/power-loss and Resolve SDK/host remain NOT VERIFIED. No checker weakening, baseline refresh, dependency installs or user-environment modifications this run.
-
-
-Milestone15 starts from fresh297-test/134-file verification in the unchanged compatible environment. Final314 tests PASS/no skips;140 Python files,0 syntax errors, imports/declared requirements/VCS/dependencies/compilation/whitespace PASS. Ruff520 findings and Pyright821 errors/17 warnings remain;0 new fingerprints against the unchanged reviewed baseline, not static-clean. New checkpoint modules/tests pass focused Ruff/Pyright with0 findings. HEALTH-TYPE-037–039 classify new import diagnostics before local fixes; HEALTH-RVM-040 records a reproduced null-provenance loader crash before strict canonical producer-contract validation. Native RVM CPU tiny-random-weight tests establish state/serialization correctness, not pretrained GPU acceptance. Final evidence `.ralph/runs/manual-check/verification.json`, `benchmark-results/m15-final-verification.txt`; no installs, suppressions, baseline refresh or user `.venv` changes. Pylance editor/CUDA/quality/Windows storage/Resolve acceptance remain NOT VERIFIED.
-
-
-Milestone16 starts from fresh314-test/140-file verification. Final328 tests PASS/no skips;145 files,0 AST errors, runtime imports/requirements/VCS/dependencies/compilation/whitespace PASS. Ruff520 findings, Pyright803 errors/17 warnings;0 new diagnostic fingerprints against the unchanged reviewed baseline, not static-clean. New Hann modules/tests and runner pass focused Ruff/Pyright0 findings. HEALTH-TYPE-041/042/045 record local iteration/import/module narrowing; HEALTH-HANN-043 repairs an existing substitute's /4 auxiliary geometry to actual /2; HEALTH-TEST-044 preserves deliberate full-rate config rejection while repairing the new test. All classified before remediation. Explicit local numeric imports improve helper dependency/type lifetimes without suppressions. No installs, baseline refresh, broad refactor or checker weakening. Final evidence `.ralph/runs/manual-check/verification.json`, `benchmark-results/m16-final-verification.txt`. CUDA false, all5 configured asset paths absent and FFmpeg not on PATH were actually checked. Pylance editor, pretrained/GPU quality/performance, Windows power-loss and Resolve SDK/host remain NOT VERIFIED.
-
-
-Milestone17 starts from fresh328-test/145-file verification in the unchanged compatible environment. Final355 tests PASS/no skips;156 Python files,0 syntax errors, runtime imports/requirements/VCS/dependencies/compilation/whitespace PASS. Ruff520 findings, Pyright803 errors/17 warnings remain;0 new fingerprints against unchanged reviewed baseline, not static-clean. All5 new worker modules and6 fixture/test files pass focused Ruff/Pyright0 findings. HEALTH-TEST/TYPE-046–050 classify normalization/serializer/callback/boundary/factory issues; HEALTH-WORKER-051–057 cover strict nested JSON, same-handle observation timeout, nonblocking bounded writes, owned group force-close, validation order, deadline bounds and progress lifetime. HEALTH-TEST-058 repairs exact descendant-ready synchronization; HEALTH-ENV-059 retains sandbox postmortem process-group inspection uncertainty; HEALTH-WORKER-060 fixes SIGINT/clean-stopped/EOF lifecycle. Classifications/evidence precede remediation, no suppressions, baseline refresh, dependency installs or user-environment changes. Actual child/native export fixtures do not validate pretrained GPU/quality/Windows/Resolve. Current checkpoint and `.ralph/runs/manual-check/verification.json` contain final evidence.
-
-
-Milestone18 begins from fresh355-test/156-file verification. Final369 tests PASS/no skips;166 files,0 AST errors, runtime imports/declared requirements/VCS/installed dependency consistency/compile/whitespace PASS. Ruff520/Pyright803 errors17 warnings,0 new fingerprints against unchanged baseline; not static-clean. All6 new desktop modules/4 test files focused Ruff/Pyright0. HEALTH-ENV-061 records actual Tk/native/DNS limits and approved isolated optional Qt6.10.2 install; HEALTH-DESKTOP/TEST-062–075 classify parser, EOF completion, readonly/array typing, standalone EXR initialization, project bounds/publication, replacement-worker records, settings labels/range synchronization and actual stale terminal status before remediation. Actual offscreen widget/native-export/owned-child tests and production CUDA failure are not pretrained GPU, interactive-native, packaging or Resolve acceptance. Optional Qt was the only dependency addition; user .venv/global packages/runtime pins, baseline and checker policy unchanged. See current checkpoint/final reports.
-
-
-Milestone19 starts from fresh369-test/166-file checks with the same compatible environment. Final386 tests PASS/no skips;173 Python files,0 syntax errors; runtime imports/requirements/VCS/dependency/compile/whitespace PASS. Ruff520 findings and Pyright803 errors/17 warnings remain,0 new fingerprints against unchanged baseline (not static-clean). New benchmark modules/fixtures/tests plus touched worker/window pass focused Ruff/Pyright0; the existing benchmark.py static backlog remains visible. HEALTH-BENCH/TYPE/TEST-076–084 classify CPU interruption/strict manifests, import order, exponent-overflow finite parsing, bounded reads/depth, export shutdown/fixture recursion assumptions, attempt-all cleanup and initial report visibility before remediation. Real CLI cancellation130 and three actual CPU correctness repetitions are not GPU throughput or quality evidence. No installs, runtime dependency changes, ignores, baseline refresh or checker weakening this run.
-
-
-Milestone20 begins from fresh386-test/173-file verification in the unchanged compatible environment. Final401 tests PASS/no skips;181 Python files,0 syntax errors, runtime imports/requirements/VCS/dependency/compile/whitespace PASS. Ruff520/Pyright800 errors17 warnings remain;0 new fingerprints against unchanged baseline, not static-clean. New editor modules/tests plus touched window/diagnostics/worker fixture pass focused Ruff/Pyright0; existing corrections.py findings remain visible. HEALTH-TYPE/TEST/EDITOR-086–096 classify supported Path input/live optional document typing, inherited QWidget API collisions, native click fixture coordinates, bounded history/canvas/strict document I/O, inactive overlays/view index, checkpoint faults and precision-preserving range edits before remediation. Accurate existing types remove3 old Pyright errors without suppressions/refactor. HEALTH-DOC-097 corrects historical recovery scope. No installs, runtime dependency upgrades, baseline refresh, ignores or checker weakening. Generated/offscreen/CPU/child evidence is not pretrained GPU/quality/Windows/Resolve acceptance.
-
-
-Milestone21 starts from fresh401-test/181-file full checks. Final422 tests PASS/no skips;191 Python files,0 AST errors, runtime imports/requirements/VCS/dependency/compile/whitespace PASS. Ruff520/Pyright800 errors17 warnings remain,0 new fingerprints (not static-clean); new queue/recovery modules/tests and touched bridge/window/report helper focused Ruff/Pyright0. HEALTH-QUEUE-099–114 classify SQL insert/optional IDs, final-event persistence errors, explicit connection/marker bounds, monotonic/detail integrity, QObject.thread collision, restart ownership race, missing codec import/type contracts, strict legacy batch parsing, actual /var temp identity drift on resume, idle event routing, failed activation status and post-send false rejection before remediation. Local fixture/process/UI/corruption evidence does not establish GPU performance/quality/Windows/SDK acceptance. No installs, baseline refresh, ignores, runtime dependency changes or checker weakening.
-
-
-Milestone22 starts from a fresh422-test/191-file baseline. Final440 tests/no skips,201 files,0 AST errors; imports/requirements/VCS/dependency consistency/compile/whitespace pass. Ruff520/Pyright800 errors17 warnings retain0 new fingerprints against the unchanged baseline. HEALTH-FORMS/ASSETS/ENV115–127 classify form staleness/precision, recipe races/bounds, asset/code-root and weights binding, typing/style and native Qt lifetime before remediation. Expanded full tests reproduced SIGSEGV during native GC/painting; failed traces are retained, affected test-owned widgets now explicitly destroy on the GUI thread, and two full440-test runs pass. HEALTH-FORMS-126 remains open because the underlying native mechanism/target-platform acceptance is unproven. No tests/GC/checkers were disabled and no baseline or dependencies were changed. Dataclass instance/class and mixed-set serialization contracts were re-inspected and existing tests pass. See the current checkpoint for exact evidence and external limits.
-
-
-Milestone23 fresh440-test/201-file baseline and final451-test/206-file gate pass without skips. Ruff520/Pyright800 errors17 warnings retain0 new fingerprints; syntax/imports/requirements/VCS/installed consistency/compile/whitespace pass. HEALTH-LIFETIME/PAGING/RESOURCES128–135 classify native editor retention/callback binding, SQLite Row lint false positive, typed negative inputs, timestamp compatibility, partial Torch probe and bounded failure UI;135 parent dirty shutdown remains open. Native Qt crash126 remains unproven; LLDB target launch failed, and no stack was obtained. Actual editor retention probe improved2/3/4/5 to1/1/1/1. Existing dataclass instance/class and mixed-set contracts were inspected and pass. No checker weakening/baseline refresh/dependency changes. CPU correctness benchmark3 repetitions completes (median29.605s), which is not inference performance.
-
-
-Milestone24 fresh451-test/206-file baseline and final464-test/207-file gate pass without skips. Ruff520/Pyright800 errors17 warnings retain0 new fingerprints; syntax/imports/requirements/VCS/dependency consistency/compile/whitespace pass with unchanged tools/baseline. Existing dataclass instance/class and mixed-set contracts remain inspected/covered.135 was reproduced with real mouse input (parent hid a dirty stopped-editor draft), then fixed before owners stop;136 known-stop presentation and137 symmetric selected-asset/queue admission were classified before correction. Native crash126 remains open; no GC/tests/checkers disabled. Archive tests include actual process exit after publication, writer acquisition races, no-overwrite publication and explicit recovery snapshot reuse. CPU correctness3 repetitions succeeds (median29.989s), not neural/GPU performance.
-
-
-Milestone25 starts from fresh464-test/207-file checks; final476 tests/no skips,210 Python files/0 syntax errors, imports/requirements/VCS/dependency consistency/compile/whitespace pass. Ruff520, Pyright696 errors17 warnings (713 diagnostics),0 new fingerprints. The104-error reduction follows replacing dynamic heterogeneous constructor kwargs in two existing negative-test methods with named dynamic field assignment before validation; same rejection cases remain and production types/checkers/baseline are unchanged. HEALTH-VIEWER/TEST/TYPE/RANGE138–145 classify source alignment, fixture API/precision/types, seek refusal and actual screenshot clipping before fixes. Existing dataclass instance/class and mixed-set contracts remain covered. Native Qt crash126 remains open; passing runs do not prove its mechanism. No installs, baseline refresh, suppression, runtime precision/backend fallback or user-environment changes.
-
-
-Milestone26: fresh476-test/210-file baseline and final486-test/218-file gates pass/no skips. Runtime imports/requirements/VCS/dependency consistency/compilation/whitespace pass; Ruff520/Pyright696 errors17 warnings retain0 new fingerprints (not static-clean). New dispatcher/bundle/smoke modules and tests pass focused Ruff/Pyright. HEALTH-PACKAGE/TYPE/SMOKE/TEST146–151 classify frozen interpreter misuse, checker findings, missing tracebacks, actual unrelated-cwd backend failure, target CPU-wheel admission and overbroad fixture mocks before fixes. The cwd reproducer changes backend NOT VERIFIED to a real cuda_available=false record. Source/frozen command unit contracts and actual source child/worker smoke are not native binary/GPU/host evidence. Existing serializer dataclass/mixed-set contracts inspected, baseline/checkers unchanged; no installs or environment upgrades. Native Qt mechanism126 remains open.
-
-
-Milestone27: fresh486-test/218-file baseline and final489-test/221-file checks pass/no skips. Runtime imports/requirements/VCS/dependency consistency/compile/whitespace pass. Ruff520/Pyright696 errors17 warnings retain0 new fingerprints; repository not static-clean. New Python cache/dispatcher/bundle/touched tests focused Ruff/Pyright0. Owned native reader/adapter/host harness compile under Clang21 C++17 -Wall -Wextra -Werror -pedantic; actual address/undefined sanitizer host runs pass with independent HDR/crop/stride/association checks. Official8 header and licence Git blob identities match pinned upstream; no interface shims or checker suppression. HEALTH-ENV/OFX/TEST152–158 classify unavailable target tools, overflow/indexing, actual path-alias failure, image contract, mode/schema, BGR fixture and CMake layout before correction.159 records unverified Windows test module cleanup for next run. Native Qt mechanism126 remains open. Existing serializer guards/callers/tests inspected. No package installs/environment upgrades/baseline refresh.
-
-
-Current policy supersedes historical fresh-baseline/five-cycle-stop instructions above: reuse trustworthy unchanged evidence, run focused checks per task and full applicable checks before integrated acceptance; checkpoint every five cycles and continue. Milestone28 final504 tests/no skips,226 files/zero syntax errors; imports/deps/compile/whitespace pass. Ruff520/Pyright696 errors17 warnings retain0 new fingerprints, not static-clean. Focused new cache/UI modules are clean; existing runner diagnostics are retained. No checker/baseline/environment changes. Reviewed source identity and command/duration evidence: benchmark-results/m28-verification-summary.json. Native Qt126/static005 remain open. Current objective: a246370a-f8f4-43e3-83be-f036b58c64eb/goal-objective.md.
-
-
-Milestone29 final526tests/no skips in42.649s,232 Python files/0syntaxerrors; imports/requirements/VCS/dependencies/compile/whitespace pass. Ruff520/Pyright696errors17warnings retain0newfingerprints and static_clean=false. Initial combined524test gate exposed source_witness inferredNone annotation (174), corrected with optional JsonValue metadata; report/export review173 and effective-setting review171 reproduced and fixed with regressions. Independent stable-batch review plus main integration review recorded in benchmark-results/m29-review-summary.json; exactsource/config/environment identities and scopes in m29-verification-summary.json. Existing baseline/checkers/environment preserved. No duplicate fullsuite percycle or three-repeat CPUactivity benchmark. Current user objective49183761-8d92-4c40-8f14-97272e3d5d8a authorizes coordinated disjoint native agents and requires acceptance matrix/review/risk-based verification; checkpoint intervals continue, not hardstops.
-
-
-M30 final554tests/no skips42.574s,236files/0syntaxerrors and fullimports/deps/compile/whitespace pass. Ruff520/Pyright696errors17warnings retain0newfingerprints; baseline/checkers/environment preserved. Independent review/main actualworkflowfound175 reports-dir layout and176 partialinterrupttruthfulness; fixedbeforeacceptance with OS unlink/rmdir/checkpoint/denied-recount regressions. Stable review/source/environment identity in m30-verification-summary.json. NativeQt126/static005 remainopen. Newm31backupwork notcoveredbythisresult untilitsown changed-scope checks.
-
-
-M31 integrated acceptance:580CPUtests/no skips43.420s,240files0syntaxerrors, full imports/dependencies/compile/whitespace and no-new-static gate pass. Ruff520/Pyright696errors17warnings remain (not static-clean). Independent stable review plus main actualQt/controller/nativeEXR backup/restore/resume resolves177–180 lexicalrootlinks/admittedgrowth/exportparent preservation/partialmarker publication. Source identities/environment/scope: benchmark-results/m31-verification-summary.json; full logs m31-final/. Existing005/nativeQt126 remain unresolved; no GPU/quality/Windows/Resolve acceptance inferred.
-
-
-M32 final599CPUtests/no skips44.396s,244Pythonfiles0syntaxerrors; complete imports/dependency/compile/whitespace/static no-regressions gate passes. Existing Ruff520/Pyright696errors17warnings remain, not static-clean. Independent stable review plus main actualQt/worker/nativeEXR relocation workflow fixes181 deselected-row actions and182 imported reparse ownership guards; independent3regressions0.057s. Reviewed batch114d9ac422cff6496ec129c3d329c39687099db4c1cfcd04e4a13d4be0f4afee; source/config/environment/logs m32-verification-summary.json/m32-final.005/nativeQt126 remain open; Windows/GPU/quality/Resolve acceptance unavailable.
-
-
-M33 final622CPUtests/no skips45.100s,248Pythonfiles0syntaxerrors; fullimports/dependency/compile/whitespace/static no-regressions pass. ExistingRuff520/Pyright696errors17warnings remain, notstatic-clean. Independent review +mainintegration fixes183–187 metadata/frontier/exporttruth/resourcebounds and188lowaliasstatus wording. Postgate purelabel/assertions delta verifiedaffected1Qtcase0.296s/RuffPyright0 and independentreview; fullgatehashes+finalhashes separate in m33-verification-summary.json, reviewedbatchee260efebc4afa31c4a6bed7365b94fe84e4aaf1ad8503c93066d962ea58f1a5. Existing005/nativeQt126 open. No GPU/quality/Windows/package/Resolve acceptance inferred.
-
-M34 deliberate model downloads accepted locally: offline catalog, explicit pinned metadata plan/licence/size/checksum review, cancellable fresh checked transfer, truthful partial outcomes and explicit path selection before separate Check/Stop/Use. No automatic jobs or asset overwrite. Actual Qt/ownedHTTP fixture transfers8files/1321bytes, preserves existing assets and refuses protected destinations before I/O. Final645tests/no skips45.313s,252Pythonfiles0syntaxerrors; full import/dependency/compile/whitespace/static no-regression gate passes. Existing Ruff520/Pyright696errors17warnings remain, not static-clean. Independent and main review resolves189–196. Source/config/environment/evidence: benchmark-results/m34-verification-summary.json; detailed gate m34-final/. RealHF/CDN/weights/Windows/GPU/quality/Resolve remain NOT VERIFIED. Full product incomplete; next total resource-policy workflow.
-
-M35 managed inference scratch ceiling accepted locally: exact aggregate writable RVM/foundation/baton/QuickKey-anchor bytes admitted before maps/writers, per-allocation plan fences, no implicit quality/scheduling/backend change. Optional temp_map_budget_bytes None/defaultunlimited or exact0..2^63-1;0 permits no managed maps. ActualQt/sharedCPU fixture accepts49494bytes/refuses49493 before map/writer creation, preserves3x9sourcefiles and identical EXRbytes. Full655CPU/no skips44.675s pass; final sole fixturetypeassert covered byaffected1test and completefinalstatic0new (255files, Ruff520/Pyright695errors17warnings remain). Original failing gates retained; composite scope/source hashes explicit in m35-verification-summary.json/m35-final/composite-evidence.json. Independent review accepted production and finalfixturedelta;197 resolved. TotalRAM/VRAM/physicaldisk/targetacceptance remain incomplete.
-
-M36 sampled worker-tree RSS stop policy accepted locally: optional exact process_tree_rss_stop_bytes None/defaultoff or0..2^63-1, birth-pinned nativeMac process/descendant observations, explicit unavailable failures, cooperative checkpoints with forcedmodel boundaries, shared session/recoveryguard coveringhash/replay/restore/publish. No hardRAM/VRAMcap/fallback. Actualowned32MiBchild RSS61177856 measured, realchildSessionthreshold0 failedbeforeloader/runner withnullFPS/nooutput/sourcepreserved; QtApply/nojobs and actualcontrollerEXRstop/resume cachepreservation verified. Final684CPU/no skips45.530s/262files, full compile/import/dependency/whitespace/static gate PASS; Ruff519/Pyright691errors17warnings,0new findings, existingbacklog retained. Independent5checks0.519s/mainreview accepted198split sampler/cache locks. Exactsource/config/environment/evidence m36-verification-summary.json/m36-final/. NativeLinux/Windows, actualGPU/quality/packaging/Resolve and fullresourceacceptance remain unverified.
-
-M37 exact Stage2 prediction-batch replay accepted locally: independent durable_stage2 defaultFalse recoverypolicy, typed whole ordered actualRGB/baton input identities and producer dtype/bits, raw prediction sealed before refinement/correction/render, verified cachecorruption/budgetskip/defaultoff paths. ActualQt/sharedworker cancellation and hardexit/lost→explicitreconnect(noautosubmit)→explicitresume reuse2batches/3frameinstances:3actualStage2calls/6evaluatedframes vsuncached5calls/9frames,9freshEXRs byte-identical and independentfloat32/.4pixeloracle. Originalsource/manifest/partialexports preserved. Final701CPU/no skips46.295s/268files and complete compile/import/dependency/whitespace/static gate PASS; Ruff519/Pyright689errors17warnings,0newfindings (existingbacklog retained). Independent6focusedchecks accepted199metadata/200payloadgrowth/201counterfix. Exactscope/source/config/environment m37-verification-summary.json/m37-final/. No realGPU/pretrainedspeed/quality/Windows/Resolve acceptance; directseek/writercheckpoints remain open.
-
-
-M38 acceptance: complete CPU evidence is explicitly composite (731 distinct cases:716 passed in full run,15 existing HTTP-fixture bind errors rechecked with authorizedlocalhost access and unchanged sources, all15passed). Initial failure remains archived. Full compile/import/dependency/whitespace and static regression gate passes on275files, zero new findings;519Ruff/689Pyright errors+17warnings remain. Independent11focusedchecks and realQt/source-preserving dossier exports pass. New review findings202–209 resolved; environment210 classified and resolved by scoped execution only. NativeQt126 staysopen despite unreproduced bounded GC/lifetime probes. Evidence m38-verification-summary.json, m38-final/composite-evidence.json and m38-local-http-recheck.json. No checker/baseline/environment changes.
-
-
-M39:745CPU/no skips48.315s; complete compile/import/dependency/whitespace/static gate PASS on280files, Ruff519/Pyright689errors17warnings and0newfindings. Unchanged environment/baseline. Core/writer12focused0.507s, actualworker2cases2.008s, independent4cases0.474s plus concurrentcachedsnapshot probe, actualQt/source-preserving profiled/unprofiled EXR oracle all pass. `m39-verification-summary.json`, `m39-final/`. No new review findings; Qt126/static005 and external acceptance remain open.
-
-For integrated acceptance, also inspect changes from the last accepted diagnostics when counts increase. An older, larger static baseline can admit reintroduced findings with an existing fingerprint; its allowance does not authorize regressions from the latest verified state. M41 caught two such optional-field diagnostics, retained the initial gate, fixed the construction and verified an empty added-diagnostic multiset against M40. No baseline or checker weakening was used.
-
-M44 locally accepted: bounded decoded-frame research through shared CLI/developer tools and comparison-status recovery. Final897CPU/no skips65.451s,310Pythonfiles/fullgate79.035s;0new static findings vs historical baseline and actualM43, retained519Ruff/689Pyright errors17warnings (not static-clean). Threeformats×threeschedules×threealternatingpairs all exactbits: overlap12→12, prepasses36→36, Quick17→12decodes;245760/262144retainedbytes. No production cache option or inference speed/quality claim. ActualQt inspection/exactexport and comparison source5/A3/B0 preserve sources/outputs and join owners. Independent+mainreview accepted;233 stale ownedstatus and234 empty-proof validator resolved. Evidence benchmark-results/m44-verification-summary.json/source-verification/review-summary. Full goal incomplete; next explicit reduced-resolution draft CK-P06-19.
-
-M45 locally accepted explicit spatialdraft model_scale finite(0,1],default1. Nativeexportgeometry/timing, linearHDR/coverage/association, nativefinalcorrections/refinement, Quickfallback/hints/recovery/OFX labels preserved. Final916CPU/no skips65.759s/314files/fullgate79.460s,sourcesunchanged,0new static vsbaseline ANDactualM44; retained519Ruff/686Pyright errors17warnings,not static-clean. Independent4proofs0.692s+mainreview/finalsource-onlyaddendum accepted235–238. ActualQt/sharedCPUworker3uint16frames129x197:192x256nativegrid→64x128halfscale, nativeEXRsalpha.4oracle1e-6/A-Baligned,Fullqualityreset1/nojob/immutablesnapshots/sourcespreserved/ownersjoined. Type-only finalsourceassertions reviewednumericallyunchanged fromactualproof; finalhashes fullgate. Initialfailed913gate/test/staticreports retained; final m45-final-fixed/. Evidence m45-verification-summary.json/m45-final-source-verification.json/m45-review-summary.json/actualQt summary. No pretrained/GPU/quality/Windows/Resolve acceptance. NextCK-Q10-04trimap-assistedrefinement contract/implementation; fullgoalACTIVE.
-
-
-Fresh review checkpoint2026-10-23: complete325file compilation/import/dependency/
-whitespace/static checks pass, with0new vsactualM45. Static remains unclean:
-519Ruff and684Pyright errors17warnings. CPU coverage is composite966 distinct
-cases:965 full-run passes plus1PASS1.660s after strengthening an old close-test
-wait; production sources unchanged. Both failed full invocations and targeted
-corrections are retained. New safety fixes239–251 are resolved; confirmed bounded
-queue/durable reads252–254 remain open for the next cycle. Detailed scope and
-limitations: [fresh review](review-2026-10-23.md). NativeQt126/static005 remain
-open; no checker suppression, baseline weakening or dependency changes.
-
-
-Final repository review2026-10-23:985CPU tests PASS72.674s/no skips;327Python
-files/0syntax errors; compilation/import/requirements/VCS/installed consistency/
-whitespace PASS. Existing519Ruff and684Pyright errors17warnings remain,0new
-fingerprints vsunchanged baseline, actualM45 AND first review checkpoint. Final
-scoped queue/durable/ownership Ruff/Pyright checks are clean. Issues248/252–254
-have focused regressions and independent stable review; all confirmed local
-review defects239–254 are resolved.005static backlog and126nativeQt mechanism
-remain open with explicit dispositions, not suppressed. Exact source identities
-and raw results: benchmark-results/fresh-review-final-source-verification.json
-and fresh-review-final/. Final checkpoint publication is blocked by missing Git
-authentication. No model/GPU/quality/Windows/Resolve acceptance is inferred.
-
-
-Ten-feature extension first checkpoint: final1028CPU/no skips73.166s and335file
-compilation/import/requirements/VCS/dependency/whitespace gate PASS.519Ruff and
-684Pyright errors17warnings remain,0new fingerprints vs unchanged historical
-baseline AND actual final repository-review evidence. Initial1021/1022passing
-integration runs retained; later concrete report-growth/resume/stale-error
-findings256–258 were fixed before final acceptance. Independent review and
-main self-review identify final source hashes in
-benchmark-results/ext01-ext05-accepted/source-verification.json. Existing static005
-and nativeQt126 remain open. No checker, baseline, interpreter or dependency
-changes; no GPU/quality/host claims.
-
-
-Second readiness checkpoint:1047CPU/no skips77.537s;338Pythonfiles and full
-compile/import/requirements/VCS/dependency/whitespace/static gate PASS.519Ruff,
-684Pyright errors17warnings remain;0new vs unchangedbaseline AND actual previous
-acceptedcheckpoint. Independent review accepted259–264 and main self-review
-recorded final source identity in benchmark-results/ext01-guided-accepted/source-verification.json.
-No checker/baseline/dependency/environment changes or GPU/encoding/Windows/host
-claims. ScopedQSettings fixtures preserve user preferences; subprocess lifecycle
-fixtures include real cancel/overflow/deadline/kill/reap.
-
-
-Extension integration findings275–280 were classified before acceptance: source
-metadata union narrowing, confirmed-root-exit process sampling race, sandbox-only
-localhost benchmark failures, correction-report envelope overflow, failure cleanup
-warning visibility and nested preview snapshot aliasing. Root-exit handling keeps
-RSS unavailable and final birth-pinned descendant/process-group verification;
-PID reuse/denial/unknown discovery remain failures. Passing narrow tests do not
-establish native Windows or the unresolved native Qt mechanism126. No checker,
-baseline or dependency changes. Final evidence is recorded in the current
-checkpoint after complete applicable verification.
-
-Seventh extension checkpoint:1273CPU tests PASS83.370s/no skips;379Python files,
-full compilation/import/requirements/VCS/dependency/whitespace checks PASS.
-Static0new vs unchanged baseline AND actual prior6746f7c; existing519Ruff and
-684Pyright errors17warnings remain, not static-clean. Independent final review
-rehashes all379files against frozen mapping2c083cea9dd36d7d4718bca9c700873c0d8c82dd710e3ee3898ddf44e8ab377c.
-Findings297–305 resolved; existing005/nativeQt126 stayopen. Explicit dataclass
-instance/class and heterogeneous-set contracts inspected; no checker/baseline or
-environment changes. Evidence ext09-connected-final/, portable-projects-review.md.
-
-Eighth extension checkpoint:1323CPU tests PASS91.578s/no skips;386Python files,
-full compile/import/requirements/VCS/dependency/whitespace/static regression gate
-PASS.0new fingerprints vs unchanged baseline AND actual priorf387223; retained
-519Ruff/684Pyright errors17warnings, not static-clean. Independent scheduler,
-execution and actualQt reviews + main distinct review resolve306–314. Frozen
-mapping3f5fc42e94b3b4a42775e7fdea218c0767af6db6bab17781e1b644f858d65f53,
-logs ext06-connected-final/. Initial failedQt/static evidence retained.005/nativeQt126
-remain open; no checker/baseline/environment changes or GPU/quality/host claims.
-
-Ninth extension checkpoint:1348CPU tests PASS91.069s/no skips;390Python files,
-full compile/import/requirements/VCS/dependency/whitespace/static regression gate
-PASS.0new fingerprints vs unchanged baseline AND actual prior865529e; retained
-519Ruff/684Pyright errors17warnings, not static-clean. Independent overlaycore/
-editor/actualQt reviews + main distinct review accept; fixture315 resolved.
-Frozen mappingc7ef2ce7e733edfa9b5184f2450bb50275448ee6271b77218097a5b0c690de24,
-logs ext07-connected-final/. Initial failedfixture/static evidence retained.
-005/nativeQt126 remain open; no checker/baseline/environment changes or quality/
-GPU/host acceptance inferred.
-
-
-## Audit-remediation stable gate — 2026-10-24
-
-Final427-source-file regression gate PASS: syntax/imports/dependency consistency and0new fingerprints; raw511 Ruff findings,684 Pyright errors+17warnings remain.1568 CPU/Qt/native cases pass with no skips in131.430s. Baseline/tool versions unchanged; no global suppression or environment migration. `benchmark-results/audit-fixes/verification-summary.json` binds actual source identity/commands. QA-002 remains open; bounded triage and dormant vendored helper limits recorded in [remediation status](audits/remediation-status.md). Tracked Linux/Windows CPU CI is syntax/contract-checked locally, not yet hosted-run evidence.
-
-
-Product performance batch1:433-file complete gate PASS with0new Counter fingerprints vs legacy and actual accepted audit (511 Ruff,684 Pyright errors17warnings remain).1597tests PASS135.731s/no skips. No checker/baseline/environment changes. Evidence `benchmark-results/product-next/batch1-summary.json`.
-
-
-## Hosted CPU runner prerequisites and failure evidence
-
-The CPU workflow installs Linux `libegl1` and `libopengl0` before the offscreen Qt import check. Python desktop wheels alone did not supply `libEGL.so.1` on the observed Ubuntu runner. Windows does not run this Linux setup. The unchanged test inventory runs with unittest `--failfast`, so the first failing platform test emits its full traceback before the job deadline; a stopped/failed run is not a full-suite pass. No checkers or cleanup guards are disabled, no baseline is refreshed, and the 30-minute job limit is unchanged. Hosted acceptance requires a successful exact-commit run; local Mac tests do not substitute for Windows evidence.
+The neutral verifier runs unit tests, compilation, static regression and whitespace
+checks. Its finite per-gate budget is1800s; this is not an aggregate job deadline or
+a guarantee that all descendant native work is forcibly interrupted. Timeout is a
+failure and partial output is retained. Packaging uses this verifier without any
+assistant/task-plan state. Logs remain local under `benchmark-results/`.
+
+## Baseline policy
+
+`tests/static-baseline.json` is the reviewed diagnostic fingerprint baseline.
+Migration to this public QA path preserves diagnostic keys, occurrence counts,
+checker versions and Python metadata; only its classification-document pointer was
+relabeled. It is not regenerated automatically. Never suppress diagnostics, relax
+checker settings or refresh the baseline merely to turn a failure green.
+
+The static gate records every raw finding and compares path/rule/severity/message
+fingerprints. A no-new-regressions result is **not static-clean**. Existing debt
+remains visible; investigate actual errors rather than assuming each legacy finding
+is harmless. Run targeted checks for changes and complete gates at coherent boundaries.
+
+Hosted CI records interpreter/platform/baseline identity and emits escaped raw-report
+chunks after verification, including on failure. Collect exact diagnostics before
+classifying platform differences. Windows path aliases are filesystem identity issues,
+not permission to ignore arbitrary paths. Hosted passes, local fixtures and declarations
+have distinct scopes; none proves GPU quality, Windows packaging or Resolve compatibility.

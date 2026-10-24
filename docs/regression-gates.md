@@ -93,9 +93,9 @@ exit1 includes fail/inconclusive/not-verified; cancellation exits130.
 ## Portable validation
 
 ```sh
-/private/tmp/corridorkey-compatible-venv/bin/python -m unittest discover -s tests -p test_regression_gate.py -v
-/private/tmp/corridorkey-compatible-venv/bin/ruff check corridorkey/regression_gate.py tests/test_regression_gate.py
-/private/tmp/corridorkey-compatible-venv/bin/pyright --pythonpath /private/tmp/corridorkey-compatible-venv/bin/python corridorkey/regression_gate.py tests/test_regression_gate.py
+python -m unittest discover -s tests -p test_regression_gate.py -v
+/path/to/verification-environment/bin/ruff check corridorkey/regression_gate.py tests/test_regression_gate.py
+/path/to/verification-environment/bin/pyright --pythonpath python corridorkey/regression_gate.py tests/test_regression_gate.py
 ```
 
 Analytic fixtures deliberately regress raw timings and actual generated EXR alpha

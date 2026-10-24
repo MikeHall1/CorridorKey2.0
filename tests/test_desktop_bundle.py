@@ -2,6 +2,7 @@ import ast
 import hashlib
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -105,3 +106,15 @@ class DesktopBundleTests(unittest.TestCase):
             self.assertEqual(report['repository']['commit'], 'explicit-test-fixture')
             self.assertEqual(important.read_text(), 'preserve')
             self.assertIn(str(ROOT / 'bundle_entry.py'), next(parent.glob('desktop-build-*/*.spec')).read_text())
+
+    def test_source_gate_is_standalone_and_failure_creates_no_bundle(self):
+        with tempfile.TemporaryDirectory() as folder, \
+                patch('corridorkey.desktop_bundle.preflight', return_value={'ready': True, 'errors': []}), \
+                patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, ['source gate'])) as process:
+            with self.assertRaises(subprocess.CalledProcessError):
+                build(Path(folder))
+            self.assertEqual(process.call_args.args[0],
+                             [sys.executable, str(ROOT / 'scripts/verify.py'),
+                              '--python', sys.executable])
+            self.assertTrue(process.call_args.kwargs['check'])
+            self.assertEqual(list(Path(folder).iterdir()), [])

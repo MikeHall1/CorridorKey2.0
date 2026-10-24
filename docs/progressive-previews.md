@@ -1,6 +1,6 @@
 # Progressive inference previews
 
-Current full-context sequence behavior and evidence: [conditioned preview guide](conditioned-progressive-preview.md), [checkpoint](checkpoint.md). The original1323-case one-frame review is [historical](progressive-previews-review.md), not current inference semantics. The desktop **Progressive preview…** panel is disabled
+The desktop **Progressive preview…** panel is disabled
 by default. Opening it does no source, model or GPU work. Choose a separate
 existing scratch parent, review the current workspace settings and display mode,
 enable the feature and explicitly **Capture settings and start**.

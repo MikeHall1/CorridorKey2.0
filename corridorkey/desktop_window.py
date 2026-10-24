@@ -1396,9 +1396,6 @@ class DesktopWindow(QMainWindow):
         if not self.bridge.done.is_set():
             self.error('Stop the current worker and wait for shutdown before starting another.')
             return
-        if self.bridge.cleanup_error is not None:
-            self.error('Previous worker cleanup is unverified; another processing owner cannot start: ' + self.bridge.cleanup_error)
-            return
         self.poll()
         if not self.bridge.done.is_set() or self.pending_queue_root is not None or self.benchmark.busy:
             self.error('Processing ownership changed while refreshing; wait for the current owner.')

@@ -156,14 +156,14 @@ with patch('socket.socket.connect', side_effect=AssertionError('Offline catalog 
         from corridorkey.asset_inventory import inspect_backend
 
         original = Path.cwd()
-        try:
-            with tempfile.TemporaryDirectory() as folder:
+        with tempfile.TemporaryDirectory() as folder:
+            try:
                 os.chdir(folder)
                 result = inspect_backend()
                 self.assertIs(type(result['cuda_available']), bool, result)
-                self.assertEqual(Path.cwd(), Path(folder).resolve())
-        finally:
-            os.chdir(original)
+                self.assertTrue(Path.cwd().samefile(folder))
+            finally:
+                os.chdir(original)
 
     def test_pair_cli_uses_explicit_source_and_frozen_dispatch(self):
         self.assertEqual(module_command('corridorkey.benchmark_pair', '--help'),

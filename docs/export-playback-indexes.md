@@ -50,11 +50,29 @@ retired without swallowing that terminal. Closing waits for the existing loader.
 Focused validation in the existing compatible CPU environment:
 
 ```sh
-PYTHONPATH=tests QT_QPA_PLATFORM=offscreen /private/tmp/corridorkey-compatible-venv/bin/python -W error -m unittest test_preview_exports test_export_playback_pipeline test_desktop_export_playback test_desktop_playback test_desktop_source_playback test_desktop_photo_background -v
+PYTHONPATH=tests QT_QPA_PLATFORM=offscreen python -W error -m unittest test_preview_exports test_export_playback_pipeline test_desktop_export_playback test_desktop_playback test_desktop_source_playback test_desktop_photo_background -v
 ```
 
 Core10actual-image/4K cases,31new/existing pipeline cases and33expanded actualQt
 cases pass. Instrumented repeated reads show zero full directory rescans after
 preparation; this is an operation count, not measured inference or decoder FPS.
-Final frozen **1456 CPU tests PASS in 105.303s, no skips**; 410 Python files pass compilation, imports, dependency consistency, static regression and whitespace checks, with zero new diagnostics against the baseline and actual preceding 03d9e9a checkpoint. See [review](export-playback-indexes-review.md). Actual
+Final frozen **1456 CPU tests PASS in 105.303s, no skips**; 410 Python files pass compilation, imports, dependency consistency, static regression and whitespace checks, with zero new diagnostics against the baseline and actual preceding 03d9e9a checkpoint. See [verification policy](code-health.md). Actual
 GPU, representative quality, native Windows and Resolve acceptance remain NOT VERIFIED.
+
+
+## Video timing admission
+
+Synchronized video playback is not admitted from nominal FPS/count alone. The
+current OpenCV backend can substitute or quantize timestamps, so uniform getter
+values do not certify original presentation timing. A valid provider must bind
+actual decoded pixels to complete, strictly increasing uniform rational PTS,
+stream identity, source origin and unchanged source bytes. Seek results must match
+that certified timeline rather than assume a successful frame-index set is exact.
+
+A same-provider timestamp/pixel decoder can remove one probe-to-display assumption,
+but does not automatically prove correspondence with OpenCV inference inputs or
+export-local EXR indices. Colour/range/chroma/orientation/precision, selected-start
+seeks, decode errors/EOF/flush and cancellation require actual codec fixtures.
+Unknown/VFR/high-bit/HDR conditions stay explicit, not silently approximated.
+Optional codec dependencies require separate compatibility and redistribution review
+before adoption; no new production decoder or dependency is implied by this guide.

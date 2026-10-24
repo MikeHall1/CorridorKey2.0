@@ -41,6 +41,57 @@ path_mappings.json
 
 # Local benchmark artifacts (footage and reports stay local).
 benchmark-results/
-.ralph/runs/
-.ralph/runner.lock
-.ralph/STOP
+
+# Local development environments, caches and build output
+/.venv/
+/.uv-cache/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+/.vscode/
+build/
+dist/
+*.egg-info/
+.DS_Store
+Thumbs.db
+Desktop.ini
+.env.*
+!.env.example
+!.env.template
+
+# Local assistant configuration, work ledgers and session artifacts
+/.codex/
+/.serena/
+/.omx/
+/.omx-state-locks/
+/.omx-state-locks.identity.json
+/.ralph/
+/docs/audits/
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/.agents/
+/.cursor/
+/.cursorrules
+/.continue/
+/.mcp.json
+/scripts/ralph_loop.py
+/tests/test_ralph.py
+
+# Local reviews, requests, checkpoints and generated evidence
+/docs/checkpoints/
+/docs/overnight/
+/docs/environments/
+/docs/acceptance.md
+/docs/audit-20261023.md
+/docs/baseline.md
+/docs/checkpoint.md
+/docs/status.md
+/docs/development-brief.md
+/docs/product-improvements-brief.md
+/docs/product-performance-brief.md
+/docs/product-improvements.md
+/docs/ralph-loop.md
+/docs/review-2026-10-23.md
+/docs/review-objective.md
+/docs/*-review.md
