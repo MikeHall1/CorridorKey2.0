@@ -1,10 +1,12 @@
 """Receipt transport tests use opaque producer files; runtime tests verify real EXR pixels."""
+import errno
 import hashlib
 import json
 import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from corridorkey.control import CancelledError
@@ -111,6 +113,67 @@ class DurableWriterPrefixTests(unittest.TestCase):
             self.assertEqual(adapter.snapshot()['receipt_bytes_hashed'], 0)
             self.assertTrue(adapter.snapshot()['checkpoint_disabled'])
             self.assertEqual(list((store.root / 'entries').iterdir()), [])
+
+    def test_receipt_descriptor_mode_matches_platform_and_sync_policy(self):
+        with BundleStore(self.root / 'cache', 100000) as store:
+            adapter, _ = self.adapter(store, self.original)
+            self.write(self.original, 0)
+            path = self.original / 'alpha/alpha_000000.exr'
+            raw = path.read_bytes()
+            original = os.open
+            for platform in ('win32', 'darwin'):
+                for sync in (True, False):
+                    with self.subTest(platform=platform, sync=sync):
+                        modes, opens, flushed = {}, [], []
+
+                        def opened(target, flags, *args, modes=modes, opens=opens, **kwargs):
+                            descriptor = original(target, flags, *args, **kwargs)
+                            modes[descriptor] = flags & (os.O_WRONLY | os.O_RDWR)
+                            opens.append(flags)
+                            return descriptor
+
+                        def flush(descriptor, modes=modes, flushed=flushed, platform=platform):
+                            if platform == 'win32' and modes[descriptor] != os.O_RDWR:
+                                raise OSError(errno.EBADF, 'Windows flush requires a writable handle')
+                            flushed.append(descriptor)
+
+                        with (patch('corridorkey.durable_writer_prefix.sys', SimpleNamespace(platform=platform)), patch.object(os, 'open', opened),
+                              patch.object(os, 'fsync', flush)):
+                            receipt = adapter._receipt(path, sync=sync)
+                        self.assertEqual(opens[0] & (os.O_WRONLY | os.O_RDWR),
+                                         os.O_RDWR if platform == 'win32' and sync else os.O_RDONLY)
+                        self.assertEqual(len(flushed), int(sync))
+                        self.assertEqual(receipt, {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()})
+                        self.assertEqual(path.read_bytes(), raw)
+
+    def test_windows_receipt_write_access_denial_and_fsync_failure_propagate(self):
+        with BundleStore(self.root / 'cache', 100000) as store:
+            adapter, _ = self.adapter(store, self.original)
+            self.write(self.original, 0)
+            path = self.original / 'alpha/alpha_000000.exr'
+            raw = path.read_bytes()
+            original = os.open
+            attempted = []
+
+            def denied(target, flags, *args, **kwargs):
+                attempted.append(flags)
+                if flags & os.O_RDWR:
+                    raise PermissionError('fixture write access denied')
+                return original(target, flags, *args, **kwargs)
+
+            with (patch('corridorkey.durable_writer_prefix.sys', SimpleNamespace(platform='win32')), patch.object(os, 'open', denied),
+                  patch.object(os, 'fsync') as flush, self.assertRaisesRegex(PermissionError, 'write access denied')):
+                adapter._receipt(path)
+            self.assertEqual(len(attempted), 1)
+            flush.assert_not_called()
+            with (patch('corridorkey.durable_writer_prefix.sys', SimpleNamespace(platform='win32')),
+                  patch.object(os, 'fsync', side_effect=OSError('fixture flush failed')) as flush,
+                  self.assertRaisesRegex(OSError, 'flush failed')):
+                adapter._receipt(path)
+            flush.assert_called_once()
+            self.assertEqual(adapter.stats['receipt_bytes_hashed'], 0)
+            self.assertEqual(list((store.root / 'entries').iterdir()), [])
+            self.assertEqual(path.read_bytes(), raw)
 
     def test_bad_watermarks_or_source_context_refuse_before_receipt(self):
         with BundleStore(self.root / 'cache', 100000) as store:

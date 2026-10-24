@@ -8,6 +8,7 @@ import math
 import os
 import re
 import stat
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -262,7 +263,8 @@ class DurableWriterPrefix(BoundModelCache):
         limit = min(MAX_PAYLOAD_BYTES, self.store.max_bytes) if sync else MAX_PAYLOAD_BYTES
         if before.st_size > limit:
             raise CacheCapacity('writer EXR exceeds bounded prefix payload admission')
-        flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
+        mode = os.O_RDWR if sync and sys.platform == 'win32' else os.O_RDONLY
+        flags = mode | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
         descriptor = os.open(path, flags)
         try:
             opened = os.fstat(descriptor)

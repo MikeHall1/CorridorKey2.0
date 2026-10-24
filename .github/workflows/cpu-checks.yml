@@ -64,7 +64,7 @@ jobs:
         if: runner.os == 'Windows'
         run: python -m unittest discover -s tests -p test_native_image_admission.py -v --failfast
       - name: Unit, integration, offscreen Qt and available native harness tests
-        run: python -m unittest discover -s tests -v
+        run: python -m unittest discover -s tests -v --failfast
       - name: Source dispatcher and worker smoke (no inference)
         run: |
           python -c "from pathlib import Path; Path('benchmark-results/ci-smoke').mkdir(parents=True, exist_ok=True)"
