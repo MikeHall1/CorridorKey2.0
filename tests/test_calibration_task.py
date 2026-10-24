@@ -24,7 +24,9 @@ from corridorkey.worker_client import WorkerClient
 from tests.test_calibration import calibration_fixture
 
 FIXTURE_CODE = '''
+import faulthandler
 import json
+faulthandler.dump_traceback_later(15)
 from tests.worker_fixture import FixtureEngine
 from corridorkey.worker_transport import serve_stdio
 original=FixtureEngine.render
@@ -32,7 +34,10 @@ def measured(self,model,job,config,writer,diagnostics):
     original(self,model,job,config,writer,diagnostics)
     diagnostics.effective=json.loads(job.config_json)
 FixtureEngine.render=measured
-serve_stdio(capacity=1,engine=FixtureEngine())
+try:
+    serve_stdio(capacity=1,engine=FixtureEngine())
+finally:
+    faulthandler.cancel_dump_traceback_later()
 '''
 
 
@@ -109,8 +114,23 @@ class CalibrationTaskTests(unittest.TestCase):
     def test_actual_worker_fixture_task_persists_full_records_and_no_gpu_claim(self):
         originals = {path:path.read_bytes() for path in Path(self.job.input_path).iterdir()}
         task = CalibrationTask(self.plan,worker_factory=calibration_worker_factory)
-        self.assertTrue(task.done.wait(30),task.snapshot())
-        task.thread.join(3)
+        try:
+            if not task.done.wait(30):
+                client = task.client
+                worker = None
+                if client is not None:
+                    with client.condition:
+                        worker = {
+                            'log_tail':client.log_tail,'failure':client.failure,'eof':client.eof,
+                            'returncode':client.process.returncode,'outstanding':sorted(client.outstanding),
+                            'queued_requests':client.outgoing.qsize(),'buffered_events':len(client.events),
+                            'buffered_progress':len(client.progress),
+                            'threads':{owner.name:owner.is_alive() for owner in (client.writer,client.reader,client.log_reader)}}
+                self.fail({'task':task.snapshot(),'worker':worker})
+        finally:
+            task.cancel()
+            task.thread.join(15)
+            self.assertFalse(task.thread.is_alive(),'Calibration task must retire before fixture directory cleanup')
         state = task.snapshot()
         self.assertEqual(state['status'],'complete',state)
         self.assertIsNone(task.cleanup_error)
