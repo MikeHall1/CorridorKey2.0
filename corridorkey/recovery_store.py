@@ -46,6 +46,21 @@ def _open_regular(path):
         yield stream, info
 
 
+def _verify_read_identity(path, before, after):
+    current = Path(path).stat(follow_symlinks=False)
+    if sys.platform == 'win32':
+        if (not stat.S_ISREG(current.st_mode) or current.st_nlink != 1
+                or getattr(current, 'st_file_attributes', 0) & 0x400):
+            raise CacheInvalid('cache read requires a regular single-link file')
+        # CPython 3.12 Windows lstat uses birthtime for ctime; fstat uses ChangeTime.
+        with _open_regular(path) as (_, reopened):
+            if _file_identity(current)[:4] != _file_identity(reopened)[:4]:
+                raise CacheInvalid('cache file changed during bounded read')
+            current = reopened
+    if _file_identity(before) != _file_identity(after) or _file_identity(after) != _file_identity(current):
+        raise CacheInvalid('cache file changed during bounded read')
+
+
 def _read_extent(path, *, max_bytes, expected_size=None, expected_sha256=None, check=None):
     if type(max_bytes) is not int or max_bytes < 0:
         raise ValueError('cache read bound must be a nonnegative integer')
@@ -71,9 +86,7 @@ def _read_extent(path, *, max_bytes, expected_size=None, expected_sha256=None, c
         if stream.read(1):
             raise CacheInvalid('cache file grew beyond admitted read extent')
         after = os.fstat(stream.fileno())
-        current = Path(path).stat(follow_symlinks=False)
-        if _file_identity(before) != _file_identity(after) or _file_identity(after) != _file_identity(current):
-            raise CacheInvalid('cache file changed during bounded read')
+        _verify_read_identity(path, before, after)
     if expected_sha256 is not None and digest.hexdigest() != expected_sha256:
         raise CacheInvalid('cache payload checksum changed during bounded read')
     if check is not None:
@@ -191,10 +204,8 @@ def _file_sha256_bounded(path, expected_size, *, check=None):
             digest.update(block)
             seen += len(block)
         after = os.fstat(stream.fileno())
-        current = Path(path).stat(follow_symlinks=False)
-    def identity(info):
-        return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-    if seen != expected_size or identity(before) != identity(after) or identity(after) != identity(current):
+        _verify_read_identity(path, before, after)
+    if seen != expected_size:
         raise CacheInvalid('artifact changed during bounded hash')
     return digest.hexdigest()
 

@@ -27,7 +27,7 @@ class DesktopPlaybackTests(unittest.TestCase):
 
         from corridorkey.desktop_window import DesktopWindow
         self.folder = tempfile.TemporaryDirectory()
-        self.root = Path(self.folder.name)
+        self.root = Path(self.folder.name).resolve()
         self.source = self.root / 'source'
         self.source.mkdir()
         for frame in range(7):

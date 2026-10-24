@@ -3,15 +3,22 @@ import hashlib
 import importlib.util
 import json
 import os
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from corridorkey.recovery_identity import ReplayIdentity, canonical
-from corridorkey.recovery_store import BundleStore, CacheInvalid, read_payload_bounded
+from corridorkey.recovery_store import (
+    BundleStore,
+    CacheInvalid,
+    _file_sha256_bounded,
+    read_payload_bounded,
+)
 
 STACK = all(importlib.util.find_spec(name) for name in ('torch', 'numpy', 'safetensors'))
 
@@ -39,6 +46,77 @@ class StoreReadBoundsTests(unittest.TestCase):
                 BundleStore(cache, 100000)
             self.assertEqual(marker.read_bytes(), marker_before)
             self.assertEqual(owner.read_bytes(), before[owner])
+
+    def test_windows_birthtime_path_stat_and_change_time_descriptor_remain_distinct(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'payload.bin'
+            path.write_bytes(b'abc')
+            os.utime(path, ns=(1000000000, 1000000000))
+            original = Path.stat
+            with path.open('rb') as stream:
+                descriptor_ctime = os.fstat(stream.fileno()).st_ctime_ns
+
+            def windows_stat(target, *args, **kwargs):
+                info = original(target, *args, **kwargs)
+                if target == path and kwargs.get('follow_symlinks') is False:
+                    values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+                    values['st_ctime_ns'] = descriptor_ctime - 1000000000
+                    return SimpleNamespace(**values)
+                return info
+
+            expected = hashlib.sha256(b'abc').hexdigest()
+            with patch.object(Path, 'stat', windows_stat), patch.object(sys, 'platform', 'win32'):
+                self.assertEqual(read_payload_bounded(path, expected_size=3, expected_sha256=expected, max_bytes=3), b'abc')
+                self.assertEqual(_file_sha256_bounded(path, 3), expected)
+                with self.assertRaisesRegex(CacheInvalid, 'checksum'):
+                    read_payload_bounded(path, expected_size=3, expected_sha256='0' * 64, max_bytes=3)
+
+    def test_windows_reopened_descriptor_rejects_each_identity_field_change(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'payload.bin'
+            path.write_bytes(b'abc')
+            original = os.fstat
+            for field in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns', 'st_ctime_ns'):
+                for changed_call in (2, 3):
+                    with self.subTest(field=field, changed_call=changed_call):
+                        calls = 0
+
+                        def changed(descriptor, changed_call=changed_call, field=field):
+                            nonlocal calls
+                            calls += 1
+                            info = original(descriptor)
+                            if calls == changed_call:
+                                values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+                                values[field] += 1
+                                return SimpleNamespace(**values)
+                            return info
+
+                        with (patch.object(sys, 'platform', 'win32'),
+                              patch('corridorkey.recovery_store.os.fstat', changed),
+                              self.assertRaisesRegex(CacheInvalid, 'changed')):
+                            read_payload_bounded(path, expected_size=3, expected_sha256=hashlib.sha256(b'abc').hexdigest(), max_bytes=3)
+
+    def test_windows_path_metadata_refuses_identity_changes_symlink_reparse_and_hardlink(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'payload.bin'
+            path.write_bytes(b'abc')
+            original = Path.stat
+            info = original(path)
+            cases = [(field, getattr(info, field) + 1) for field in ('st_dev', 'st_ino', 'st_size', 'st_mtime_ns')]
+            cases += [('st_mode', stat.S_IFLNK | 0o600), ('st_nlink', 2), ('st_file_attributes', 0x400)]
+            for field, value in cases:
+                with self.subTest(field=field):
+                    def changed(target, *args, field=field, value=value, **kwargs):
+                        info = original(target, *args, **kwargs)
+                        if target == path and kwargs.get('follow_symlinks') is False:
+                            values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+                            values[field] = value
+                            return SimpleNamespace(**values)
+                        return info
+
+                    with (patch.object(sys, 'platform', 'win32'), patch.object(Path, 'stat', changed),
+                          self.assertRaisesRegex(CacheInvalid, 'changed|regular single-link')):
+                        read_payload_bounded(path, expected_size=3, expected_sha256=hashlib.sha256(b'abc').hexdigest(), max_bytes=3)
 
     def test_payload_growth_is_capped_to_admitted_plus_one_on_same_descriptor(self):
         with tempfile.TemporaryDirectory() as folder:

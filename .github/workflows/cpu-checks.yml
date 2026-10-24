@@ -61,7 +61,7 @@ jobs:
                   print("descriptor_stat", {name: getattr(descriptor_stat, name) for name in fields})
           '@ | python -
       - name: Unit, integration, offscreen Qt and available native harness tests
-        run: python -m unittest discover -s tests -v --failfast
+        run: python -m unittest discover -s tests -v
       - name: Source dispatcher and worker smoke (no inference)
         run: |
           python -c "from pathlib import Path; Path('benchmark-results/ci-smoke').mkdir(parents=True, exist_ok=True)"
