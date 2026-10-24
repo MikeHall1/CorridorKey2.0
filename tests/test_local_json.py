@@ -13,7 +13,9 @@ class RegularJsonTests(unittest.TestCase):
     def test_regular_file_admission_refuses_pipe_before_read(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'selected.json'
-            os.mkfifo(path)
+            mkfifo = getattr(os, 'mkfifo', None)
+            assert callable(mkfifo)
+            mkfifo(path)
             with self.assertRaisesRegex(ValueError, 'regular file'):
                 read_object(path, max_bytes=128, regular_file=True)
 

@@ -1,11 +1,13 @@
 import hashlib
 import json
+import runpy
 import subprocess
 import sys
 import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts import code_health
@@ -21,12 +23,14 @@ class HealthTests(unittest.TestCase):
         workflow = (code_health.ROOT / '.github/workflows/cpu-checks.yml').read_text()
         step = workflow.split('      - name: Preserve raw static reports', 1)[1]
         self.assertIn('if: always()', step)
-        code = textwrap.dedent(step.split('        run: |\n', 1)[1])
+        code = ("from pathlib import Path\n"
+                "original_read = Path.read_text\n"
+                "Path.read_text = lambda self, encoding='cp1252', **kw: original_read(self, encoding=encoding, **kw)\n") + textwrap.dedent(step.split('        run: |\n', 1)[1])
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder) / 'benchmark-results/ci-health'
             root.mkdir(parents=True)
             raw = '::error::not a workflow command\nUnicode: é\n' + 'x' * 9000
-            (root / 'pyright.json').write_text(raw)
+            (root / 'pyright.json').write_text(raw, encoding='utf-8')
             completed = subprocess.run([sys.executable, '-c', code], cwd=folder,
                                        capture_output=True, text=True, check=True)
             records = [json.loads(line) for line in completed.stdout.splitlines()]
@@ -34,6 +38,65 @@ class HealthTests(unittest.TestCase):
             self.assertEqual([row['offset'] for row in chunks], [0, 4096, 8192])
             self.assertEqual(''.join(row['content'] for row in chunks), raw)
             self.assertIsNone(next(row['content'] for row in records if row['report'] == 'ruff.json'))
+
+    def test_checker_utf8_survives_non_utf8_parent_locale_and_report_io(self):
+        message = 'Type “é”\n\u00a0\u00a0cannot be assigned'
+        raw = json.dumps({'generalDiagnostics': [
+            {'file': str(code_health.ROOT / 'infer.py'), 'rule': 'reportArgumentType',
+             'severity': 'error', 'message': message}]}, ensure_ascii=False)
+        original_run = subprocess.run
+        original_write = Path.write_text
+
+        def checker(command, **kwargs):
+            # Model a UTF-8-emitting checker under a Windows cp1252 parent locale.
+            kwargs.setdefault('encoding', 'cp1252')
+            self.assertEqual(kwargs.get('env', {}).get('PYTHONIOENCODING'), 'utf-8')
+            self.assertEqual(kwargs.get('errors'), 'strict')
+            payload = raw if 'pyright' in command else '[]'
+            return original_run([sys.executable, '-c',
+                                 'import sys; sys.stdout.buffer.write(' +
+                                 repr(payload.encode('utf-8')) + ')'], **kwargs)
+
+        with tempfile.TemporaryDirectory() as folder, \
+                patch.object(code_health, 'source_files', return_value=[]), \
+                patch.object(code_health.subprocess, 'run', side_effect=checker), \
+                patch.object(code_health.importlib.metadata, 'version', return_value='test'), \
+                patch.object(code_health, 'dependencies', return_value={'status': 'PASS'}), \
+                patch.object(code_health.platform, 'platform', return_value='controlled cp1252'), \
+                patch.object(Path, 'write_text', autospec=True, side_effect=lambda path, data,
+                             encoding='cp1252', **kw: original_write(path, data, encoding=encoding, **kw)):
+            report = code_health.run(Path(folder))
+            written = Path(folder, 'pyright.json').read_bytes().decode('utf-8')
+            self.assertEqual(json.loads(written)['generalDiagnostics'][0]['message'], message)
+            expected = code_health.fingerprints('pyright', json.loads(raw)['generalDiagnostics'])
+            self.assertEqual(report['static']['pyright']['fingerprints'], expected)
+            self.assertEqual(json.loads(Path(folder, 'health.json').read_bytes()), report)
+
+    def test_vendor_cluster_uname_fields_preserve_linux_and_windows_detection(self):
+        cluster = runpy.run_path(str(code_health.ROOT /
+                                 'third_party/MoGe/moge/model/dinov2/utils/cluster.py'))
+        for system, release, node, expected in (
+                ('Linux', '6.8-aws', 'host', 'AWS'),
+                ('Linux', '6.8', 'rsc42', 'RSC'),
+                ('Linux', '6.8', 'host', 'FAIR'),
+                ('Windows', '11', 'host', 'FAIR')):
+            with self.subTest(system=system, release=release, node=node), \
+                    patch('platform.uname', return_value=SimpleNamespace(
+                        system=system, release=release, node=node)):
+                self.assertEqual(cluster['_guess_cluster_type']().name, expected)
+
+    def test_invalid_utf8_checker_output_is_rejected_not_replaced(self):
+        original_run = subprocess.run
+
+        def invalid_output(command, **kwargs):
+            return original_run([sys.executable, '-c',
+                                 "import sys; sys.stdout.buffer.write(bytes([255]))"], **kwargs)
+
+        with tempfile.TemporaryDirectory() as folder, \
+                patch.object(code_health, 'source_files', return_value=[]), \
+                patch.object(code_health.subprocess, 'run', side_effect=invalid_output), \
+                self.assertRaises(UnicodeDecodeError):
+            code_health.run(Path(folder))
 
     def test_source_inventory_needs_only_git_and_keeps_hidden_untracked_sources(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -155,6 +155,12 @@ class ProcessMemoryTests(unittest.TestCase):
         provider.records[1] = info(1, rss=-1)
         self.assertEqual(observer.sample()['status'], 'unavailable')
 
+    def test_linux_provider_refuses_missing_page_size_api(self):
+        from corridorkey.process_memory import MeasurementError, _Linux
+        with patch('corridorkey.process_memory.os.sysconf', None, create=True), \
+                self.assertRaisesRegex(MeasurementError, 'page size is unavailable'):
+            _Linux(4)
+
     def test_linux_bounded_stat_parser_and_missing_vs_denied(self):
         import io
 
@@ -162,7 +168,8 @@ class ProcessMemoryTests(unittest.TestCase):
         # A command containing ')' and spaces must not shift field indices.
         fields = ['S', '1'] + ['0'] * 17 + ['12345', '0', '7']
         data = ('22 (worker ) name) ' + ' '.join(fields)).encode()
-        provider = _Linux(4)
+        with patch('corridorkey.process_memory.os.sysconf', return_value=4096, create=True):
+            provider = _Linux(4)
         with patch('pathlib.Path.open', return_value=io.BytesIO(data)):
             record = provider.read(22)
         self.assertEqual(record, ProcessInfo(22, 1, '12345', 7 * provider.page_size))

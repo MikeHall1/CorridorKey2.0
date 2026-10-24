@@ -138,7 +138,10 @@ class WorkerFaultTests(unittest.TestCase):
                 self.assertEqual(heartbeat.read_text(), value, 'owned descendant still executing after force close')
             finally:
                 try:
-                    if os.getpgid(pid) == client.process.pid:
-                        os.kill(pid, signal.SIGKILL)
+                    getpgid = getattr(os, 'getpgid', None)
+                    sigkill = getattr(signal, 'SIGKILL', None)
+                    assert callable(getpgid) and sigkill is not None
+                    if getpgid(pid) == client.process.pid:
+                        os.kill(pid, sigkill)
                 except ProcessLookupError:
                     pass

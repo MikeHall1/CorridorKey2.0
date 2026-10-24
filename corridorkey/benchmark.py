@@ -16,6 +16,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
+from typing import cast
 
 from .app_process import module_command
 
@@ -112,7 +113,10 @@ def environment():
                 hardware[field + "_unavailable"] = str(exc)
     elif hasattr(__import__("os"), "sysconf"):
         import os
-        hardware["ram_bytes"] = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+        sysconf = vars(os).get("sysconf")
+        if callable(sysconf):
+            sysconf = cast(Callable[[str], int], sysconf)
+            hardware["ram_bytes"] = sysconf("SC_PHYS_PAGES") * sysconf("SC_PAGE_SIZE")
     return {"python": sys.version, "os": platform.platform(), "hardware": hardware,
             "dependencies": packages, "ffmpeg": shutil.which("ffmpeg"),
             "nvidia_smi": shutil.which("nvidia-smi"),

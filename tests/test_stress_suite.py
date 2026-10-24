@@ -161,7 +161,9 @@ class StressSuiteTests(unittest.TestCase):
     @unittest.skipUnless(hasattr(os, 'mkfifo'), 'POSIX FIFO admission')
     def test_fifo_batch_refused_without_open_block(self):
         self.batch.unlink()
-        os.mkfifo(self.batch)
+        mkfifo = getattr(os, 'mkfifo', None)
+        assert callable(mkfifo)
+        mkfifo(self.batch)
         report = self.run_suite()
         self.assertEqual(report['status'], 'failed')
         self.assertEqual(report['summary']['failed_cases'], 9)

@@ -98,7 +98,9 @@ class StoreReadBoundsTests(unittest.TestCase):
     def test_workspace_fifo_is_refused_without_blocking_owned_child(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            os.mkfifo(root / 'workspace.json')
+            mkfifo = getattr(os, 'mkfifo', None)
+            assert callable(mkfifo)
+            mkfifo(root / 'workspace.json')
             code = '''import sys
 from corridorkey.recovery_store import BundleStore,CacheInvalid
 try:

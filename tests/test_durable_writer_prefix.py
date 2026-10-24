@@ -192,7 +192,9 @@ class DurableWriterPrefixTests(unittest.TestCase):
             self.write(self.original, 0)
             fifo = self.original / 'alpha/alpha_000000.exr'
             fifo.unlink()
-            os.mkfifo(fifo)
+            mkfifo = getattr(os, 'mkfifo', None)
+            assert callable(mkfifo)
+            mkfifo(fifo)
             with patch('corridorkey.durable_writer_prefix.os.open', side_effect=AssertionError('must not open FIFO')), \
                     self.assertRaises(CacheInvalid):
                 adapter.checkpoint((0,), completed={'alpha': 1, 'fg': 1})

@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from unittest.mock import patch
 
 from corridorkey import cache_backup as transfer
@@ -70,6 +70,32 @@ class BackupTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), source)
         self.assertEqual(maintenance.inventory(restored)['entry_count'], 1)
         self.assertEqual(transfer.inspect_backup(backup)['status'], 'complete')
+
+    def test_windows_relative_keys_backup_restore_preserve_posix_manifest_and_real_files(self):
+        relative_to = Path.relative_to
+
+        def windows_relative_to(path, *args, **kwargs):
+            return PureWindowsPath(relative_to(path, *args, **kwargs).as_posix())
+
+        before = self.fingerprint(self.workspace)
+        with patch.object(Path, 'relative_to', windows_relative_to):
+            backup = self.backup()
+            payload = json.loads((backup / 'backup.json').read_bytes())['payload']
+            self.assertEqual(payload['schema_version'], 1)
+            self.assertIn(f'entries/{self.identity.key}', [item['name'] for item in payload['directories']])
+            self.assertIn(f'entries/{self.identity.key}/payload-000000.bin', [item['name'] for item in payload['files']])
+            self.assertTrue(all('\\' not in item['name'] for group in ('directories', 'files') for item in payload[group]))
+            self.assertEqual(transfer.inspect_backup(backup)['status'], 'complete')
+            result = transfer.restore_backup(backup, self.parent)
+            self.assertEqual(result['status'], 'complete', result)
+            self.assertTrue(result['usable'])
+            self.assertEqual(maintenance.inventory(result['destination'])['entry_count'], 1)
+        restored = self.fingerprint(Path(result['destination']))
+        for name, value in before.items():
+            if name != 'lock.sqlite':
+                self.assertEqual(restored[name], value, name)
+        self.assertEqual(self.fingerprint(self.workspace), before)
+        self.assertEqual(self.source.read_bytes(), b'preserve original export' * 500)
 
     def test_busy_source_and_missing_parent_do_not_create_destination(self):
         connection = sqlite3.connect(self.workspace / 'lock.sqlite', timeout=0)

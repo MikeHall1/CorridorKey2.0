@@ -148,7 +148,7 @@ def _scan(root: Path, check: Check) -> tuple[dict[str, Any], dict[str, Any]]:
 
     def directory(path: Path) -> list[str]:
         _check(check)
-        directories[str(path.relative_to(root))] = _stat(path, directory=True)
+        directories[path.relative_to(root).as_posix()] = _stat(path, directory=True)
         return _names(path, MAX_FILES, check)
 
     def file(path: Path) -> dict[str, int]:
@@ -158,7 +158,7 @@ def _scan(root: Path, check: Check) -> tuple[dict[str, Any], dict[str, Any]]:
         if count > MAX_FILES:
             raise ValueError('Workspace inventory exceeds the bounded file limit')
         value = _stat(path)
-        files[str(path.relative_to(root))] = value
+        files[path.relative_to(root).as_posix()] = value
         return value
 
     top = directory(root)

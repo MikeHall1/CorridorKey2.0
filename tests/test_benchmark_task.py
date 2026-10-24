@@ -125,7 +125,8 @@ class BenchmarkTaskTests(unittest.TestCase):
     def test_inspection_denial_still_joins_logs_and_closes_owned_pipe(self):
         import os
         from unittest.mock import patch
-        real_signal = os.killpg
+        real_signal = getattr(os, 'killpg', None)
+        assert callable(real_signal)
 
         def deny_inspection(pid, operation):
             if operation == 0:

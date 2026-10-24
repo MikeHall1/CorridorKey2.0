@@ -5,6 +5,7 @@
 
 from enum import Enum
 import os
+import platform
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -16,12 +17,12 @@ class ClusterType(Enum):
 
 
 def _guess_cluster_type() -> ClusterType:
-    uname = os.uname()
-    if uname.sysname == "Linux":
+    uname = platform.uname()
+    if uname.system == "Linux":
         if uname.release.endswith("-aws"):
             # Linux kernel versions on AWS instances are of the form "5.4.0-1051-aws"
             return ClusterType.AWS
-        elif uname.nodename.startswith("rsc"):
+        elif uname.node.startswith("rsc"):
             # Linux kernel versions on RSC instances are standard ones but hostnames start with "rsc"
             return ClusterType.RSC
 

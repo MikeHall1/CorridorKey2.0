@@ -237,7 +237,8 @@ class GuidanceProcessTests(unittest.TestCase):
         def cancel():
             if time.monotonic() >= deadline:
                 raise CancelledError('fixture cancellation stays primary')
-        actual_signal = os.killpg
+        actual_signal = getattr(os, 'killpg', None)
+        assert callable(actual_signal)
         def denied_query(pid, sig):
             if sig == 0:
                 raise PermissionError('fixture group observation denied')
