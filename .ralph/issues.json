@@ -9770,6 +9770,60 @@
       ],
       "created_utc": "2026-10-24T15:52:58.887906+00:00",
       "resolved_utc": "2026-10-24T16:15:31.276328+00:00"
+    },
+    {
+      "id": "CI-PUBLISH-001",
+      "component": "Windows test path identity and temporary cwd cleanup",
+      "priority": "P2",
+      "status": "open",
+      "classification": "Confirmed hosted test error, short/long path aliases plus cleanup ordering, not a proven runtime backend bug",
+      "affected_files": "tests/test_app_process.py:155-168",
+      "problem": "Observed on published source44c753a4950c19ecec68d6b1ce850490ef928c36; see https://github.com/MikeHall1/CorridorKey2.0/actions/runs/40112761374",
+      "proposed_action": "Resolve both cwd representations and restore caller cwd inside the temporary-directory lifetime; regression proves identical filesystem location and cleanup even when assertions/probe fail.",
+      "evidence": [
+        "benchmark-results/product-next/publication-review/ci44-summary.json",
+        "https://github.com/MikeHall1/CorridorKey2.0/actions/runs/40112761374"
+      ],
+      "acceptance": [
+        "Targeted deterministic regression with no useful assertion/checker weakening; exact new-SHA hosted Ubuntu/Windows gates pass before target acceptance."
+      ],
+      "created_utc": "2026-10-24T17:08:26.688492+00:00"
+    },
+    {
+      "id": "CI-PUBLISH-002",
+      "component": "Hosted Ubuntu crash record lifecycle",
+      "priority": "P2",
+      "status": "open",
+      "classification": "Confirmed sending!=lost assertion after bridge.done; root cause requires controlled reproduction, not arbitrary sleep",
+      "affected_files": "tests/test_desktop_window.py:341-353; corridorkey/desktop_window.py/new_worker and desktop_bridge.py",
+      "problem": "Observed on published source44c753a4950c19ecec68d6b1ce850490ef928c36; see https://github.com/MikeHall1/CorridorKey2.0/actions/runs/40112761374",
+      "proposed_action": "Trace bridge completion/event delivery/new_worker consumption ownership, reproduce deterministic event ordering, fix responsible layer or invalid oracle without dropping loss/partial-output protection.",
+      "evidence": [
+        "benchmark-results/product-next/publication-review/ci44-summary.json",
+        "https://github.com/MikeHall1/CorridorKey2.0/actions/runs/40112761374"
+      ],
+      "acceptance": [
+        "Targeted deterministic regression with no useful assertion/checker weakening; exact new-SHA hosted Ubuntu/Windows gates pass before target acceptance."
+      ],
+      "created_utc": "2026-10-24T17:08:26.688492+00:00"
+    },
+    {
+      "id": "CI-PUBLISH-003",
+      "component": "Windows Pyright regression fingerprint classification",
+      "priority": "P2",
+      "status": "open",
+      "classification": "Observed713diagnostics/331newfingerprints, actual rawmessages not present in compact jobstdout",
+      "affected_files": "scripts/code_health.py; .github/workflows/cpu-checks.yml",
+      "problem": "Observed on published source44c753a4950c19ecec68d6b1ce850490ef928c36; see https://github.com/MikeHall1/CorridorKey2.0/actions/runs/40112761374",
+      "proposed_action": "Collect exact per-platform raw diagnostics and environment then classify root causes. Fix actual regressions; retain checkers/baseline, no mass suppression or unproved baseline refresh.",
+      "evidence": [
+        "benchmark-results/product-next/publication-review/ci44-summary.json",
+        "https://github.com/MikeHall1/CorridorKey2.0/actions/runs/40112761374"
+      ],
+      "acceptance": [
+        "Targeted deterministic regression with no useful assertion/checker weakening; exact new-SHA hosted Ubuntu/Windows gates pass before target acceptance."
+      ],
+      "created_utc": "2026-10-24T17:08:26.688492+00:00"
     }
   ],
   "updated_utc": "2026-10-24T16:15:31.276328+00:00"

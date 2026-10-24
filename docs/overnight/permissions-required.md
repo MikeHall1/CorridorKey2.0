@@ -25,7 +25,7 @@ Current run: OMX `omx-1792790265529-l6n3bp`, G004; branch `review/corridorkey-au
 
   Exclude `.gitignore`, `AGENTS.md`, `.codex/`, `.serena/`, `.DS_Store`, raw audit/benchmark evidence, media, weights and caches unless separately owned/approved. Do not blindly commit all changes.
 - **Required verification:** committed source matches accepted hashes; index contains only reviewed paths; remote SHA equals pushed SHA; inspect exact new-SHA hosted jobs. Passing local fixtures do not establish Windows/GPU acceptance.
-- **Status:** **USER AUTHORISED — reviewed-path publication in progress.** Current user instruction: “review the existing staged changes and then publish.” Exact fork/branch tip revalidated41e7c32; narrow Git-write/push grants used per command. Only explicit reviewed product paths may be committed;121 unrelated staged entries remain protected. Commit/push results will be recorded after actual success.
+- **Status:** **GRANTED AND COMPLETED — source checkpoint published2026-10-24.** User-authorised reviewed161-path commit `44c753a4950c19ecec68d6b1ce850490ef928c36` was normally pushed and independently confirmed as the fork review-branch tip. All121 excluded staged entries retained identical mode/OID/stage/flags. Previous author identity reused command-locally; no global/repository Git configuration change. This confirmation is saved in a subsequent documentation-only commit; no force/tag/default-branch/release action.
 
 ## External prerequisites — not permission requests
 
@@ -167,3 +167,20 @@ I006 accepted after1,955 authorised tests PASS350.965s/481 stable Python files/f
 ## Current permission review — supersedes historical deferred statuses
 
 PERM002 closed by actual15-case pass. PERM004 acquisition/import preflight completed in isolated target; actual provider tests remain work, not permission to ship. PERM001 publication explicitly authorised by user after staged review; commit/push pending exact reviewed-path execution. PERM003 remains optional/deferred. Current portable coverage is1970 cases across two runs, plus29 fresh affected tests after test-only EOF cleanup; not one new whole-suite run. See [compact verification](verification-summary.json). Old checkpoint narratives below/above retain historical evidence, not current permission state.
+
+
+## Publication confirmed
+
+Source checkpoint `44c753a4950c19ecec68d6b1ce850490ef928c36` is verified on `MikeHall1/CorridorKey2.0`, branch `review/corridorkey-audit-20261023`.161 reviewed paths published;121 unrelated staged entries preserved exactly. PERM001 and002 are closed for this execution. PERM004 acquisition/import preflight completed in isolated target; actual codec/provider proof remains. PERM003 optional/deferred. The earlier native prerequisite-block audit is historical because new grants changed work availability. Source identity and composite portable evidence: [verification](verification-summary.json).
+
+
+## PERM-005 — README model downloads (completed)
+
+- **Affected task:** obtain the four model groups listed by the project README.
+- **Authority:** current user request, “can you pull the weights from hugging face, if you view the readme”; narrow platform grants separately authorised metadata and the exact5.08GB transfer. Not inferred from silence/overnight instructions.
+- **Action/files:** existing anonymous downloader resolved pinned original publishers, then created fresh ignored `weights/downloaded-assets/corridorkey-assets-wz21cm42`; no existing assets/globalcache/environment/settings overwritten or activated.
+- **Actual size/cost:**35files/5,076,141,689payloadbytes; public HuggingFace and GoogleDeepMind storage, no paidcompute/mediaupload. Available local storage checked before transfer.
+- **Verification:** exact sizes/publisher-declared checksums, completed sealed inventory and RuntimePaths presence check; nonexecuting identity/structure audit complete. MoGe legacyformat, tensors, modelcompatibility/GPU/quality remainunverified. No pickle/modelcode executed.
+- **Risk/rollback:** preserve publisher licences; keep only this owned bundle if needed. No automatic deletion, uninstallation or overwrite. Bundle remains out of Git.
+- **Status:** **GRANTED AND COMPLETED**. Actual assets now present locally; this closes the prior missing-asset prerequisite, not CUDA/hardware/quality/host acceptance.
+- **Evidence/next:** [local asset root and provenance](model-assets.md), [compact verification](verification-summary.json). Future model use must select the explicit root and meet backend requirements; no silent fallback.

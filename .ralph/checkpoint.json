@@ -247,7 +247,7 @@
       "acceptance": "SDK and Resolve host available; real adapter build and sequential/random/reverse/multi-instance/colour/export tests."
     }
   ],
-  "next_action": "Safe overnight checkpoint: no additional straightforward currently-authorized local defect established by bounded A-J triage. Next approve/reject PERM004 isolated PyAV experiment, then implement/prove remaining CFR timestamp+pixel/OpenCV-output correspondence and high-bit encoded video precision/admission; PERM001 publication/indexownership, PERM002HTTP, optionalPERM003 metadata separate. ActualCUDA/weights/licensedfootage/quality/Windows/newSHAhostedCI/Resolve prerequisites remain. No overall completion.",
+  "next_action": "Prioritise observed hostedCI-PUBLISH001/002/003: Windows cwd alias+cleanup, Ubuntu crashrecord ordering, Windows staticrawdiagnostics classification. No arbitrary sleeps/checker weakening/baseline refresh. Provider/CFR experiments nowfeasible with isolatedPyAV; downloadedweights present but actualCUDAquality/Windowspackaging/Resolve remainunverified.",
   "last_verification_logs": "benchmark-results/audit-20261023/second-batch",
   "product_complete": false,
   "reviewed_source_identity": "9e7935bbbf0e5ff451f9e02393168ed14fec89344349f3850765a2e6f1a93925",
@@ -451,8 +451,8 @@
       "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c"
     },
     "external": "CUDA/weights/local representative footage/FFmpeg/SAM2/Windows/Resolve/distribution NOT VERIFIED",
-    "next_action": "Safe overnight checkpoint: no additional straightforward currently-authorized local defect established by bounded A-J triage. Next approve/reject PERM004 isolated PyAV experiment, then implement/prove remaining CFR timestamp+pixel/OpenCV-output correspondence and high-bit encoded video precision/admission; PERM001 publication/indexownership, PERM002HTTP, optionalPERM003 metadata separate. ActualCUDA/weights/licensedfootage/quality/Windows/newSHAhostedCI/Resolve prerequisites remain. No overall completion.",
-    "current_task": "PERM002closed/PERM004isolatedpreflightpassed; publish explicit reviewed product paths, preserve121 unrelated stagedentries",
+    "next_action": "Prioritise observed hostedCI-PUBLISH001/002/003: Windows cwd alias+cleanup, Ubuntu crashrecord ordering, Windows staticrawdiagnostics classification. No arbitrary sleeps/checker weakening/baseline refresh. Provider/CFR experiments nowfeasible with isolatedPyAV; downloadedweights present but actualCUDAquality/Windowspackaging/Resolve remainunverified.",
+    "current_task": "Source44c753a published; READMEassets5.08GB/35files transferred and nonexecuting-audited; publish recordsonly followup",
     "workers": {
       "conditioned_preview": "completed/frozen B002+I006",
       "preview_design_review": "completed independent approved, allprobes terminal",
@@ -491,7 +491,7 @@
       "hosted_ci": "Prior41e7c32 Ubuntu failure under investigation; Windows pending; not accepted",
       "product_complete": false
     },
-    "status": "user_authorised_permission_review_and_publication_in_progress",
+    "status": "portable_source_checkpoint_published_next_provider_proof",
     "batch3_verification": {
       "status": "locally_accepted_publication_deferred_PERM-001",
       "tests": {
@@ -2286,13 +2286,134 @@
     "permission_review": {
       "observed_utc": "2026-10-24T16:34:46.657597+00:00",
       "user_instruction": "review the existing staged changes and then publish",
-      "PERM001": "authorised user; exactGitplatform commands pending",
+      "PERM001": "Reviewed161-path source checkpoint committed/pushed/remoteconfirmed44c753a;121excludedstagedentriespreserved",
       "PERM002": "15PASS1.021s actuallocalhost",
       "PERM003": "optionaldeferred",
       "PERM004": "isolatedinstall/import7PASS0.543s; actualproviderproof notimplemented",
       "source_identity": "8274684322c3ab4b1f6939af904d63be09496fb6757c75c0cb9891b33f9bec52",
       "semantic_source_delta": "Only two test EOF blankline repairs; AST+bytecode unchanged;29freshPASS25.334s",
-      "record": "docs/overnight/verification-summary.json"
+      "record": "docs/overnight/verification-summary.json",
+      "work_availability": "Previous prerequisite block changed: isolated provider experiments are now locally feasible; prior blocked audit is historical, not current no-work evidence."
+    },
+    "pushed_commit": "44c753a4950c19ecec68d6b1ce850490ef928c36",
+    "push_confirmed": true,
+    "pushed_commit_scope": "Verified source checkpoint; documentation-only confirmation commit follows",
+    "publication_confirmed": {
+      "observed_utc": "2026-10-24T16:44:30.978265+00:00",
+      "source_commit": "44c753a4950c19ecec68d6b1ce850490ef928c36",
+      "remote_tip_verified": "44c753a4950c19ecec68d6b1ce850490ef928c36",
+      "remote": "https://github.com/MikeHall1/CorridorKey2.0.git",
+      "branch": "review/corridorkey-audit-20261023",
+      "push_record": "benchmark-results/product-next/publication-product-push.json",
+      "files": 161,
+      "excluded_staged_entries_preserved": 121,
+      "source_files_verified": 481,
+      "source_identity": "8274684322c3ab4b1f6939af904d63be09496fb6757c75c0cb9891b33f9bec52",
+      "author_identity": "Reused from41e7c32 through command-local environment; no configuration change",
+      "records_followup": "This source publication confirmation is recorded in a later documentation-only commit; source code unchanged."
+    },
+    "downloaded_model_assets": {
+      "observed_utc": "2026-10-24T17:03:50.528395+00:00",
+      "asset_root": "weights/downloaded-assets/corridorkey-assets-wz21cm42",
+      "files": 35,
+      "payload_bytes": 5076141689,
+      "download_wall_seconds": 774.0057157920673,
+      "download_result": "complete/usable true: transfer only",
+      "provenance_marker": "weights/downloaded-assets/corridorkey-assets-wz21cm42/asset-download.json",
+      "plan_token": "1c0c85413b970e88f67751a8f7de49921b8760038ce38afcd377330d76890ba5",
+      "publishers": [
+        {
+          "asset": "corridorkey",
+          "source": "https://huggingface.co/nikopueringer/CorridorKey2.0",
+          "resolved_revision": "cf44a8db3f024bb49fd59daa408848ccf05f7477"
+        },
+        {
+          "asset": "cradio",
+          "source": "https://huggingface.co/nvidia/C-RADIOv4-SO400M",
+          "resolved_revision": "c0457f5dc26ca145f954cd4fc5bb6114e5705ad8"
+        },
+        {
+          "asset": "moge",
+          "source": "https://huggingface.co/Ruicheng/moge-2-vitb-normal",
+          "resolved_revision": "ca5f0e07ff01d3e5a364c1d954ed12ee1814b368"
+        },
+        {
+          "asset": "rvm",
+          "source": "https://storage.googleapis.com/representations4d/checkpoints/pretrain_rvm_small16_256_204031069.npz",
+          "resolved_revision": null
+        }
+      ],
+      "transfer_checks": "All declared lengths and publisher-declared checksums verified; RVM uses existing legacyMD5 with observedSHA256. Not publisher signature/authenticity or neuralcompatibility proof.",
+      "structure_audit": {
+        "status": "complete",
+        "assets_present": true,
+        "model_compatibility": "NOT VERIFIED",
+        "entries": [
+          {
+            "asset": "weights",
+            "bytes": 2661698720,
+            "format": "safetensors",
+            "format_status": "PASS",
+            "sha256": "c43596de98cc8866d577c8a9f9ea239acdf3f7a130ff24e25db4375a50590436"
+          },
+          {
+            "asset": "foundation_stats",
+            "bytes": 18864,
+            "format": "safetensors",
+            "format_status": "PASS",
+            "sha256": "924783ceddd293fd470126332ce328166faea6c4c8d2f36402d5b95187166af3"
+          },
+          {
+            "asset": "rvm_ckpt",
+            "bytes": 270086372,
+            "format": "npz/npy",
+            "format_status": "PASS",
+            "sha256": "8821ba9f5d983b9a3746bb5fe86b9c2ea834fe9985ab7b02438b917438bf2ede"
+          },
+          {
+            "asset": "moge_checkpoint",
+            "bytes": 419110160,
+            "format": "legacy checkpoint",
+            "format_status": "UNVERIFIED",
+            "sha256": "16b8110e86d5dc5a849db120ca96ef3a223fd30b0c9146d1d81db504073da5f6"
+          },
+          {
+            "asset": "cradio_dir",
+            "bytes": 1725227573,
+            "format": "C-RADIO local tree",
+            "format_status": "PASS",
+            "sha256": "2fbb64fc32fc9c341ad2c0126dc4cfc5ddab30a4f4cb9290c52455585551f15f"
+          }
+        ]
+      },
+      "safety": "Fresh ignored asset tree; no existing files overwritten, globalcache/env/inference settings changed, modelcode/tensors/pickle executed or model assets staged. No automatic activation.",
+      "raw_local": [
+        "benchmark-results/product-next/model-assets-metadata.json",
+        "benchmark-results/product-next/model-assets-download.json",
+        "benchmark-results/product-next/model-assets-structure-audit-report.json"
+      ],
+      "remaining": "NVIDIA/CUDA/runtime compatibility, actual tensor/quality/performance/Windows/Resolve acceptance stillunverified; MoGe legacycheckpoint deliberately notdeserialized."
+    },
+    "hosted_publication_result": {
+      "observed_utc": "2026-10-24T17:08:26.688492+00:00",
+      "commit": "44c753a4950c19ecec68d6b1ce850490ef928c36",
+      "run_url": "https://github.com/MikeHall1/CorridorKey2.0/actions/runs/40112761374",
+      "conclusion": "failure",
+      "ubuntu": {
+        "job_id": 120927739472,
+        "tests_before_failfast": 637,
+        "test_seconds": 167.275,
+        "failure": "test_desktop_window.DesktopWindowTests.test_crash_records_are_consumed_before_explicit_new_worker: sending != lost",
+        "classification": "Confirmed hosted failure; runtime versus timing/test oracle root cause not yet reproduced."
+      },
+      "windows": {
+        "job_id": 120927739650,
+        "tests_before_failfast": 3,
+        "test_seconds": 1.431,
+        "failure": "test_app_process.ApplicationProcessTests.test_backend_probe_uses_code_root_after_caller_changes_directory: short RUNNER~1 cwd differs from resolved runneradmin; tempfile cleanup WinError32/5 while cwd still inside target.",
+        "static": "Ruff0new; Pyright713diagnostics/331newfingerprints vs checkedbaseline, rawdiagnostics need collection/classification; no suppression/baseline refresh."
+      },
+      "scope": "Hosted results invalidate any all-target-green inference from localCPU verification. Actual productionGPU/quality/Windowspackaging/Resolve acceptance stillopen; no appfix included in records-only commit."
     }
   },
   "updated_utc": "2026-10-24T16:15:31.276328+00:00",

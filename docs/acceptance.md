@@ -1,5 +1,7 @@
 # Product acceptance
 
+**Model-download update:** READMEassets35files/5.08GB now downloaded to a fresh ignored bundle, transferchecks verified and nonexecuting audit completed. Existing weights/env/settings unchanged; no automatic activation. MoGe legacyformat, actual modelcompatibility/CUDA/quality/Windows/Resolve remainunverified. [Asset root and provenance](overnight/model-assets.md).
+
 Current portable verification supplement:15 previously blocked localhost cases now pass1.021s under a narrow grant, completing1970-case coverage across separate runs. Two test-only EOF cleanups are AST+bytecode identical and29affected tests freshly pass. PyAV isolated import preflight7passes is NOT CFR/quality acceptance. [Compact provenance](overnight/verification-summary.json).
 
 

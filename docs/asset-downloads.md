@@ -1,6 +1,11 @@
 # Deliberate model asset downloads
 
-The workflow is locally verified with tiny owned HTTP fixtures and the actual Qt interface. Production Hugging Face/CDN, real weights and Windows behavior remain unverified.
+The workflow is fixture-tested and now has an actual production transfer: the README
+asset set (35files/5.08GB) was downloaded2026-10-24 from pinned public publishers,
+with exact-size/checksum verification and a nonexecuting local structure audit.
+See [asset root/provenance](overnight/model-assets.md). No model tensors/code were
+loaded. MoGe legacyformat, pretrained compatibility, actualGPU/quality and Windows
+remain unverified; downloaded weights are not bundled in Git.
 
 Open **Local assets… → Download model assets…**. Opening reads the offline publisher catalog only. **Resolve online plan** explicitly requests bounded publisher metadata and exact byte sizes. It does not download model weights. Review the publishers, licence links, pinned revisions, local file paths, checksums and total payload bytes. The C-RADIO snapshot includes local Python code that the runtime will load only during later explicit model use.
 
@@ -38,7 +43,7 @@ python -m corridorkey.asset_download download --plan /existing/parent/new-plan.j
 
 `catalog` is offline. `plan` (alias `resolve`) performs metadata requests. `download` fetches the reviewed payload only when explicitly invoked. Saving a plan requires a fresh file and never overwrites an existing one. JSON terminal results report actual destination, usability, payload/file counts, partial files, error/warning and scope. Packaged dispatch uses `--corridorkey-module corridorkey.asset_download` in place of `python -m corridorkey.asset_download`. The original `scripts/download_weights.py` flags and behavior remain available as a source companion.
 
-## Verification scope
+## Historical fixture verification scope
 
 `benchmark-results/m34-generated-summary.json` records actual Qt catalog → metadata plan → checked fresh download → explicit selection using an owned tiny local HTTP publisher fixture. All fixed public URLs are mapped to127.0.0.1 by a test-only injected transport; the RVM checksum is replaced with a tiny fixture oracle inside that process. No remote publisher/model data is requested. The workflow preserves existing asset bytes, leaves presence validation unready until requested, submits no jobs and refuses a new download inside the selected tree before file/network I/O.
 
