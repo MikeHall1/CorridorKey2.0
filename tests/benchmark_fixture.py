@@ -35,6 +35,9 @@ if data.get('mode') == 'crash':
     os._exit(78)
 if data.get('mode') == 'wait':
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+    break_signal = getattr(signal, 'SIGBREAK', None)
+    if break_signal is not None:
+        signal.signal(break_signal, signal.SIG_IGN)
     print('fixture_ready', flush=True)
     while True:
         time.sleep(.05)

@@ -1,6 +1,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from corridorkey.config import InferenceConfig
@@ -47,7 +48,7 @@ class QueueStoreTests(unittest.TestCase):
             saved = QueueStore.inspect(root, request_id='job')
             self.assertEqual(saved['status'], 'result')
             self.assertEqual(saved['event']['payload']['record']['status'], 'complete')
-            with sqlite3.connect(root / 'queue.sqlite') as db:
+            with closing(sqlite3.connect(root / 'queue.sqlite')) as db, db:
                 db.execute("UPDATE requests SET event='{}' WHERE id='job'")
             with self.assertRaisesRegex(ValueError, 'checksum'):
                 QueueStore.inspect(root, request_id='job')
@@ -74,7 +75,7 @@ class QueueStoreTests(unittest.TestCase):
                     store.phase('job', 'sent')
             finally:
                 store.close()
-            with sqlite3.connect(root / 'queue.sqlite') as db:
+            with closing(sqlite3.connect(root / 'queue.sqlite')) as db, db:
                 db.execute("UPDATE requests SET status='failed' WHERE id='job'")
             with self.assertRaisesRegex(ValueError, 'metadata'):
                 QueueStore.inspect(root, request_id='job')

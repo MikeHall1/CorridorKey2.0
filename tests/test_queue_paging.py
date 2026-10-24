@@ -2,6 +2,7 @@
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from typing import Any, cast
 
@@ -39,7 +40,7 @@ class QueuePagingTests(unittest.TestCase):
                 self.assertEqual(QueueStore.inspect(root, request_id='job0')['status'], 'prepared')
             finally:
                 store.close()
-            with sqlite3.connect(root / 'queue.sqlite') as db:
+            with closing(sqlite3.connect(root / 'queue.sqlite')) as db, db:
                 self.assertEqual(db.execute('SELECT COUNT(*) FROM requests').fetchone()[0], 271)
 
     def test_invalid_cursors_and_detail_combination_are_rejected(self):

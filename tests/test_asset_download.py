@@ -426,24 +426,52 @@ class AssetDownloadTests(unittest.TestCase):
         self.assertEqual(result['partial_files'], [])
 
     def test_staging_path_replacement_cannot_publish_wrong_hashed_inode(self):
+        self._check_staging_path_replacement(refuse_replacement=False)
+
+    def test_staging_replacement_refused_by_os_stays_unusable_and_unsealed(self):
+        self._check_staging_path_replacement(refuse_replacement=True)
+
+    def _check_staging_path_replacement(self, *, refuse_replacement):
         plan = self.fixture.plan()
         original = os.fsync
-        changed = []
+        observed = {}
 
         def replacing(descriptor):
-            if stat.S_ISREG(os.fstat(descriptor).st_mode) and not changed:
+            if stat.S_ISREG(os.fstat(descriptor).st_mode) and not observed:
                 stage = next(self.parent.rglob('.download-*'))
-                size = stage.stat().st_size
-                stage.rename(stage.with_name(stage.name + '.original'))
-                stage.write_bytes(b'x' * size)
-                changed.append(True)
+                before = stage.stat()
+                observed.update(path=stage, raw=stage.read_bytes(), identity=(before.st_dev, before.st_ino), refused=False)
+                backup = stage.with_name(stage.name + '.original')
+                try:
+                    if refuse_replacement:
+                        raise PermissionError('controlled open-file sharing refusal')
+                    stage.rename(backup)
+                except PermissionError:
+                    observed['refused'] = True
+                    raise
+                stage.write_bytes(b'x' * before.st_size)
             original(descriptor)
 
         with patch.object(download.os, 'fsync', replacing):
             result = download.download_plan(plan, self.parent, plan['total_bytes'], transport=self.fixture.transport)
         self.assertFalse(result['usable'])
-        self.assertIn('descriptor', result['error'])
+        self.assertEqual(result['status'], 'failed')
         self.assertFalse((Path(result['destination']) / 'asset-download.json').exists())
+        self.assertEqual(result['copied_files'], 0)
+        self.assertTrue(observed)
+        stage = observed['path']
+        if observed['refused']:
+            self.assertIn('PermissionError', result['error'])
+            self.assertEqual(stage.read_bytes(), observed['raw'])
+            current = stage.stat()
+            self.assertEqual((current.st_dev, current.st_ino), observed['identity'])
+            self.assertFalse(stage.with_name(stage.name + '.original').exists())
+        else:
+            self.assertIn('descriptor', result['error'])
+            self.assertEqual(stage.read_bytes(), b'x' * len(observed['raw']))
+            self.assertEqual(stage.with_name(stage.name + '.original').read_bytes(), observed['raw'])
+        if refuse_replacement:
+            self.assertTrue(observed['refused'])
 
     def test_plan_persistence_is_exact_fresh_and_production_https_policy(self):
         plan = self.fixture.plan()

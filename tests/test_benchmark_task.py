@@ -53,6 +53,33 @@ class BenchmarkTaskTests(unittest.TestCase):
             assert task.process is not None
             self.assertIsNotNone(task.process.poll())
 
+    def test_wait_fixture_ignores_platform_cancellation_before_readiness(self):
+        import ast
+        import runpy
+        from types import SimpleNamespace
+
+        tree = ast.parse(FIXTURE.read_text(), filename=str(FIXTURE))
+        wait = next(node for node in tree.body if isinstance(node, ast.If)
+                    and ast.unparse(node.test) == "data.get('mode') == 'wait'")
+        self.assertIsInstance(wait.body[-1], ast.While)
+        with tempfile.TemporaryDirectory() as folder:
+            preparation = Path(folder) / 'wait_preparation.py'
+            preparation.write_text(ast.unparse(ast.Module(body=wait.body[:-1], type_ignores=[])))
+            events = []
+            for windows in (False, True):
+                with self.subTest(windows=windows):
+                    events.clear()
+                    fake_signal = SimpleNamespace(SIGINT=2, SIG_IGN='ignore',
+                                                  signal=lambda number, handler: events.append((number, handler)))
+                    if windows:
+                        fake_signal.SIGBREAK = 21
+                    runpy.run_path(str(preparation), init_globals={
+                        'signal': fake_signal, 'print': lambda message, *, flush: events.append((message, flush))})
+                    expected = [(2, 'ignore')]
+                    if windows:
+                        expected.append((21, 'ignore'))
+                    self.assertEqual(events, [*expected, ('fixture_ready', True)])
+
     def test_hard_exit_is_terminal_and_not_restarted(self):
         with tempfile.TemporaryDirectory() as folder:
             task = self.task(Path(folder), 'crash')

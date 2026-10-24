@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -143,7 +144,7 @@ class QueueTransferTests(unittest.TestCase):
         unknown.write_bytes(b'preserve')
         self.assertFalse(transfer.export_history(self.queue, self.parent)['usable'])
         unknown.unlink()
-        with sqlite3.connect(self.queue / 'queue.sqlite') as db:
+        with closing(sqlite3.connect(self.queue / 'queue.sqlite')) as db, db:
             db.execute('PRAGMA journal_mode=WAL')
         self.assertFalse(transfer.export_history(self.queue, self.parent)['usable'])
         self.assertEqual(list(self.parent.iterdir()), [])
@@ -168,7 +169,7 @@ class QueueTransferTests(unittest.TestCase):
                     shutil.rmtree(root / 'batches')
                     (root / 'batches').symlink_to(self.queue / 'batches', target_is_directory=True)
                 else:
-                    with sqlite3.connect(root / 'queue.sqlite') as db:
+                    with closing(sqlite3.connect(root / 'queue.sqlite')) as db, db:
                         db.execute("UPDATE requests SET request='{}' WHERE id='recover'")
                 with self.assertRaises(ValueError):
                     QueueStore.inspect(root, request_id='recover')
