@@ -31,9 +31,10 @@ class CacheMaintenanceTests(unittest.TestCase):
                 identity = ReplayIdentity(canonical({'schema_version': 1, 'kind': 'whole_job_exr_replay', 'fixture': index}))
                 store.publish(identity, {'alpha/000001.exr': self.source}, {'status': 'complete'})
                 self.keys.append(identity.key)
-        # Deterministic lookup-recency ordering, not lexical content-key order.
+        # Distinct recency even on filesystems coarser than nanoseconds (NTFS: 100ns).
         for index, key in enumerate(self.keys):
-            os.utime(self.workspace / 'entries' / key, ns=(1000000000 + index, 1000000000 + index))
+            timestamp = 10_000_000_000 * (index + 1)
+            os.utime(self.workspace / 'entries' / key, ns=(timestamp, timestamp))
         journals = self.workspace / 'journals'
         journals.mkdir()
         (journals / ('a' * 64 + '.json')).write_bytes(b'preserved journal')
