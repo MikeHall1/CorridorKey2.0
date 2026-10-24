@@ -27,9 +27,12 @@ from PySide6.QtWidgets import (
 )
 
 from .control import CancellationToken, CancelledError
-from .desktop_comparison import completed_view
 from .desktop_preview import preview
-from .preview_execution import PreviewPreparationError, prepare_preview
+from .preview_execution import (
+    PreviewPreparationError,
+    prepare_preview,
+    selected_preview_view,
+)
 from .progressive_preview import PreviewArtifact, ProgressivePreview
 from .worker_protocol import job_to_wire
 
@@ -74,8 +77,18 @@ class ProgressivePreviewPanel(QDialog):
         self.scale.setRange(.01, .99)
         self.scale.setValue(.5)
         self.scale.setDecimals(2)
-        self.idle = QCheckBox('Refine surrounding frames after 1 second idle')
+        self.idle = QCheckBox('Refine surrounding and opted-in ranges after 1 second idle')
         self.idle.setChecked(True)
+        self.selected_range = QCheckBox('Refine selected absolute source range at idle')
+        self.selected_in = QLineEdit()
+        self.selected_out = QLineEdit()
+        self.selected_in.setPlaceholderText('Source In (inclusive)')
+        self.selected_out.setPlaceholderText('Source Out (exclusive)')
+        self.remaining_range = QCheckBox('Then refine remaining captured requested range at idle')
+        self.selected_range.toggled.connect(self.settings_changed)
+        self.remaining_range.toggled.connect(self.settings_changed)
+        self.selected_in.textChanged.connect(self.settings_changed)
+        self.selected_out.textChanged.connect(self.settings_changed)
         self.view = QComboBox()
         self.view.addItems(['Alpha', 'Foreground', 'Checker composite'])
         for control in (self.scratch,):
@@ -91,6 +104,8 @@ class ProgressivePreviewPanel(QDialog):
         stop.clicked.connect(lambda: self.enabled.setChecked(False))
         self.status = QLabel('Disabled. Opening this panel performs no model or filesystem work.')
         self.status.setWordWrap(True)
+        self.range_status = QLabel('Range work off. Opt-in limit: 256 distinct frames, 1024 range attempts per capture; worker generation history remains bounded at 4096 requests.')
+        self.range_status.setWordWrap(True)
         self.image = QLabel('No progressive preview')
         self.image.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image.setMinimumHeight(260)
@@ -100,6 +115,11 @@ class ProgressivePreviewPanel(QDialog):
         form.addRow(choose, self.scratch)
         form.addRow(self.draft, self.scale)
         form.addRow('Display', self.view)
+        selected_row = QHBoxLayout()
+        selected_row.addWidget(self.selected_in)
+        selected_row.addWidget(self.selected_out)
+        form.addRow(self.selected_range, selected_row)
+        form.addRow(self.remaining_range)
         row = QHBoxLayout()
         row.addWidget(self.start)
         row.addWidget(stop)
@@ -108,8 +128,9 @@ class ProgressivePreviewPanel(QDialog):
         layout.addWidget(self.enabled)
         layout.addLayout(form)
         layout.addWidget(self.idle)
+        layout.addWidget(self.range_status)
         layout.addLayout(row)
-        layout.addWidget(QLabel('Final preview stage preserves the captured processing settings; single-frame temporal context restarts. This is not full-range export equivalence.'))
+        layout.addWidget(QLabel('Every preview processes the full captured timeline and original groups, retaining only the selected frame. Full inference/temp-disk cost; no latency guarantee. Final preserves captured settings.'))
         layout.addWidget(self.status)
         layout.addWidget(self.image)
         layout.addWidget(self.details)
@@ -145,7 +166,17 @@ class ProgressivePreviewPanel(QDialog):
     def _key(self):
         job = self.workspace.job(preview_only=True)
         selection = self.workspace.asset_selection
-        return (job, selection, self.view.currentText(), self.draft.isChecked(), self.scale.value(), self.scratch.text(), id(self.workspace.bridge))
+        return (job, selection, self.view.currentText(), self.draft.isChecked(), self.scale.value(), self.scratch.text(), id(self.workspace.bridge),
+                self.selected_range.isChecked(), self.selected_in.text(), self.selected_out.text(), self.remaining_range.isChecked())
+
+    def _range_options(self):
+        selected = None
+        if self.selected_range.isChecked():
+            try:
+                selected = (int(self.selected_in.text()), int(self.selected_out.text()))
+            except ValueError as exc:
+                raise ValueError('Selected preview Source In/Out require exact absolute frame integers; Out is exclusive.') from exc
+        return selected, self.remaining_range.isChecked()
 
     def _io(self, kind, operation):
         if self.io_busy:
@@ -174,6 +205,7 @@ class ProgressivePreviewPanel(QDialog):
             if not self._engine_available():
                 raise ValueError('Wait for normal renders, recovery, benchmark or worker shutdown before previewing.')
             key = self._key()
+            self._range_options()
             job, selection = key[:2]
             config, _ = job.configurations()
             required_outputs = {'alpha'} if self.view.currentText() == 'Alpha' else {'fg'} if self.view.currentText() == 'Foreground' else {'alpha', 'fg'}
@@ -213,6 +245,7 @@ class ProgressivePreviewPanel(QDialog):
         self.recipe = None
         self.validated_frame = None
         self.status.setText(message)
+        self.range_status.setText('Range work stopped. ' + message)
         self._cancel_worker()
 
     def suspend_for_export(self):
@@ -262,7 +295,7 @@ class ProgressivePreviewPanel(QDialog):
                         raise CancelledError('Preview snapshot was invalidated.')
                     prepared.check_source(check=check)
                     prepared.workspace.check_budget(check=check)
-                    view = completed_view(prepared.job, payload['record'])
+                    view = selected_preview_view(prepared, payload['record'])
                     frame = preview(**view.options(mode, prepared.frame), max_side=512)
                     check()
                     scheduler.check(request)
@@ -274,7 +307,7 @@ class ProgressivePreviewPanel(QDialog):
                                 'requested_settings_sha256': hashlib.sha256(prepared.requested_settings_json).hexdigest(),
                                 'effective_settings_sha256': hashlib.sha256(prepared.effective_settings_json).hexdigest(),
                                 'provenance_sha256': hashlib.sha256(prepared.provenance_json).hexdigest(),
-                                'temporal_context': 'single frame; restarted', 'inference_evidence': 'Completed engine record; selected execution observations retained. Captured model references are metadata, not authentication.'}
+                                'temporal_context': 'full captured timeline and original groups', 'inference_evidence': 'Completed engine record; selected execution observations retained. Captured model references are metadata, not authentication.'}
                     artifact = PreviewArtifact(request.identity, frame.pixels.tobytes(), json.dumps(metadata, allow_nan=False).encode())
                 except CancelledError as exc:
                     primary = exc
@@ -296,6 +329,12 @@ class ProgressivePreviewPanel(QDialog):
         if self.scheduler is None:
             return
         snapshot = self.scheduler.snapshot(self.desired_frame)
+        ranges = self.scheduler.range_state
+        self.range_status.setText(
+            f'Range final recipes: {ranges.completed_frames}/{ranges.total_frames} completed · {ranges.failed_frames} failed · '
+            f'{ranges.attempts}/{ranges.max_requests} range attempts · limit {ranges.max_frames} frames · '
+            + ('range request budget exhausted; capture a smaller range explicitly' if ranges.budget_exhausted else
+               'idle only; acknowledged results are not rerendered after cache eviction'))
         result = snapshot.result
         state = snapshot.status
         self.status.setText(f'Source frame {self.desired_frame} · {state}{' / pending ' + snapshot.pending.stage.name if snapshot.pending else ''} · bounded512px display; final means captured preview recipe')
@@ -336,8 +375,13 @@ class ProgressivePreviewPanel(QDialog):
                             if not result.context.source_start <= frame < result.context.source_end:
                                 raise ValueError(f'Progressive source frame {frame} is outside captured range [{result.context.source_start}, {result.context.source_end}); select a frame within that range and capture again.')
                             scheduler = ProgressivePreview(result.context, result.stages, enabled=True)
+                            selected, remaining = self._range_options()
+                            if selected is not None or remaining:
+                                scheduler.set_ranges(selected=selected, remaining=remaining)
                             scheduler.focus(frame, playing=playing)
-                            self.details.setPlainText(json.dumps({'summary': result.summary(), 'requested_job': json.loads(result.context.requested_settings_json), 'provenance': json.loads(result.context.provenance_json), 'preview_stages': [{'name': stage.name, 'effective_settings': json.loads(stage.effective_settings_json), 'estimated_work_bytes': stage.estimated_work_bytes} for stage in result.stages]}, indent=2))
+                            self.details.setPlainText(json.dumps({'summary': result.summary(), 'range_work': {'selected_source_range': selected, 'remaining_requested_range': remaining,
+                                                                'max_range_frames': scheduler.limits.max_range_frames, 'max_range_requests': scheduler.limits.max_range_requests},
+                                                                'requested_job': json.loads(result.context.requested_settings_json), 'provenance': json.loads(result.context.provenance_json), 'preview_stages': [{'name': stage.name, 'effective_settings': json.loads(stage.effective_settings_json), 'estimated_work_bytes': stage.estimated_work_bytes} for stage in result.stages]}, indent=2))
                             self.recipe, self.scheduler = result, scheduler
                             self.desired_frame, self.desired_playing = frame, playing
                             self.validated_frame = frame
@@ -354,7 +398,7 @@ class ProgressivePreviewPanel(QDialog):
                                 if scheduler is None or request is None:
                                     raise RuntimeError('Prepared preview has no owned scheduler request.')
                                 scheduler.check(request)
-                                self.worker_id = self.workspace.bridge.send('preview', {'job': job_to_wire(result.job)})
+                                self.worker_id = self.workspace.bridge.send('preview', {'job': job_to_wire(result.job), 'selected_frame': result.frame})
                             except CancelledError:
                                 pass  # Superseded preparation still owns its workspace until cleanup.
                             except (ValueError, RuntimeError, queue.Full) as exc:

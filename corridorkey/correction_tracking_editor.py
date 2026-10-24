@@ -86,8 +86,8 @@ def prepare_tracking(editor, *, anchor_ids, span, direction, unreliable_policy='
         raise ValueError('Select one to 32 unique authored coverage anchors.')
     ids = set(anchor_ids)
     entries = [entry for entry in data['entries'] if entry['id'] in ids]
-    if len(entries) != len(ids) or any(entry['kind'] not in {'keep', 'remove', 'matte'} for entry in entries):
-        raise ValueError('Tracking anchors must be existing matte/keep/remove entries, not trimaps or resets.')
+    if len(entries) != len(ids) or any(entry['kind'] not in {'keep', 'remove', 'matte', 'region'} for entry in entries):
+        raise ValueError('Tracking anchors must be existing matte/keep/remove/region entries, not trimaps or resets.')
     if (not isinstance(span, list) or len(span) != 2 or any(type(x) is not int for x in span)
             or not 0 <= span[0] < span[1] <= data['source']['frame_count']):
         raise ValueError('Tracking range must lie inside the selected correction timeline.')
@@ -117,16 +117,22 @@ def prepare_tracking(editor, *, anchor_ids, span, direction, unreliable_policy='
     anchors = []
     for entry in entries:
         # Reuse coverage admission/precision without mixing existing track output.
-        isolated = {**entry, 'kind': 'matte', 'strength': 1., 'direction': 'both'}
+        isolated = {**entry, 'strength': 1., 'direction': 'both'}
+        if entry['kind'] != 'region':
+            isolated['kind'] = 'matte'
         isolated.pop('guidance_id', None)
         isolated_data = {**data, 'entries': [isolated]}
-        if isolated_data['schema_version'] == 4:
+        if isolated_data['schema_version'] >= 4:
             isolated_data['guidance'] = []
         if isolated_data['schema_version'] >= 3:
             isolated_data['tracks'] = []
         rasters = CorrectionRasters(CorrectionDocument.parse(isolated_data, editor.document.base_dir), editor.meta, check=editor.check)
         try:
-            mask = rasters.apply(np.zeros(editor.meta['native_hw'], np.float32), entry['frame'])
+            if entry['kind'] == 'region':
+                mask = rasters.region(entry['frame'], entry['purpose'], entry['target'])
+                assert mask is not None
+            else:
+                mask = rasters.apply(np.zeros(editor.meta['native_hw'], np.float32), entry['frame'])
         finally:
             rasters.close()
         anchors.append(TrackingAnchor.create(entry['id'], entry['revision'], entry['frame'], entry['kind'], entry['strength'], mask))
@@ -146,7 +152,8 @@ def prepare_tracking(editor, *, anchor_ids, span, direction, unreliable_policy='
     try:
         if capture_diagnostics:
             diagnostic_directory.mkdir(exist_ok=False)
-        for candidate in track_corrections(request, tuple(anchors), read, control=JobControl(check_hook=editor.check)):
+        for candidate in track_corrections(request, tuple(anchors), read, control=JobControl(check_hook=editor.check),
+                                           capture_diagnostics=capture_diagnostics):
             editor.check()
             provenance = json.loads(candidate.provenance_json)
             summaries.append({'frame': candidate.local_frame, 'source_frame': candidate.source_frame,
@@ -203,12 +210,13 @@ def prepare_tracking(editor, *, anchor_ids, span, direction, unreliable_policy='
                                        'budget_bytes': MAX_DIAGNOSTIC_BYTES,
                                        'mask_budget_bytes': MAX_PREVIEW_BYTES,
                                        'available_frames': sorted(diagnostic_receipts),
-                                       'kinds': ['reliability', 'uncertainty'] if diagnostic_receipts else [],
+                                       'kinds': sorted({row['kind'] for receipt in diagnostic_receipts.values() for row in receipt.to_dict()['maps']}),
                                        'frame_events': [{'frame': item['frame'], 'source_frame': item['source_frame'],
                                                          'status': item['status'], 'available': item['frame'] in diagnostic_receipts,
+                                                         'kinds': [row['kind'] for row in diagnostic_receipts[item['frame']].to_dict()['maps']] if item['frame'] in diagnostic_receipts else [],
                                                          'reason': str(item['diagnostics'].get('reason', ''))[:96]}
                                                         for item in summaries] if capture_diagnostics else [],
-                                       'legend': ('Red opacity shows low heuristic reliability or the uncertain fraction in a proxy cell. '
+                                       'legend': ('Red opacity shows low heuristic reliability, uncertain fraction or measured two-anchor warped coverage difference. '
                                                   'Flow/photometric heuristics are not calibrated confidence or proof of occlusion.'),
                                        'captured_request': {
                                            'document_identity': editor.document.identity,
@@ -284,11 +292,12 @@ def tracking_overlay_view(editor, frame, kind, opacity=.55):
     """Inspect captured heuristic maps on a source copy, without accepting coverage."""
     from .desktop_preview import PreviewFrame
     from .preview_sequence import scan_sequence
+    from .project_collection import admit_file, assert_pin
     from .tracking_overlays import OverlayBinding, read_bundle, render_layer
     from .video_io import _read_frame_dir_views
 
     editor.check()
-    if (type(frame) is not int or kind not in ('reliability', 'uncertainty')
+    if (type(frame) is not int or kind not in ('reliability', 'uncertainty', 'disagreement')
             or type(opacity) not in (int, float) or not math.isfinite(opacity) or not 0 <= opacity <= 1):
         raise ValueError('Select a local tracking frame and an available diagnostic kind.')
     preview = getattr(editor, 'tracking_preview', None)
@@ -314,6 +323,7 @@ def tracking_overlay_view(editor, frame, kind, opacity=.55):
     if row is None:
         raise ValueError('No captured tracking event exists for this frame.')
     mask_row = next((item for item in preview['track']['frames'] if item['frame'] == frame), None)
+    captured_pins = [admit_file(mask_row['asset']['path'])] if mask_row is not None else []
     if mask_row is not None and file_sha256(mask_row['asset']['path'], check=editor.check) != mask_row['asset']['sha256']:
         raise ValueError('Tracking preview mask changed; prepare diagnostics again.')
     index = scan_sequence(editor.job.input_path, check=editor.check)
@@ -335,8 +345,26 @@ def tracking_overlay_view(editor, frame, kind, opacity=.55):
                               source_frame=absolute, local_frame=frame,
                               native_width=editor.meta['native_hw'][1], native_height=editor.meta['native_hw'][0],
                               source_proxy_sha256=proxy_hash)
+    if receipt.binding != expected:
+        raise ValueError('Stale overlay receipt binding differs')
+    captured_pins.extend(admit_file(preview['diagnostic_directory'] / item['name']) for item in receipt.to_dict()['maps'])
     bundle = read_bundle(receipt, preview['diagnostic_directory'], expected_binding=expected, check=editor.check)
-    layer = render_layer(bundle, kind, opacity=opacity)
+    # Pin diagnostic inputs before decoding; revalidate after display/source work.
+    diagnostic_entries = [entry for entry in data['entries'] if entry['kind'] == 'region'
+                          and entry['purpose'] == 'diagnostic' and entry['strength'] > 0]
+    diagnostic_ids = {entry['id'] for entry in diagnostic_entries}
+    diagnostic_assets = [entry['asset'] for entry in diagnostic_entries]
+    diagnostic_assets.extend(row['asset'] for accepted in data.get('tracks', [])
+                             if accepted['owner_id'] in diagnostic_ids for row in accepted['frames'])
+    diagnostic_pins = [admit_file(editor.document.base_dir / asset['path']) for asset in diagnostic_assets]
+    region = None
+    if diagnostic_entries:
+        rasters = CorrectionRasters(editor.document, editor.meta, check=editor.check)
+        try:
+            region = rasters.diagnostic_region(frame)
+        finally:
+            rasters.close()
+    layer = render_layer(bundle, kind, opacity=opacity, region=region, check=editor.check)
     display, _ = editor.view(frame)
     rgba = np.frombuffer(layer.pixels, np.uint8).reshape(layer.height, layer.width, 4)
     rgba = cv2.resize(rgba, (display.pixels.shape[1], display.pixels.shape[0]), interpolation=cv2.INTER_NEAREST)
@@ -346,7 +374,15 @@ def tracking_overlay_view(editor, frame, kind, opacity=.55):
     if (_source_hash(index, editor.check) != captured['source_identity']
             or scan_sequence(editor.job.input_path, check=editor.check).identity != index.identity):
         raise ValueError('Source changed while inspecting diagnostic maps; view discarded.')
+    for pin in [*captured_pins, *diagnostic_pins]:
+        editor.check()
+        assert_pin(pin)
+    if editor.document.identity != expected.document_identity:
+        raise ValueError('Correction document changed during diagnostic display; prepare a new preview.')
     editor.check()
-    note = (f'{kind.title()} heuristic · local frame {frame} / source frame {absolute} · '
-            f'map proxy {layer.width}×{layer.height} · not calibrated confidence or occlusion proof. {display.note}')
+    scope = ' Diagnostic region clips display opacity only; measurements/statistics unchanged.' if region is not None else ''
+    meaning = ('Warped-anchor coverage difference (not confidence, occlusion or final matte error)'
+               if kind == 'disagreement' else f'{kind.title()} heuristic')
+    note = (f'{meaning} · local frame {frame} / source frame {absolute} · '
+            f'map proxy {layer.width}×{layer.height} · not calibrated confidence or occlusion proof.{scope} {display.note}')
     return PreviewFrame(pixels, display.count, display.width, display.height, display.fps, note), None

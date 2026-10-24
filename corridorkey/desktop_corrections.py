@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -68,6 +69,11 @@ class CorrectionDialog(QDialog):
         self.radius.setValue(12)
         self.kind, self.direction = QComboBox(), QComboBox()
         self.kind.addItems(['keep', 'remove', 'matte'])
+        self.kind.addItem('Refinement region — expansion/feather only', 'region')
+        self.region_purpose = QComboBox()
+        self.region_purpose.addItem('Refinement / expansion & feather', 'refinement')
+        self.region_purpose.addItem('Composite / despill', 'composite')
+        self.region_purpose.addItem('Diagnostic / captured tracking overlay', 'diagnostic')
         self.direction.addItems(['both', 'forward', 'backward'])
         self.strength = QDoubleSpinBox()
         self.strength.setRange(0, 1)
@@ -75,12 +81,20 @@ class CorrectionDialog(QDialog):
         self.strength.setValue(1)
         self.eraser = QCheckBox('Erase draft')
         for label, widget in [('Frame', self.frame), ('Kind', self.kind), ('Strength', self.strength),
-                              ('Direction', self.direction), ('Start', self.start), ('End exclusive', self.end),
+                              ('Region purpose', self.region_purpose), ('Direction', self.direction), ('Start', self.start), ('End exclusive', self.end),
                               ('Radius px', self.radius)]:
             controls.addWidget(QLabel(label))
             controls.addWidget(widget)
         controls.addWidget(self.eraser)
         root.addLayout(controls)
+        config, _ = job.configurations()
+        self.region_note = QLabel('Refinement regions restrict expansion/feather only, not guided refinement, neural computation or artist constraints. '
+                                 + ('Inactive: expansion and feather are zero.' if not (config.alpha_expand_radius or config.alpha_feather_radius)
+                                    else 'Outside enabled regions, expansion/feather leaves alpha unchanged.'))
+        self.region_note.setWordWrap(True)
+        root.addWidget(self.region_note)
+        self.kind.currentIndexChanged.connect(self._region_controls)
+        self.region_purpose.currentIndexChanged.connect(self._region_controls)
         self.canvas = CorrectionCanvas()
         self.radius.valueChanged.connect(lambda value: setattr(self.canvas, 'radius', value))
         self.eraser.toggled.connect(lambda value: setattr(self.canvas, 'value', 0 if value else 255))
@@ -107,6 +121,11 @@ class CorrectionDialog(QDialog):
                 button.setEnabled(False)
         root.addLayout(second)
         tracking = QHBoxLayout()
+        self.region_tracking_direction = QComboBox()
+        self.region_tracking_direction.addItems(['both', 'forward', 'backward'])
+        self.region_tracking_direction.setToolTip('Motion direction for regions only. Authored regions remain both-direction static weights outside an accepted track. Ordinary brush Direction remains unchanged.')
+        tracking.addWidget(QLabel('Region track direction'))
+        tracking.addWidget(self.region_tracking_direction)
         self.tracking_policy = QComboBox()
         self.tracking_policy.addItems(['request_anchor', 'stop', 'retain_approximation'])
         self.tracking_policy.setToolTip('Flow/photometric reliability is heuristic, not calibrated confidence. Retain approximation explicitly accepts uncertain draft propagation.')
@@ -125,7 +144,7 @@ class CorrectionDialog(QDialog):
                 tracking = QHBoxLayout()
             self._button(text, callback, tracking)
         root.addLayout(tracking)
-        self.tracking_note = QLabel('Sequence tracking: choose same-kind/strength contiguous authored anchors; Start/End and Direction set tracking range. Preview changes no history. Inspect a retained frame before explicit acceptance. Cuts/resets stop the range. Video/trimap tracking unavailable.')
+        self.tracking_note = QLabel('Sequence tracking: choose same-kind/strength/purpose contiguous authored anchors. Start/End set tracking range; ordinary brush Direction is unchanged. Regions use the separate Region track direction and remain both-direction when authored. Preview changes no history. Inspect a retained frame before explicit acceptance. Cuts/resets stop the range. Video/trimap tracking unavailable. Accepted region tracks gate only their declared purpose; no matte/hint/neural changes.')
         self.tracking_note.setWordWrap(True)
         root.addWidget(self.tracking_note)
         self._build_tracking_diagnostics(root)
@@ -317,12 +336,33 @@ class CorrectionDialog(QDialog):
         root = QVBoxLayout(self.plate_panel)
         self.plate_toggle.toggled.connect(self._toggle_plate)
         self.plate_panel.hide()
+        self.screen_samples_mode = QCheckBox('Use source screen-colour samples (no empty plate)')
+        root.addWidget(self.screen_samples_mode)
+        row = QHBoxLayout()
+        self.screen_points = QPlainTextEdit()
+        self.screen_points.setPlaceholderText('Native X,Y per line; 1–32 known-background samples, maximum2048 characters')
+        self.screen_points.setMaximumHeight(58)
+        row.addWidget(self.screen_points)
+        self.screen_sample_radius, self.screen_influence_radius = QSpinBox(), QSpinBox()
+        self.screen_sample_radius.setRange(1, 31)
+        self.screen_sample_radius.setValue(3)
+        self.screen_influence_radius.setRange(1, 32768)
+        self.screen_influence_radius.setValue(256)
+        self.screen_guidance_strength = QDoubleSpinBox()
+        self.screen_guidance_strength.setRange(0, 1)
+        self.screen_guidance_strength.setDecimals(3)
+        self.screen_guidance_strength.setValue(1.)
+        for label, widget in [('Patch radius px', self.screen_sample_radius), ('Influence radius px', self.screen_influence_radius),
+                              ('Guidance strength', self.screen_guidance_strength)]:
+            row.addWidget(QLabel(label))
+            row.addWidget(widget)
+        root.addLayout(row)
         row = QHBoxLayout()
         self.plate_reference_path = QLineEdit()
         self.plate_reference_path.setPlaceholderText('Local empty-plate image or sequence directory')
         row.addWidget(self.plate_reference_path)
-        self._button('Plate image…', lambda: self.choose_plate(False), row)
-        self._button('Plate sequence…', lambda: self.choose_plate(True), row)
+        self.plate_image_button = self._button('Plate image…', lambda: self.choose_plate(False), row)
+        self.plate_sequence_button = self._button('Plate sequence…', lambda: self.choose_plate(True), row)
         self.plate_reference_frame = QSpinBox()
         self.plate_reference_frame.setRange(0, 99999)
         row.addWidget(QLabel('Reference absolute index'))
@@ -340,9 +380,9 @@ class CorrectionDialog(QDialog):
         self.plate_samples_path = QLineEdit()
         self.plate_samples_path.setPlaceholderText('Required native binary known-background mask (0 / maximum)')
         row.addWidget(self.plate_samples_path)
-        self._button('Background samples…', self.choose_plate_samples, row)
+        self.plate_samples_button = self._button('Background samples…', self.choose_plate_samples, row)
         self.plate_whole_frame = QCheckBox('Assume entire source frame is known background')
-        self.plate_whole_frame.toggled.connect(lambda checked: self.plate_samples_path.setEnabled(not checked))
+        self.plate_whole_frame.toggled.connect(self._screen_mode_changed)
         row.addWidget(self.plate_whole_frame)
         root.addLayout(row)
         row = QHBoxLayout()
@@ -397,6 +437,37 @@ class CorrectionDialog(QDialog):
         note_scroll.setWidget(self.plate_note)
         row.addWidget(note_scroll, 1)
         root.addLayout(row)
+        self.screen_samples_mode.toggled.connect(self._screen_mode_changed)
+        self._screen_mode_changed()
+
+    def _screen_mode_changed(self):
+        synthetic = self.screen_samples_mode.isChecked()
+        for widget in (self.screen_points, self.screen_sample_radius, self.screen_influence_radius, self.screen_guidance_strength):
+            widget.setEnabled(synthetic)
+        for widget in (self.plate_reference_path, self.plate_image_button, self.plate_sequence_button,
+                       self.plate_reference_frame, self.plate_profile, self.plate_samples_button,
+                       self.plate_whole_frame, self.plate_alignment, self.plate_exposure):
+            widget.setEnabled(not synthetic)
+        self.plate_samples_path.setEnabled(not synthetic and not self.plate_whole_frame.isChecked())
+        self._plate_alignment_changed()
+
+    def _screen_sample_points(self):
+        text = self.screen_points.toPlainText()
+        if len(text) > 2048:
+            raise ValueError('Screen samples exceed the2048-character input limit.')
+        rows = [row.strip() for row in text.splitlines() if row.strip()]
+        if not 1 <= len(rows) <= 32:
+            raise ValueError('Enter1–32 native X,Y sample rows.')
+        points = []
+        for row in rows:
+            pair = row.split(',')
+            if len(pair) != 2:
+                raise ValueError('Each screen sample must be one native integer X,Y pair.')
+            try:
+                points.append([int(value.strip()) for value in pair])
+            except ValueError as exc:
+                raise ValueError('Screen sample coordinates must be native integers.') from exc
+        return points
 
     def _toggle_plate(self, visible):
         if visible and hasattr(self, "subject_toggle"):
@@ -405,7 +476,7 @@ class CorrectionDialog(QDialog):
         self.plate_toggle.setText('Hide clean-plate assistance ▾' if visible else 'Show clean-plate assistance ▸')
 
     def _plate_alignment_changed(self):
-        declared = self.plate_alignment.currentData() == 'declared'
+        declared = self.plate_alignment.currentData() == 'declared' and not self.screen_samples_mode.isChecked()
         self.plate_dx.setEnabled(declared)
         self.plate_dy.setEnabled(declared)
 
@@ -429,6 +500,20 @@ class CorrectionDialog(QDialog):
             self.plate_whole_frame.setChecked(False)
 
     def preview_plate(self):
+        if self.screen_samples_mode.isChecked():
+            try:
+                points = self._screen_sample_points()
+            except ValueError as exc:
+                self.status.setText(str(exc))
+                return
+            if self.plate_bg.value() >= self.plate_fg.value():
+                self.status.setText('Background threshold must be below foreground threshold, leaving an unknown band.')
+                return
+            self.request('plate_preview', frame=self.frame.value(), screen_points=points,
+                         sample_radius=self.screen_sample_radius.value(), influence_radius=self.screen_influence_radius.value(),
+                         guidance_strength=self.screen_guidance_strength.value(),
+                         background_threshold=self.plate_bg.value(), foreground_threshold=self.plate_fg.value())
+            return
         reference = self.plate_reference_path.text().strip()
         samples = self.plate_samples_path.text().strip()
         if not reference:
@@ -475,6 +560,17 @@ class CorrectionDialog(QDialog):
         counts = diagnostics.get('class_counts', {})
         request = preview.get('request', {})
         settings = request.get('settings', request)
+        sampling = request.get('screen_sampling')
+        if sampling is not None:
+            self.plate_note.setText(
+                f"SYNTHETIC screen field from captured source frame {preview.get('source_frame')}; not an empty plate. "
+                f"Native samples {sampling.get('points')}; patch radius {sampling.get('sample_radius')}; influence radius {sampling.get('influence_radius')}.\n"
+                f"Usable: {preview.get('usable')} · inspected: {preview.get('inspected')} · accepted strength {request.get('guidance_strength')}. "
+                f"Background {counts.get('background', 0)} / unknown {counts.get('unknown', 0)} / foreground {counts.get('foreground', 0)} pixels. "
+                f"{diagnostics.get('reason') or 'Inspect guidance and synthetic screen field before acceptance.'}\n"
+                'Samples must be known background. Spatial interpolation is heuristic; outside influence remains unknown. '
+                'Similar-coloured foreground can be erased. No empty-background observation, neural channels or verified quality benefit.')
+            return
         sample_scope = ('ENTIRE source frame assumed background; foreground may be erased' if request.get('whole_frame_samples') else 'artist binary background samples')
         self.plate_note.setText(
             f"Captured source frame {preview.get('source_frame')} (selection {preview.get('frame')}) → reference index {preview.get('reference_frame')} · {preview.get('reference_path')}\n"
@@ -511,6 +607,7 @@ class CorrectionDialog(QDialog):
         self.tracking_diagnostic_kind = QComboBox()
         self.tracking_diagnostic_kind.addItem('Flow reliability heuristic', 'reliability')
         self.tracking_diagnostic_kind.addItem('Uncertain fraction', 'uncertainty')
+        self.tracking_diagnostic_kind.addItem('Warped-anchor coverage difference', 'disagreement')
         self.tracking_diagnostic_opacity = QDoubleSpinBox()
         self.tracking_diagnostic_opacity.setRange(0, 1)
         self.tracking_diagnostic_opacity.setDecimals(2)
@@ -528,7 +625,7 @@ class CorrectionDialog(QDialog):
         self._button('Use captured range', self.use_tracking_diagnostic_range, row)
         self._button('New correction at shown frame', self.correct_tracking_diagnostic, row)
         layout.addLayout(row)
-        self.tracking_diagnostic_legend = QLabel('Maps are generated only during an explicitly opted-in tracking preview. Existing saved tracks retain scalar observations, not spatial evidence. Reliability and uncertainty are algorithmic heuristics, not calibrated confidence or proof of occlusion/visual defects. Inspecting maps does not inspect or accept a tracked mask.')
+        self.tracking_diagnostic_legend = QLabel('Maps are generated only during an explicitly opted-in tracking preview. Existing saved tracks retain scalar observations, not spatial evidence. Reliability and uncertainty are algorithmic heuristics; optional two-anchor disagreement is warped coverage difference, not calibrated confidence, occlusion or final matte error. Inspecting maps does not inspect or accept a tracked mask.')
         self.tracking_diagnostic_legend.setWordWrap(True)
         layout.addWidget(self.tracking_diagnostic_legend)
 
@@ -589,12 +686,12 @@ class CorrectionDialog(QDialog):
 
     def add_tracking_anchor(self):
         entry = self.selected()
-        if self.pending is not None or entry is None or entry['kind'] not in {'keep', 'remove', 'matte'}:
+        if self.pending is not None or entry is None or entry['kind'] not in {'keep', 'remove', 'matte', 'region'}:
             self.status.setText('Select a committed coverage entry after the current operation finishes.')
             return
         if entry['id'] not in self.tracking_anchors:
             self.tracking_anchors.append(entry['id'])
-        self.tracking_note.setText('Artist anchor frames: ' + str([e['frame'] for e in self.entries if e['id'] in self.tracking_anchors]) + '. Same kind/strength and contiguous entry order required. Use Start/End/Direction, then Preview track; inspect before accepting.')
+        self.tracking_note.setText('Artist anchor frames: ' + str([e['frame'] for e in self.entries if e['id'] in self.tracking_anchors]) + '. Same kind/strength/purpose and contiguous entry order required. Use Start/End and region-specific or ordinary direction, then Preview track; inspect before accepting.')
 
     def cancel_operation(self):
         if self.pending is not None:
@@ -612,16 +709,41 @@ class CorrectionDialog(QDialog):
         entry = self.selected()
         anchors = self.tracking_anchors.copy() or ([entry['id']] if entry is not None else [])
         self.request('track_preview', anchor_ids=anchors, span=[self.start.value(), self.end.value()],
-                     direction=self.direction.currentText(), unreliable_policy=self.tracking_policy.currentText(),
+                     direction=(self.region_tracking_direction.currentText() if any(
+                         e['id'] in anchors and e['kind'] == 'region' for e in self.entries) else self.direction.currentText()),
+                     unreliable_policy=self.tracking_policy.currentText(),
                      capture_diagnostics=self.capture_tracking_diagnostics.isChecked())
 
     def inspect_tracking(self):
         if self.request('track_view', frame=self.frame.value()):
             self.view_requested_frame = self.frame.value()
 
+    def _region_controls(self):
+        region = self.kind.currentData() == 'region'
+        if region:
+            self.direction.setCurrentText('both')
+        self.region_purpose.setEnabled(region and self.selected() is None and self.pending is None and not self.closing)
+        purpose = self.region_purpose.currentData()
+        labels = {'refinement': 'Refinement region — expansion/feather only',
+                  'composite': 'Composite region — despill only',
+                  'diagnostic': 'Diagnostic region — captured overlay only'}
+        self.kind.setItemText(self.kind.findData('region'), labels[purpose])
+        if purpose == 'composite':
+            self.region_note.setText('Composite regions restrict existing despill in cutout/checker only; inactive for other outputs or despill strength zero. Region strength zero disables this entry. No alpha/hint/neural effect.')
+        elif purpose == 'diagnostic':
+            self.region_note.setText('Diagnostic regions clip display opacity of explicitly captured tracking reliability/uncertainty or measured two-anchor disagreement maps only; no new measurement or changed statistics. Missing maps remain unavailable. Region strength zero disables this entry. No export effect.')
+        else:
+            config, _ = self.job.configurations()
+            self.region_note.setText('Refinement regions restrict final expansion/feather only; no guided refinement/hint/neural effect. '
+                                     + ('Inactive: expansion and feather are zero.' if not (config.alpha_expand_radius or config.alpha_feather_radius)
+                                        else 'Outside coverage alpha is unchanged.'))
+        self.direction.setEnabled(not region and self.pending is None and not self.closing)
+        self.region_tracking_direction.setEnabled(region and self.pending is None and not self.closing)
+
     def parameters(self):
-        return {'kind': self.kind.currentText(), 'frame': self.frame.value(), 'strength': self.strength.value(),
-                'direction': self.direction.currentText(), 'span': [self.start.value(), self.end.value()]}
+        return {'kind': self.kind.currentData() or self.kind.currentText(), 'frame': self.frame.value(), 'strength': self.strength.value(),
+                'direction': self.direction.currentText(), 'span': [self.start.value(), self.end.value()],
+                **({'purpose': self.region_purpose.currentData()} if self.kind.currentData() == 'region' else {})}
 
     def request(self, action, *, allow_draft=False, **payload):
         if self.closing:
@@ -682,6 +804,7 @@ class CorrectionDialog(QDialog):
         if path:
             parameters = self.parameters()
             parameters.pop('kind')
+            parameters.pop('purpose', None)
             self.request('import_trimap', path=Path(path), **parameters)
 
     def new_mask(self):
@@ -708,6 +831,7 @@ class CorrectionDialog(QDialog):
             return
         self.displayed_role = 'authored'
         self.canvas.painting = not self.closing
+        self._region_controls()
 
     def save(self):
         self.request('save')
@@ -720,7 +844,7 @@ class CorrectionDialog(QDialog):
         changes: dict[str, Any] = {'frame': self.frame.value()}
         if entry['kind'] != 'reset':
             parameters = self.parameters()
-            changes.update({key: value for key, value in parameters.items() if key != 'span'})
+            changes.update({key: value for key, value in parameters.items() if key not in ('span', 'purpose')})
             if self.presented_entry == entry['id'] and self.strength.value() == self.presented_strength:
                 changes.pop('strength', None)
             changes['range'] = parameters['span']
@@ -747,9 +871,10 @@ class CorrectionDialog(QDialog):
         self.presented_strength = None
         reset = entry is not None and entry['kind'] == 'reset'
         trimap = entry is not None and entry['kind'] == 'trimap'
+        region = entry is not None and entry['kind'] == 'region'
         for widget in (self.kind, self.strength, self.direction, self.start, self.end):
             widget.setEnabled(not reset)
-        self.kind.setEnabled(not reset and not trimap)
+        self.kind.setEnabled(not reset and not trimap and not region)
         self.kind.setPlaceholderText('Imported trimap')
         self.canvas.painting = self.displayed_role == 'authored' and not trimap and self.pending is None and not self.closing
         if entry is not None:
@@ -757,6 +882,9 @@ class CorrectionDialog(QDialog):
             if not reset:
                 if trimap:
                     self.kind.setCurrentIndex(-1)
+                elif region:
+                    self.kind.setCurrentIndex(self.kind.findData('region'))
+                    self.region_purpose.setCurrentIndex(self.region_purpose.findData(entry['purpose']))
                 else:
                     self.kind.setCurrentText(entry['kind'])
                 self.strength.setValue(entry['strength'])
@@ -764,6 +892,9 @@ class CorrectionDialog(QDialog):
                 self.direction.setCurrentText(entry['direction'])
                 self.start.setValue(entry['range'][0])
                 self.end.setValue(entry['range'][1])
+        self._region_controls()
+        if reset:
+            self.direction.setEnabled(False)
 
     def populate(self, snapshot, action):
         old = self.selected()
@@ -782,7 +913,7 @@ class CorrectionDialog(QDialog):
         self.table.setRowCount(len(self.entries))
         self.table.setCurrentCell(-1, -1)
         for row, entry in enumerate(self.entries):
-            for col, value in enumerate([entry['kind'], entry['frame'], entry.get('range', ''),
+            for col, value in enumerate([entry['kind'] + (f" / {entry['purpose']}/{entry['target']}" if entry['kind'] == 'region' else ''), entry['frame'], entry.get('range', ''),
                                          entry.get('direction', ''), entry.get('strength', '')]):
                 self.table.setItem(row, col, QTableWidgetItem(str(value)))
             if entry['id'] == selected:
@@ -843,7 +974,7 @@ class CorrectionDialog(QDialog):
                     self.displayed_frame = (event['snapshot'].get('subject_preview') or {}).get('frame')
                 else:
                     self.displayed_frame = (event['snapshot'].get('plate_preview') or {}).get('frame') if action == 'plate_view' else self.view_requested_frame
-                role = 'subject source/coarse Keep preview; read-only' if action in ('subject_prepare', 'subject_view') else 'derived clean-plate preview; heuristic guidance, read-only' if action == 'plate_view' else ('spatial tracking diagnostic; heuristic, read-only, not calibrated confidence or proof of occlusion' if action == 'track_overlay_view' else 'derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only')
+                role = 'subject source/coarse Keep preview; read-only' if action in ('subject_prepare', 'subject_view') else 'derived clean-plate preview; heuristic guidance, read-only' if action == 'plate_view' else (f'spatial tracking diagnostic; {display.note}' if action == 'track_overlay_view' else 'derived tracking preview; heuristic guidance, not neural alpha' if action == 'track_view' else 'authored overlay only')
                 self.frame_note.setText(f"Displayed selected-frame {self.displayed_frame} (source start {event['snapshot']['document']['source']['start_frame']}) · {display.width}×{display.height} · {role}")
                 if action == 'track_overlay_view':
                     self.canvas.click_mode = False

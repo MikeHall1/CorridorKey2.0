@@ -5,7 +5,10 @@ import os
 import shutil
 import subprocess
 import time
+from collections.abc import Callable
+from contextlib import nullcontext
 from pathlib import Path
+from typing import Literal, ParamSpec, TypeVar, overload
 
 os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
 
@@ -104,55 +107,69 @@ def crop_model_chw_to_output(x: np.ndarray, model_native_hw, pad, output_hw):
     return resize_chw_lanczos(cropped, output_hw)
 
 
+_NO_HOST_SCOPE = nullcontext()
+_HostArgs = ParamSpec("_HostArgs")
+_HostResult = TypeVar("_HostResult")
+
+
+def _host_call(observer, name, function: Callable[_HostArgs, _HostResult],
+               *args: _HostArgs.args, **kwargs: _HostArgs.kwargs) -> _HostResult:
+    if observer is None:
+        return function(*args, **kwargs)
+    with observer.stage(name, gpu=False):
+        return function(*args, **kwargs)
+
+
 def read_image_rgb(path: str | os.PathLike, *, info=None, alpha_mode="ignore", expected_channels: int | None = None,
-                   encoded_bytes: bytes | None = None):
+                   encoded_bytes: bytes | None = None, host_observer=None) -> np.ndarray:
     path = str(path)
     if encoded_bytes is None:
-        img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+        img = _host_call(host_observer, "source_decode", cv2.imread, path, cv2.IMREAD_UNCHANGED)
     else:
         if type(encoded_bytes) is not bytes or not encoded_bytes:
             raise ValueError('Captured encoded image must be nonempty immutable bytes.')
-        img = cv2.imdecode(np.frombuffer(encoded_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
+        encoded = np.frombuffer(encoded_bytes, np.uint8)
+        img = _host_call(host_observer, "source_decode", cv2.imdecode, encoded, cv2.IMREAD_UNCHANGED)
     if img is None:
         raise FileNotFoundError(path)
-    if expected_channels is not None:
-        channels = 1 if img.ndim == 2 else img.shape[-1] if img.ndim == 3 else 0
-        if type(expected_channels) is not int or expected_channels not in (1, 3, 4) or channels != expected_channels:
-            raise ValueError(f'{path}: actual channel layout differs from expected {expected_channels}.')
-    if info is not None:
-        info.update(decoded_dtype=str(img.dtype))
-    if img.dtype == np.uint8:
-        img = img.astype(np.float32) / 255.0
-    elif img.dtype == np.uint16:
-        img = img.astype(np.float32) / 65535.0
-    elif path.lower().endswith(".exr") and np.issubdtype(img.dtype, np.floating):
-        img = img.astype(np.float32, copy=False)
-    else:
-        raise ValueError(f"{path}: unsupported RGB storage dtype {img.dtype}; use uint8/uint16 images or float EXR")
-    if not np.isfinite(img).all():
-        raise ValueError(f"{path}: source contains non-finite RGB/alpha values")
-    if img.ndim == 2:
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    if img.ndim != 3 or img.shape[2] not in (3, 4):
-        raise ValueError(f"{path}: source RGB image must have 3 or 4 channels")
-    if alpha_mode not in ("ignore", "premultiplied"):
-        raise ValueError("source alpha mode must be ignore or premultiplied")
-    if alpha_mode == "premultiplied":
-        if img.shape[2] != 4:
-            raise ValueError(f"{path}: premultiplied input requires an RGBA coverage channel")
-        alpha = img[:, :, 3:4]
-        if np.any((alpha < 0) | (alpha > 1)):
-            raise ValueError(f"{path}: premultiplied source alpha must be coverage in [0,1]")
-        rgb = np.zeros_like(img[:, :, :3])
-        with np.errstate(over="ignore", invalid="ignore"):
-            np.divide(img[:, :, :3], alpha, out=rgb, where=alpha > 1e-6)
-        if not np.isfinite(rgb).all():
-            raise ValueError(f"{path}: unpremultiplication overflowed")
-        img = rgb
-    if img.shape[2] == 4:
-        img = img[:, :, :3]
-    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
+    with (_NO_HOST_SCOPE if host_observer is None else host_observer.stage("source_normalize", gpu=False)):
+        if expected_channels is not None:
+            channels = 1 if img.ndim == 2 else img.shape[-1] if img.ndim == 3 else 0
+            if type(expected_channels) is not int or expected_channels not in (1, 3, 4) or channels != expected_channels:
+                raise ValueError(f'{path}: actual channel layout differs from expected {expected_channels}.')
+        if info is not None:
+            info.update(decoded_dtype=str(img.dtype))
+        if img.dtype == np.uint8:
+            img = img.astype(np.float32) / 255.0
+        elif img.dtype == np.uint16:
+            img = img.astype(np.float32) / 65535.0
+        elif path.lower().endswith(".exr") and np.issubdtype(img.dtype, np.floating):
+            img = img.astype(np.float32, copy=False)
+        else:
+            raise ValueError(f"{path}: unsupported RGB storage dtype {img.dtype}; use uint8/uint16 images or float EXR")
+        if not np.isfinite(img).all():
+            raise ValueError(f"{path}: source contains non-finite RGB/alpha values")
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        if img.ndim != 3 or img.shape[2] not in (3, 4):
+            raise ValueError(f"{path}: source RGB image must have 3 or 4 channels")
+        if alpha_mode not in ("ignore", "premultiplied"):
+            raise ValueError("source alpha mode must be ignore or premultiplied")
+        if alpha_mode == "premultiplied":
+            if img.shape[2] != 4:
+                raise ValueError(f"{path}: premultiplied input requires an RGBA coverage channel")
+            alpha = img[:, :, 3:4]
+            if np.any((alpha < 0) | (alpha > 1)):
+                raise ValueError(f"{path}: premultiplied source alpha must be coverage in [0,1]")
+            rgb = np.zeros_like(img[:, :, :3])
+            with np.errstate(over="ignore", invalid="ignore"):
+                np.divide(img[:, :, :3], alpha, out=rgb, where=alpha > 1e-6)
+            if not np.isfinite(rgb).all():
+                raise ValueError(f"{path}: unpremultiplication overflowed")
+            img = rgb
+        if img.shape[2] == 4:
+            img = img[:, :, :3]
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 def read_hint_image(path: str | os.PathLike) -> np.ndarray:
     img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
@@ -276,7 +293,7 @@ def probe_video_meta(video_path: str, *, num_frames: int, shape_quantum: int,
 
 
 def _read_frame_dir_views(path: str, *, exr_linear: bool, precision_log=None, alpha_mode="ignore", witness=None,
-                          source_colour_profile="legacy", encoded_bytes: bytes | None = None):
+                          source_colour_profile="legacy", encoded_bytes: bytes | None = None, host_observer=None) -> tuple[np.ndarray, np.ndarray]:
     if source_colour_profile != "legacy":
         from .colour_contract import describe_source_colour
         describe_source_colour(source_colour_profile, scene_linear=exr_linear)
@@ -284,10 +301,22 @@ def _read_frame_dir_views(path: str, *, exr_linear: bool, precision_log=None, al
             raise ValueError("Source witness supports only the legacy source colour profile")
     info = {}
     decode_options = {} if encoded_bytes is None else {"encoded_bytes": encoded_bytes}
+    if host_observer is not None:
+        decode_options["host_observer"] = host_observer
     raw = read_image_rgb(path, info=info, alpha_mode=alpha_mode,
                          expected_channels=3 if witness is not None else None, **decode_options)
     if precision_log is not None and info["decoded_dtype"] not in precision_log:
         precision_log.append(info["decoded_dtype"])
+    display, linear = _host_call(host_observer, "source_colour", _source_colour_views, raw,
+                                 exr_linear, source_colour_profile)
+    if witness is not None:
+        if not exr_linear or alpha_mode != 'ignore':
+            raise ValueError('Source witness requires explicit scene-linear three-channel RGB.')
+        witness.observe_path(path, linear)
+    return display, linear
+
+
+def _source_colour_views(raw: np.ndarray, exr_linear: bool, source_colour_profile: str) -> tuple[np.ndarray, np.ndarray]:
     if exr_linear:
         linear = raw.astype(np.float32, copy=False)
         if source_colour_profile != "legacy":
@@ -297,10 +326,6 @@ def _read_frame_dir_views(path: str, *, exr_linear: bool, precision_log=None, al
     else:
         display = np.clip(raw.astype(np.float32, copy=False), 0.0, 1.0)
         linear = cu.srgb_to_linear(display)
-    if witness is not None:
-        if not exr_linear or alpha_mode != 'ignore':
-            raise ValueError('Source witness requires explicit scene-linear three-channel RGB.')
-        witness.observe_path(path, linear)
     return display, linear
 
 
@@ -385,7 +410,24 @@ def _spatial_model_views(linear, review_linear, meta, *, need_model):
     return torch.from_numpy(model.transpose(2, 0, 1)).to(dtype=torch.bfloat16), foundation, review
 
 
-def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: bool):
+@overload
+def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: Literal[True]) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]: ...
+
+
+@overload
+def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: Literal[False]) -> tuple[None, torch.Tensor, torch.Tensor]: ...
+
+
+@overload
+def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: bool) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor]: ...
+
+
+def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: bool) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor]:
+    return _host_call(meta.get('_host_observer'), "source_preprocess", _preprocess_video_frame_views,
+                      frame_bgr, meta, need_model=need_model)
+
+
+def _preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: bool):
     if frame_bgr.dtype != np.uint8:
         raise ValueError("legacy OpenCV video path requires uint8 decoded RGB; use a validated high-bit/linear sequence")
     if frame_bgr.ndim != 3 or frame_bgr.shape[2] != 3 or tuple(frame_bgr.shape[:2]) != tuple(meta["native_hw"]):
@@ -420,32 +462,47 @@ def preprocess_video_frame_views(frame_bgr, meta: dict, *, need_model: bool):
     return model_t, foundation, review
 
 
-def preprocess_frame_dir_path(path: str, meta: dict, *, need_model: bool):
+@overload
+def preprocess_frame_dir_path(path: str, meta: dict, *, need_model: Literal[True]) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]: ...
+
+
+@overload
+def preprocess_frame_dir_path(path: str, meta: dict, *, need_model: Literal[False]) -> tuple[None, torch.Tensor, torch.Tensor]: ...
+
+
+@overload
+def preprocess_frame_dir_path(path: str, meta: dict, *, need_model: bool) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor]: ...
+
+
+def preprocess_frame_dir_path(path: str, meta: dict, *, need_model: bool) -> tuple[torch.Tensor | None, torch.Tensor, torch.Tensor]:
     h_out, w_out = meta["shape_hw"]
     h_model, w_model = meta["model_native_hw"]
+    observer = meta.get('_host_observer')
     display, linear = _read_frame_dir_views(
         path, exr_linear=bool(meta.get("exr_linear", False)), precision_log=meta.get("decoded_source_dtypes_observed"),
         alpha_mode=meta.get("source_alpha_mode", "ignore"), witness=meta.get('_source_witness'),
-        source_colour_profile=meta.get('source_colour_profile', 'legacy'))
-    if tuple(linear.shape[:2]) != tuple(meta["native_hw"]):
-        raise ValueError(f"{path}: frame geometry changed within the sequence; implicit resizing is disabled")
-    if meta.get('spatial_draft'):
+        source_colour_profile=meta.get('source_colour_profile', 'legacy'), host_observer=observer)
+    with (_NO_HOST_SCOPE if observer is None else observer.stage("source_model_prepare", gpu=False)):
+        assert isinstance(display, np.ndarray) and isinstance(linear, np.ndarray)
+        if tuple(linear.shape[:2]) != tuple(meta["native_hw"]):
+            raise ValueError(f"{path}: frame geometry changed within the sequence; implicit resizing is disabled")
+        if meta.get('spatial_draft'):
+            linear = resize_hwc_lanczos(linear, (h_model, w_model))
+            return _spatial_model_views(linear, linear, meta, need_model=need_model)
+        display = resize_hwc_lanczos(display, (h_model, w_model))
         linear = resize_hwc_lanczos(linear, (h_model, w_model))
-        return _spatial_model_views(linear, linear, meta, need_model=need_model)
-    display = resize_hwc_lanczos(display, (h_model, w_model))
-    linear = resize_hwc_lanczos(linear, (h_model, w_model))
-    display, _ = center_pad_to_shape(np.clip(display, 0.0, 1.0), h_out, w_out)
-    display_t = torch.from_numpy(
-        display.transpose(2, 0, 1)).to(dtype=torch.bfloat16)
-    if not need_model:
-        return None, display_t, display_t
-    linear, _ = center_pad_to_shape(linear, h_out, w_out)
-    with np.errstate(over="ignore", invalid="ignore"):
-        model = cu.linear_to_asinh(linear)
-    if not np.isfinite(model).all():
-        raise ValueError(f"{path}: scene-linear RGB overflowed the float32 model encoding")
-    model_t = torch.from_numpy(model.transpose(2, 0, 1)).to(dtype=torch.bfloat16)
-    return model_t, display_t, display_t
+        display, _ = center_pad_to_shape(np.clip(display, 0.0, 1.0), h_out, w_out)
+        display_t = torch.from_numpy(
+            display.transpose(2, 0, 1)).to(dtype=torch.bfloat16)
+        if not need_model:
+            return None, display_t, display_t
+        linear, _ = center_pad_to_shape(linear, h_out, w_out)
+        with np.errstate(over="ignore", invalid="ignore"):
+            model = cu.linear_to_asinh(linear)
+        if not np.isfinite(model).all():
+            raise ValueError(f"{path}: scene-linear RGB overflowed the float32 model encoding")
+        model_t = torch.from_numpy(model.transpose(2, 0, 1)).to(dtype=torch.bfloat16)
+        return model_t, display_t, display_t
 
 
 def _seek_video(capture: cv2.VideoCapture, index: int, source: str) -> None:
@@ -479,7 +536,7 @@ class SequentialVideoWindowReader:
 
     def _read_until(self, t_end: int, *, retain_from=0):
         while self.next_t < t_end:
-            ret, frame = self.cap.read()
+            ret, frame = _host_call(self.meta.get('_host_observer'), "source_decode", self.cap.read)
             if not ret:
                 raise RuntimeError(
                     f"{self.video_path}: failed decoding frame "
@@ -499,6 +556,15 @@ class SequentialVideoWindowReader:
         for old_t in [k for k in self.cache if k < t0]:
             del self.cache[old_t]
         return model, foundation, review
+
+
+def _draft_video_views(bgr):
+    if bgr.dtype != np.uint8:
+        raise ValueError("draft video decoder returned unsupported high-bit pixels; use explicit linear image frames")
+    proxy = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255
+    linear = cu.srgb_to_linear(proxy)
+    assert isinstance(linear, np.ndarray)
+    return proxy, linear
 
 
 class DraftSourceReader:
@@ -529,22 +595,21 @@ class DraftSourceReader:
                                                  precision_log=self.meta.get("decoded_source_dtypes_observed"),
                                                  alpha_mode=self.meta.get("source_alpha_mode", "ignore"),
                                                  witness=self.meta.get('_source_witness'),
-                                                 source_colour_profile=self.meta.get('source_colour_profile', 'legacy'))
+                                                 source_colour_profile=self.meta.get('source_colour_profile', 'legacy'),
+                                                 host_observer=self.meta.get('_host_observer'))
             self.frames_decoded += 1
         else:
             while self.next_frame <= frame:
-                valid, bgr = self.cap.read()
+                valid, bgr = _host_call(self.meta.get('_host_observer'), "source_decode", self.cap.read)
                 if not valid:
                     raise RuntimeError(f"{self.source}: failed decoding draft frame {self.next_frame}")
                 self.next_frame += 1
                 self.frames_decoded += 1
-            if bgr.dtype != np.uint8:
-                raise ValueError("draft video decoder returned unsupported high-bit pixels; use explicit linear image frames")
-            proxy = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255
-            linear = cu.srgb_to_linear(proxy)
+            proxy, linear = _host_call(self.meta.get('_host_observer'), "source_preprocess", _draft_video_views, bgr)
         if tuple(linear.shape[:2]) != tuple(self.meta["output_hw"]):
             raise ValueError("draft source frame dimensions changed or require unsupported scaling")
         self.next_frame = frame + 1
+        assert isinstance(linear, np.ndarray)
         return SourceFrame(linear.astype(np.float32, copy=False), np.clip(proxy, 0, 1).astype(np.float32, copy=False))
 
 
@@ -592,7 +657,7 @@ def iter_video_frame_chunks(video_path: str, meta: dict, *, chunk_size: int,
             foundation_list = []
             t0 = t
             while t < int(meta["num_frames"]) and len(foundation_list) < chunk_size:
-                ret, frame = cap.read()
+                ret, frame = _host_call(meta.get('_host_observer'), "source_decode", cap.read)
                 if not ret:
                     break
                 model, foundation, _review = preprocess_video_frame_views(
@@ -921,7 +986,7 @@ class ExrSequenceWriter:
     def __init__(self, dir_path: str, fps: float, size: tuple[int, int], *,
                  channels: int = 3, dtype: str = "half", maxsize: int = 2,
                  frame_name: str = "frame", check=None, timeout_seconds=60.0,
-                 on_frame_written=None, clock=time.perf_counter, start_index=0):
+                 on_frame_written=None, clock=time.perf_counter, start_index=0, host_observer=None):
         if dtype not in ("half", "float"):
             raise ValueError(f"exr dtype must be 'half' or 'float', got {dtype!r}")
         if type(start_index) is not int or not 0 <= start_index < 2**63:
@@ -932,6 +997,7 @@ class ExrSequenceWriter:
         self.channels = channels
         self.frame_name = frame_name
         self.on_frame_written = on_frame_written
+        self.host_observer = host_observer
         self.observation_clock = clock
         self.observation_error = None
         self.check = check or (lambda: None)
@@ -960,8 +1026,10 @@ class ExrSequenceWriter:
             frame = np.ascontiguousarray(arr[j])
             if frame.shape[-1] == 1:
                 frame = frame[..., 0]
-            if not cv2.imwrite(out_path, frame, self.imwrite_params):
-                raise RuntimeError(f"cv2.imwrite failed: {out_path}")
+            with (_NO_HOST_SCOPE if self.host_observer is None else
+                  self.host_observer.stage("native_image_encode_and_write", gpu=False)):
+                if not cv2.imwrite(out_path, frame, self.imwrite_params):
+                    raise RuntimeError(f"cv2.imwrite failed: {out_path}")
             if self.on_frame_written is not None and self.observation_error is None:
                 with ObservationBoundary(self._observation_failed):
                     observed_at = self.observation_clock()
@@ -998,7 +1066,14 @@ class ExrSequenceWriter:
         return self.frame_idx
 
     def release(self):
-        self.worker.close()
+        try:
+            self.worker.close()
+        finally:
+            # WriterWorker retains its bound consumer, including after close.
+            # Retire the diagnostic owner only after native I/O has stopped;
+            # a timed-out live consumer must keep its active observer.
+            if not self.worker.thread.is_alive():
+                self.host_observer = None
 
 
 def color_chw_to_bgr(x: np.ndarray) -> np.ndarray:

@@ -62,7 +62,7 @@ def calibration_view(value: dict[str, Any]) -> str:
         'expiry_status': 'Expiry status', 'report_path': 'Local report', 'cleanup_error': 'Cleanup blocker',
         'error': 'Error', 'artifact_error': 'Artifact blocker', 'scope': 'Scope', 'warning': 'Limits',
         'excluded_trials': 'Excluded trials', 'duration_scope': 'Duration estimate limits',
-        'recommendation_scope': 'Recommendation scope',
+        'recommendation_scope': 'Recommendation scope', 'quality_objective': 'Calibration objective',
     }
     for key, label in labels.items():
         if key in value and value[key] is not None:
@@ -76,7 +76,7 @@ def calibration_view(value: dict[str, Any]) -> str:
                     lines.append('  Further fields retained in the local report.')
                     break
                 lines.append(f'  {str(key)[:80]}: {_short(item, 1024)}')
-    for name in ('profiles', 'case_summaries', 'groups', 'recommendations', 'observations', 'duration_estimates', 'failures', 'exclusions', 'warnings', 'missing_files', 'missing'):
+    for name in ('profiles', 'case_summaries', 'groups', 'recommendations', 'observations', 'duration_estimates', 'failures', 'exclusions', 'warnings', 'missing_files', 'missing', 'quality_constraints'):
         rows = value.get(name)
         if isinstance(rows, (list, tuple)):
             lines.append(f'{name.replace("_", " ").title()} ({len(rows)}):')
@@ -148,12 +148,13 @@ class _Capture:
     scratch_parent: Path
     report_parent: Path
     limits: Any
+    quality_policy_path: Path | None = None
 
     def arguments(self) -> dict[str, Any]:
         return {'sample_start': self.sample_start, 'frame_count': self.frame_count,
                 'profiles': self.profiles, 'asset_selection': self.selection,
                 'scratch_parent': self.scratch_parent, 'report_parent': self.report_parent,
-                'limits': self.limits}
+                'limits': self.limits, 'quality_policy_path': self.quality_policy_path}
 
 
 def _task_factory(plan):
@@ -218,6 +219,16 @@ class CalibrationDialog(QDialog):
             button.clicked.connect(lambda checked=False, target=field, title=label: self._choose_directory(target, title))
             row_layout.addWidget(button)
             form.addRow(label, row)
+        self.quality_policy = QLineEdit()
+        self.quality_policy.setPlaceholderText('Optional version1 reference-agreement policy JSON; empty = timing only')
+        quality_row = QWidget()
+        quality_layout = QHBoxLayout(quality_row)
+        quality_layout.setContentsMargins(0, 0, 0, 0)
+        quality_layout.addWidget(self.quality_policy)
+        choose_quality = QPushButton('Choose policy…')
+        choose_quality.clicked.connect(self._choose_quality_policy)
+        quality_layout.addWidget(choose_quality)
+        form.addRow('Optional quality policy', quality_row)
         layout.addLayout(form)
         profile_note = QLabel('One to eight profiles: JSON objects with id, purpose (preview/final), overrides. '
                               'Explicit overrides can select model_scale, hann_chunk/hann_stride, stage2_batch, low_vram, '
@@ -255,7 +266,7 @@ class CalibrationDialog(QDialog):
         self.report_button.clicked.connect(self.inspect_report)
         self._form_widgets = [self.sample_start, self.frame_count, self.repetitions, self.max_jobs,
                               self.max_total_frames, self.max_wall_seconds, self.output_budget, self.read_budget,
-                              self.scratch_parent, self.report_parent, self.profiles]
+                              self.scratch_parent, self.report_parent, self.profiles, self.quality_policy]
         for widget in self._form_widgets:
             if isinstance(widget, QSpinBox):
                 widget.valueChanged.connect(self._changed)
@@ -321,6 +332,13 @@ class CalibrationDialog(QDialog):
         if path:
             target.setText(path)
 
+    def _choose_quality_policy(self):
+        if self.busy or self._closing:
+            return
+        path, _ = QFileDialog.getOpenFileName(self, 'Select reference-agreement policy', '', 'JSON (*.json)')
+        if path:
+            self.quality_policy.setText(path)
+
     def _capture_fields(self):
         from .calibration import CalibrationLimits, CalibrationProfile
         if self.job is None:
@@ -349,7 +367,8 @@ class CalibrationDialog(QDialog):
                                    max_output_bytes=self.output_budget.value() * 1024**2,
                                    read_budget=self.read_budget.value() * 1024**2)
         return _Capture(self.job, self.captured_selection, start, self.frame_count.value(), tuple(profiles),
-                        Path(self.scratch_parent.text()), Path(self.report_parent.text()), limits)
+                        Path(self.scratch_parent.text()), Path(self.report_parent.text()), limits,
+                        Path(self.quality_policy.text().strip()) if self.quality_policy.text().strip() else None)
 
     def _begin_io(self, kind, capture):
         if self.busy or self._closing:

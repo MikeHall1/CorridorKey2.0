@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 
-def finish_alpha(alpha, *, expansion=0, feather=0, check=None):
+def finish_alpha(alpha, *, expansion=0, feather=0, region=None, check=None):
     """Native coverage: signed square max/min radius, then finite Gaussian feather.
 
     Replicate image borders. 256-pixel tiles with exact combined halos bound
@@ -17,6 +17,10 @@ def finish_alpha(alpha, *, expansion=0, feather=0, check=None):
     alpha = np.asarray(alpha, dtype=np.float32)
     if alpha.ndim != 2 or min(alpha.shape) < 1:
         raise ValueError('edge finishing requires nonempty 2D coverage')
+    if region is not None:
+        region = np.asarray(region, dtype=np.float32)
+        if region.shape != alpha.shape:
+            raise ValueError('edge finishing region must match native coverage')
     if check is not None:
         check()
     import cv2
@@ -41,7 +45,15 @@ def finish_alpha(alpha, *, expansion=0, feather=0, check=None):
                                         borderType=cv2.BORDER_REPLICATE)
                 tile = np.clip(tile, 0, 1)
             h, w = min(256, alpha.shape[0] - y), min(256, alpha.shape[1] - x)
-            result[y:y + h, x:x + w] = tile[y - y0:y - y0 + h, x - x0:x - x0 + w]
+            finished = tile[y - y0:y - y0 + h, x - x0:x - x0 + w]
+            if region is not None:
+                weight = region[y:y + h, x:x + w]
+                if not np.isfinite(weight).all() or np.any((weight < 0) | (weight > 1)):
+                    raise ValueError('edge finishing region requires finite coverage in [0,1]')
+                original = alpha[y:y + h, x:x + w]
+                blend = original * (1 - weight) + finished * weight
+                finished = np.where(weight == 0, original, np.where(weight == 1, finished, blend))
+            result[y:y + h, x:x + w] = finished
     if check is not None:
         check()
     return result

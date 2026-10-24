@@ -309,16 +309,21 @@ Optional draft defaults unchecked, scale0.5 (must be below captured model_scale)
 idle surrounding refinement defaults checked. Core scheduler limits and workspace
 bounds are fixed explicit admission policies, not hardware memory caps. Normal
 exports retain their settings and disable previews. Worker protocol `preview`
-accepts the same strict job wire as `render`, shares the same sequential session,
+accepts the same strict job wire as `render` plus optional absolute `selected_frame`,
+shares the same sequential session,
 and is excluded from durable render history. No existing CLI flag, inference
-precision/colour/backend default or persisted format changes. Initial sequences
-only, no Quick Key/hints/corrections; single-frame temporal state restarts.
+precision/colour/backend default or persisted format changes. Sequence previews
+preserve full original temporal context, hints and corrections and capture one EXR;
+each selection still processes the entire timeline. Video/QuickKey/derived profiles
+remain unsupported;512MiB context dependency-read bound. Distinct preview_complete
+results cannot become full exports.
 [Workflow and verification limits](progressive-previews.md).
 
 Correction editor **Show spatial tracking diagnostics** is collapsed by default;
 **Capture diagnostic maps on next Preview track** defaults false. Opt-in capture
 reuses existing flow and adds a separate64MiB map/receipt admission budget to the
-existing512MiB tracking-mask budget. Explicit reliability/uncertainty inspection
+existing512MiB tracking-mask budget. Explicit reliability/uncertainty and measured
+two-anchor warped-coverage disagreement inspection (when actually captured)
 and staged opacity (default0.55) affect source-display pixels only. Navigation,
 captured range and new-correction actions use existing safeguards/source reload.
 No CLI/inference flag, correction schema, persisted track semantics or render
@@ -370,3 +375,9 @@ pixel limit. [Workflow and validation](export-playback-indexes.md).
 ## Audit-remediation admission changes (2026-10-24)
 
 No new processing control or precision/backend default. Legacy tensor/dict checkpoints load with restricted `weights_only=True`; executable/custom-object legacy payloads refuse. Runtime-format checkpoints must omit frozen `foundations.*` state and use separate validated assets/stats. Incomplete MoGe state, invalid enabled-model statistics and unavailable video FPS now refuse instead of silently substituting. Batch outputs cannot overwrite another admitted job’s sources/hints/corrections/model assets. Model inventory rejects linked/reparse children. See [compatibility and proof](audits/remediation-status.md).
+
+### Source-bound shot profiles
+
+`--shot_profiles PATH` explicitly admits a saved version1 shot-profile document against matching source/range/base settings. The optional embedded `shot_profiles` field defaults to `None`; only Stage2 batch caps and final expansion/feather are supported. Enabled profiles remain one timeline job; derived short/preview/calibration/OFX/portable jobs require explicit disable. No resource-fit or quality promise. See [shot profiles](shot-profiles.md) for limits, persistence and rollback.
+
+Recovery-only `--reuse-upstream-finishing-edits` defaults off and requires at least one explicitly enabled `--durable-foundations`, `--durable-rvm` or `--durable-hann`. It excludes only the two global final expansion/feather controls from those raw upstream cache parents; Stage2 still requires its separate finishing-reuse flag. See [upstream finishing reuse](upstream-finishing-reuse.md). No normal-inference default or cache/journal payload format changes.

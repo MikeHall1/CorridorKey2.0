@@ -12,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .preview_background import PreparedBackground, compose_photo
-from .preview_sequence import SequenceIndex
+from .preview_sequence import SequenceIndex, scan_sequence
 from .scheduling import frame_paths
 
 
@@ -24,14 +24,48 @@ class PreviewFrame:
     height: int
     fps: float | None
     note: str
+    native_pixels: bool = False
 
 
-def read_frame(path: str, index: int, *, alpha_mode: str = 'ignore', sequence: SequenceIndex | None = None) -> tuple[NDArray[np.float32], int, float | None]:
+def read_frame(path: str, index: int, *, alpha_mode: str = 'ignore', sequence: SequenceIndex | None = None, native_pixels: bool = False) -> tuple[NDArray[np.float32], int, float | None]:
     from .video_io import read_image_rgb
 
     if type(index) is not int or index < 0:
         raise ValueError('Preview frame must be nonnegative.')
     source = Path(path)
+    if type(native_pixels) is not bool:
+        raise TypeError('Native pixel inspection must be an explicit boolean.')
+    if native_pixels:
+        from .native_image_admission import admit_image
+        from .project_collection import admit_file, assert_pin, real_path
+
+        if not source.is_dir() and source.suffix.lower() not in {'.png', '.jpg', '.jpeg', '.exr'}:
+            raise ValueError('Native pixel inspection supports still images/sequences only; video is unsupported.')
+        real_path(source)
+        if sequence is not None and not isinstance(sequence, SequenceIndex):
+            raise TypeError('Prepared sequence must be a SequenceIndex instance.')
+        if sequence is not None and str(source.resolve()) != sequence.source:
+            raise ValueError('Prepared sequence belongs to a different source path.')
+        if source.is_dir():
+            sequence = sequence or scan_sequence(source)
+            sequence.check_path(index)
+            selected, count = sequence.paths[index], len(sequence.paths)
+        else:
+            if sequence is not None or source.suffix.lower() not in {'.png', '.jpg', '.jpeg', '.exr'}:
+                raise ValueError('Native pixel inspection supports still images/sequences only; video is unsupported.')
+            if index != 0:
+                raise ValueError('A still image has only frame zero.')
+            selected, count = str(source), 1
+        pin = admit_file(selected)
+        admitted = admit_image(selected, expected_hw=None, max_pixels=16 * 1024**2, max_bytes=256 * 1024**2)
+        rgb = np.asarray(read_image_rgb(selected, alpha_mode=alpha_mode, encoded_bytes=admitted.encoded_bytes,
+                                       expected_channels=admitted.channels), dtype=np.float32)
+        if rgb.shape[:2] != admitted.shape:
+            raise ValueError('Decoded native image geometry differs from its admitted header.')
+        assert_pin(pin)
+        if sequence is not None:
+            sequence.check_path(index)
+        return rgb, count, None
     if sequence is not None:
         if not isinstance(sequence, SequenceIndex):
             raise TypeError('Prepared sequence must be a SequenceIndex instance.')
@@ -72,7 +106,7 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
             expected_count: int | None = None, expected_hw: tuple[int, int] | None = None,
             source_colour_profile: str = 'legacy', sequence: SequenceIndex | None = None,
             background_image: PreparedBackground | None = None,
-            alpha_sequence: SequenceIndex | None = None) -> PreviewFrame:
+            alpha_sequence: SequenceIndex | None = None, native_pixels: bool = False) -> PreviewFrame:
     from .color_utils import linear_to_srgb, srgb_to_linear
 
     if type(max_side) is not int or max_side < 1:
@@ -85,7 +119,7 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
         source = Path(path)
         if source_colour_profile != 'legacy' and not (source.is_dir() or source.suffix.lower() in {'.png', '.jpg', '.jpeg', '.exr'}):
             raise ValueError('Explicit source colour profiles require scene-linear image sequences, not video.')
-    rgb, count, fps = read_frame(path, index, alpha_mode=alpha_mode, sequence=sequence)
+    rgb, count, fps = read_frame(path, index, alpha_mode=alpha_mode, sequence=sequence, native_pixels=native_pixels)
     if not coverage and source_colour_profile != 'legacy':
         from .colour_contract import to_working_rgb
         rgb = to_working_rgb(rgb, source_colour_profile)
@@ -100,7 +134,7 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
             raise ValueError('Export alpha must be coverage in [0,1].')
         rgb = np.repeat(alpha, 3, axis=2)
     elif alpha_path is not None:
-        alpha_rgb, alpha_count, _ = read_frame(alpha_path, index, sequence=alpha_sequence)
+        alpha_rgb, alpha_count, _ = read_frame(alpha_path, index, sequence=alpha_sequence, native_pixels=native_pixels)
         if alpha_count != count or alpha_rgb.shape[:2] != (height, width):
             raise ValueError('Foreground and alpha exports must have matching geometry/frame count.')
         alpha = alpha_rgb[:, :, :1]
@@ -125,7 +159,7 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
     rgb = np.asarray(rgb, dtype=np.float32)
     if not np.isfinite(rgb).all():
         raise ValueError('Preview contains nonfinite values.')
-    if max(height, width) > max_side:
+    if not native_pixels and max(height, width) > max_side:
         scale = max_side / max(height, width)
         rgb = cv2.resize(rgb, (max(1, round(width * scale)), max(1, round(height * scale))),
                          interpolation=cv2.INTER_AREA)
@@ -139,7 +173,9 @@ def preview(path: str, index: int, *, linear: bool = False, coverage: bool = Fal
         note += '; frozen path/stat sequence index; source content is not authenticated'
     if fps is not None:
         note += '; OpenCV video seek, VFR alignment unverified'
-    return PreviewFrame(pixels, count, width, height, fps, note)
+    if native_pixels:
+        note += '; native image pixels; still inspection only, no thumbnail resize'
+    return PreviewFrame(pixels, count, width, height, fps, note, native_pixels)
 
 
 @dataclass(frozen=True)
@@ -149,7 +185,11 @@ class PreviewPair:
 
 
 def preview_pair(a: dict, b: dict) -> PreviewPair:
-    """Publish both thumbnails together or fail the entire comparison."""
+    """Publish both matched-mode still previews together or fail the comparison."""
+    if any(type(side.get('native_pixels', False)) is not bool for side in (a, b)):
+        raise TypeError('Native pixel inspection must be an explicit boolean on both sides.')
+    if a.get('native_pixels', False) != b.get('native_pixels', False):
+        raise ValueError('Comparison requires the same native/thumbnail inspection mode on both sides.')
     photo_a, photo_b = a.get('background_image'), b.get('background_image')
     if photo_a is not None and photo_b is not None and photo_a is not photo_b:
         raise ValueError('Photo comparison must use the same immutable prepared background snapshot.')

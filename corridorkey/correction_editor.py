@@ -13,6 +13,7 @@ from numpy.typing import NDArray
 
 from .correction_rasters import CorrectionRasters
 from .corrections import (
+    REGION_TARGETS,
     CorrectionDocument,
     CorrectionHistory,
     load_corrections,
@@ -20,6 +21,8 @@ from .corrections import (
 )
 from .desktop_preview import PreviewFrame, preview
 from .identities import file_sha256, source_identity
+from .preview_sequence import scan_sequence
+from .project_collection import admit_file, assert_pin
 from .session import JobRequest
 
 MAX_EDITOR_PIXELS = 64 * 1024 * 1024
@@ -101,7 +104,7 @@ class CorrectionEditor:
         # the exact earlier accepted snapshot and immutable mask assets.
         if data.get('schema_version', 1) >= 3 and not preserve_tracks:
             data['tracks'] = []
-        if data.get('schema_version') == 4:
+        if data.get('schema_version', 1) >= 4:
             present = {entry['id'] for entry in data['entries']}
             data['guidance'] = [origin for origin in data['guidance'] if origin['entry_id'] in present]
         data['revision'] = self.revision + 1
@@ -217,31 +220,33 @@ class CorrectionEditor:
         self.checkpoint_path = path
 
     def _entry(self, kind: str, frame: int, strength: float, direction: str, span: list[int], asset: Path,
-               *, sha256: str | None = None) -> dict[str, Any]:
+               *, sha256: str | None = None, purpose: str = 'refinement') -> dict[str, Any]:
         return {'id': uuid.uuid4().hex, 'revision': self.revision + 1, 'frame': frame, 'kind': kind,
                 'asset': {'path': str(asset.resolve()), 'sha256': sha256 if sha256 is not None else file_sha256(asset, check=self.check)},
-                'strength': strength, 'direction': direction, 'range': span}
+                'strength': strength, 'direction': direction, 'range': span,
+                **({'purpose': purpose, 'target': REGION_TARGETS.get(purpose)} if kind == 'region' else {})}
 
-    def import_mask(self, path: Path, *, kind: str, frame: int, strength: float, direction: str, span: list[int]) -> None:
-        if kind not in {'matte', 'keep', 'remove'}:
-            raise ValueError('Coverage import supports matte/keep/remove; use explicit trimap import for classes.')
-        self._import_raster(path, kind=kind, frame=frame, strength=strength, direction=direction, span=span)
+    def import_mask(self, path: Path, *, kind: str, frame: int, strength: float, direction: str, span: list[int], purpose: str = 'refinement') -> None:
+        if kind not in {'matte', 'keep', 'remove', 'region'}:
+            raise ValueError('Coverage import supports matte/keep/remove/region; use explicit trimap import for classes.')
+        self._import_raster(path, kind=kind, frame=frame, strength=strength, direction=direction, span=span, purpose=purpose)
 
     def import_trimap(self, path: Path, *, frame: int, strength: float, direction: str, span: list[int]) -> None:
         self._import_raster(path, kind='trimap', frame=frame, strength=strength, direction=direction, span=span)
 
-    def _import_raster(self, path: Path, *, kind: str, frame: int, strength: float, direction: str, span: list[int], origin=None) -> None:
+    def _import_raster(self, path: Path, *, kind: str, frame: int, strength: float, direction: str, span: list[int], origin=None, purpose: str = 'refinement') -> None:
         from .correction_tracking_editor import MAX_CLEANUP_PENDING, _cleanup
         for pending in list(self.tracking_cleanup_pending):
             _cleanup(self, pending)
         if len(self.tracking_cleanup_pending) >= MAX_CLEANUP_PENDING:
             raise OSError('Private asset cleanup remains blocked; inspect pending cleanup before importing more masks.')
-        trimap_asset = None
-        if kind == 'trimap':
-            from .trimap_refinement import load_trimap_asset
+        admitted_asset = None
+        if kind in ('trimap', 'region'):
+            from .trimap_refinement import load_coverage_asset, load_trimap_asset
             # Admit the original lexical path before resolution or any unbounded hash.
-            trimap_asset = load_trimap_asset(path, expected_hw=self.meta['native_hw'], check=self.check)
-            entry = self._entry(kind, frame, strength, direction, span, path, sha256=trimap_asset.sha256)
+            loader = load_coverage_asset if kind == 'region' else load_trimap_asset
+            admitted_asset = loader(path, expected_hw=self.meta['native_hw'], check=self.check)
+            entry = self._entry(kind, frame, strength, direction, span, path, sha256=admitted_asset.sha256, purpose=purpose)
         else:
             path = path.resolve()
             entry = self._entry(kind, frame, strength, direction, span, path)
@@ -251,6 +256,10 @@ class CorrectionEditor:
             data['tracks'] = []
         if kind == 'trimap':
             data['schema_version'] = max(2, data['schema_version'])
+        if kind == 'region':
+            data['schema_version'] = 5
+            data.setdefault('tracks', [])
+            data.setdefault('guidance', [])
         candidate = CorrectionDocument.parse(data, self.document.base_dir)
         if origin is not None:
             from .corrections import attach_guidance
@@ -261,7 +270,7 @@ class CorrectionEditor:
         rasters = CorrectionRasters(candidate, self.meta, check=self.check)
         rasters.close()
         # Copy exact verified encoded bytes, preserving authored float/uint16 precision.
-        raw = trimap_asset.encoded_bytes if trimap_asset is not None else path.read_bytes()
+        raw = admitted_asset.encoded_bytes if admitted_asset is not None else path.read_bytes()
         import hashlib
         if hashlib.sha256(raw).hexdigest() != entry['asset']['sha256']:
             raise ValueError('Imported raster changed before publication.')
@@ -281,7 +290,7 @@ class CorrectionEditor:
             raise
 
     def commit_brush(self, mask: NDArray[np.uint8], *, kind: str, frame: int, strength: float,
-                     direction: str, span: list[int]) -> None:
+                     direction: str, span: list[int], purpose: str = 'refinement') -> None:
         if mask.dtype != np.uint8 or mask.shape != (self.binding['height'], self.binding['width']):
             raise ValueError('Brush must be a native-size uint8 coverage mask.')
         if np.any((mask != 0) & (mask != 255)):
@@ -294,7 +303,7 @@ class CorrectionEditor:
         with path.open('xb') as stream:
             stream.write(encoded.tobytes())
         try:
-            self.import_mask(path, kind=kind, frame=frame, strength=strength, direction=direction, span=span)
+            self.import_mask(path, kind=kind, frame=frame, strength=strength, direction=direction, span=span, purpose=purpose)
         finally:
             path.unlink(missing_ok=True)  # Only this private, newly created staging mask.
 
@@ -310,6 +319,8 @@ class CorrectionEditor:
         entry = next(e for e in data['entries'] if e['id'] == identifier)
         if (changes.get('kind', entry['kind']) == 'trimap') != (entry['kind'] == 'trimap'):
             raise ValueError('Trimap classes and coverage kinds cannot be reinterpreted; import a new raster explicitly.')
+        if (changes.get('kind', entry['kind']) == 'region') != (entry['kind'] == 'region'):
+            raise ValueError('Regions and alpha corrections cannot be reinterpreted; import a new raster explicitly.')
         entry.update(changes)
         entry['revision'] = self.revision + 1
         self._apply(data)
@@ -384,14 +395,28 @@ class CorrectionEditor:
         if type(frame) is not int or not 0 <= frame < self.binding['frame_count']:
             raise ValueError('Editor frame is outside the selected timeline.')
         config, _ = self.job.configurations()
+        data = self.document.to_dict() if identifier is not None else None
+        region_track = None
+        if data is not None:
+            region = next((entry for entry in data['entries'] if entry['id'] == identifier and entry['kind'] == 'region'), None)
+            if region is not None:
+                region_track = next((track for track in data.get('tracks', []) if identifier in track['anchor_ids']
+                                     and track['range'][0] <= frame < track['range'][1]), None)
+        # Capture source membership/stat metadata BEFORE native preview decoding.
+        source_index = scan_sequence(self.job.input_path, check=self.check) if region_track is not None else None
+        if source_index is not None:
+            source_index.check_path(frame + self.binding['start_frame'])
         display = preview(self.job.input_path, frame + self.binding['start_frame'],
                           linear=config.frame_dir_linear if Path(self.job.input_path).is_dir() else False,
                           alpha_mode=config.frame_dir_alpha, source_colour_profile=config.source_colour_profile)
+        if source_index is not None:
+            source_index.check_path(frame + self.binding['start_frame'])
         if (display.height, display.width) != self.meta['native_hw']:
             raise ValueError('Source frame geometry changed.')
         overlay = None
+        tracked_region_inputs = None
         if identifier is not None:
-            data = self.document.to_dict()
+            assert data is not None
             entry = next(e for e in data['entries'] if e['id'] == identifier)
             if entry['kind'] == 'trimap' and entry['range'][0] <= frame < entry['range'][1]:
                 from .trimap_refinement import load_trimap_asset
@@ -399,13 +424,42 @@ class CorrectionEditor:
                                           expected_sha256=entry['asset']['sha256'], check=self.check)
                 overlay = cv2.resize(asset.labels, (display.pixels.shape[1], display.pixels.shape[0]),
                                      interpolation=cv2.INTER_NEAREST)
+            elif entry['kind'] == 'region':
+                track = region_track
+                coverage = None
+                if track is not None:
+                    from .corrections import load_tracked_asset
+                    from .trimap_refinement import load_coverage_asset
+                    tracked_region_inputs = []
+                    for anchor in data['entries']:
+                        if anchor['id'] in track['anchor_ids']:
+                            path = self.document.base_dir / anchor['asset']['path']
+                            tracked_region_inputs.append(admit_file(path))
+                            load_coverage_asset(path, expected_hw=self.meta['native_hw'],
+                                expected_sha256=anchor['asset']['sha256'], check=self.check)
+                    row = track['frames'][frame - track['range'][0]]
+                    observation = track['observations'][frame - track['range'][0]]
+                    tracked_region_inputs.append(admit_file(self.document.base_dir / row['asset']['path']))
+                    coverage = load_tracked_asset(self.document.base_dir / row['asset']['path'],
+                        expected_hw=self.meta['native_hw'], expected_sha256=row['asset']['sha256'],
+                        expected_mask_sha256=observation['derived_mask_sha256'], check=self.check)
+                    display = replace(display, note=display.note + f" Accepted tracked {entry['purpose']}/{entry['target']} region coverage; purpose-specific weights only.")
+                elif entry['range'][0] <= frame < entry['range'][1]:
+                    from .trimap_refinement import load_coverage_asset
+                    coverage = load_coverage_asset(self.document.base_dir / entry['asset']['path'],
+                        expected_hw=self.meta['native_hw'], expected_sha256=entry['asset']['sha256'], check=self.check).coverage
+                if coverage is not None:
+                    overlay = np.rint(cv2.resize(coverage, (display.pixels.shape[1], display.pixels.shape[0]),
+                                                 interpolation=cv2.INTER_AREA) * 255).astype(np.uint8)
             elif entry['kind'] != 'reset' and entry['range'][0] <= frame < entry['range'][1]:
                 # Obtain the actual stored coverage through the shared matte operator.
                 isolated = {**entry, 'kind': 'matte', 'strength': 1.0, 'direction': 'both'}
                 isolated.pop('guidance_id', None)
+                isolated.pop('purpose', None)
+                isolated.pop('target', None)
                 candidate = CorrectionDocument.parse({**data, 'entries': [isolated],
                     **({'tracks': []} if data['schema_version'] >= 3 else {}),
-                    **({'guidance': []} if data['schema_version'] == 4 else {})}, self.document.base_dir)
+                    **({'guidance': []} if data['schema_version'] >= 4 else {})}, self.document.base_dir)
                 rasters = CorrectionRasters(candidate, self.meta, check=self.check)
                 try:
                     mask = rasters.apply(np.zeros(self.meta['native_hw'], dtype=np.float32), entry['frame'])
@@ -413,4 +467,14 @@ class CorrectionEditor:
                     rasters.close()
                 overlay = np.rint(cv2.resize(mask, (display.pixels.shape[1], display.pixels.shape[0]),
                                              interpolation=cv2.INTER_AREA) * 255).astype(np.uint8)
+        if tracked_region_inputs is not None:
+            from .correction_tracking_editor import _source_hash
+            assert source_index is not None
+            if _source_hash(source_index, self.check) != self.binding['sha256']:
+                raise ValueError('Source changed since accepted region tracking; re-track before inspection')
+            for pin in tracked_region_inputs:
+                self.check()
+                assert_pin(pin)
+            if scan_sequence(self.job.input_path, check=self.check).identity != source_index.identity:
+                raise ValueError('Source sequence changed during accepted region inspection; re-track before inspection')
         return display, overlay

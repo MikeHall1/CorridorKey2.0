@@ -3,7 +3,9 @@ import json
 import math
 import os
 import tempfile
+import threading
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
@@ -19,6 +21,11 @@ if TYPE_CHECKING:
     from .output_telemetry import OutputTelemetry
 
 from .control import JobControl
+
+MAX_STAGE_GROUPS = 64
+MAX_STAGE_NAME_CHARS = 128
+STAGE_OVERFLOW_NAME = "<stage-name-overflow>"
+STAGE_AGGREGATION_SCOPE = "Per (name, method, status) inclusive scope totals; not event order or additive end-to-end time."
 
 JsonValue: TypeAlias = None | bool | int | float | str | list["JsonValue"] | dict[str, "JsonValue"]
 
@@ -106,8 +113,18 @@ class RunDiagnostics:
         self.profile_stages = profile_stages
         self.clock = clock
         self.started = clock()
-        self.synchronize = None
+        self.synchronize: Callable[[], None] | None = None
+        self._cuda_synchronize: Callable[[], None] | None = None
+        self._cuda_synchronize_device: int | None = None
         self.stages = []
+        self._stage_lock = threading.Lock() if profile_stages else None
+        self._stage_groups = {} if profile_stages else None
+        self._stage_named_groups = 0
+        self._stage_observations = 0
+        self._stage_overflow_observations = 0
+        # Execution control, like control/durable stores; not a measured observation.
+        self.preview_frame: int | None = None
+        self.preview_selection: dict[str, Any] | None = None
         self.frames_submitted = 0
         self.first_frame_ready_seconds = None
         self.effective: JsonValue = None
@@ -135,31 +152,92 @@ class RunDiagnostics:
         self.correction_preflight_seconds: float | None = None
         self.alpha_refinement = None
 
+    def _configure_cuda_synchronizer(self, synchronize: Callable[[], None], device_index: int) -> None:
+        if type(device_index) is not int or device_index < 0 or not callable(synchronize):
+            raise ValueError("CUDA stage synchronization requires a callable and explicit device index")
+        self.synchronize = synchronize
+        self._cuda_synchronize = synchronize
+        self._cuda_synchronize_device = device_index
+
+    def _matches_cuda_synchronizer(self, device_index: int | None) -> bool:
+        return (self.profile_stages and self._cuda_synchronize is not None
+                and self.synchronize is self._cuda_synchronize and self._cuda_synchronize_device == device_index)
+
+    def _observe_cuda_wait(self, synchronize: Callable[[], None], name: str) -> None:
+        started = self.clock()
+        succeeded = False
+        try:
+            synchronize()
+            succeeded = True
+        finally:
+            self._record_stage(name, self.clock() - started, "complete" if succeeded else "failed", "host_wall")
+
     @contextmanager
     def stage(self, name, *, gpu=True):
         if not self.profile_stages:
             yield
             return
         synchronize = self.synchronize if gpu else None
+        observe_waits = synchronize is not None and self._matches_cuda_synchronizer(self._cuda_synchronize_device)
         if synchronize:
-            synchronize()
+            if observe_waits:
+                self._observe_cuda_wait(synchronize, "cuda_sync_before_scope")
+            else:
+                synchronize()
         started = self.clock()
         succeeded = False
         try:
             yield
             if synchronize:
-                synchronize()
+                if observe_waits:
+                    self._observe_cuda_wait(synchronize, "cuda_sync_after_scope")
+                else:
+                    synchronize()
             succeeded = True
         finally:
-            self.stages.append({"name": name, "seconds": self.clock() - started,
-                                "status": "complete" if succeeded else "failed",
-                                "method": "synchronized_wall" if synchronize else "host_wall"})
+            self._record_stage(name, self.clock() - started, "complete" if succeeded else "failed",
+                               "synchronized_wall" if synchronize else "host_wall")
+
+    def _record_stage(self, name, seconds, status, method):
+        assert self._stage_lock is not None
+        with self._stage_lock:
+            assert self._stage_groups is not None
+            self._stage_observations += 1
+            named = isinstance(name, str) and len(name) <= MAX_STAGE_NAME_CHARS and name != STAGE_OVERFLOW_NAME
+            key = (name, method, status) if named else (STAGE_OVERFLOW_NAME, method, status)
+            # Reserve four slots so unknown names never erase method/status evidence.
+            if not named or key not in self._stage_groups and self._stage_named_groups >= MAX_STAGE_GROUPS - 4:
+                key = (STAGE_OVERFLOW_NAME, method, status)
+                self._stage_overflow_observations += 1
+                named = False
+            row = self._stage_groups.get(key)
+            if row is None:
+                row = {"name": key[0], "seconds": seconds, "status": status, "method": method,
+                       "count": 1, "min_seconds": seconds, "max_seconds": seconds, "overflow": not named}
+                self._stage_groups[key] = row
+                self.stages.append(row)
+                self._stage_named_groups += int(named)
+            else:
+                row["seconds"] += seconds
+                row["count"] += 1
+                row["min_seconds"] = min(row["min_seconds"], seconds)
+                row["max_seconds"] = max(row["max_seconds"], seconds)
+
 
     def frame_ready(self):
         if self.first_frame_ready_seconds is None:
             self.first_frame_ready_seconds = self.clock() - self.started
 
     def snapshot(self):
+        if self._stage_lock is None:
+            stages, stage_metadata = self.stages, {}
+        else:
+            with self._stage_lock:
+                stages = [dict(row) for row in self.stages]
+                stage_metadata = {"stage_observations": {"schema_version": 1, "format": "aggregated_scopes_v1",
+                    "group_limit": MAX_STAGE_GROUPS, "name_limit": MAX_STAGE_NAME_CHARS,
+                    "observations": self._stage_observations, "overflow_observations": self._stage_overflow_observations,
+                    "scope": STAGE_AGGREGATION_SCOPE}}
         return json_value({"effective_settings": self.effective, "source": self.source,
                            "last_checkpoint": self.control.last_checkpoint,
                            "source_witness": self.source_witness,
@@ -170,8 +248,15 @@ class RunDiagnostics:
                            "alpha_refinement": self.alpha_refinement,
                            "outputs": self.outputs, "output_contracts": self.output_contracts,
                            "frames_submitted": self.frames_submitted,
+                           "preview_selection": self.preview_selection,
                            "first_rendered_batch_seconds": self.first_frame_ready_seconds,
-                           "stages": self.stages, "profiling_enabled": self.profile_stages,
+                           "stages": stages, "profiling_enabled": self.profile_stages,
+                           **stage_metadata,
+                           **({"cuda_stage_observations": {"device_index": self._cuda_synchronize_device,
+                               "runtime_callback_active": self.synchronize is self._cuda_synchronize,
+                               "scope": "Host waits around existing device-bound stage callbacks only; overlap stage totals. "
+                                        "RVM RGB upload includes float promotion; not pure DMA or all transfers."}}
+                              if self.profile_stages and self._cuda_synchronize_device is not None else {}),
                            "resources": self.resources, "warnings": self.warnings,
                            "resource_policy": self.resource_policy,
                            "foundation_cache": self.foundation_cache, "memory_policy": self.memory_policy,

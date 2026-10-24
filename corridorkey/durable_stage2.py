@@ -216,7 +216,8 @@ class DurableStage2Batches(BoundModelCache):
             self.store_seconds += time.perf_counter() - started
 
     def snapshot(self):
-        return {'enabled': True, 'parent_key': self.parent.key, 'batch_hits': self.hits, 'batch_misses': self.misses,
+        return {'enabled': True, 'parent_key': self.parent.key,
+                'parent_kind': self.parent.to_dict()['kind'], 'batch_hits': self.hits, 'batch_misses': self.misses,
                 'stage2_frame_instances_reused': self.frames_reused, 'stored_batches': self.stored,
                 'corrupt_entries': self.corrupt, 'budget_rejected_batches': self.budget_rejected,
                 'bytes_loaded': self.bytes_loaded, 'last_error': self.last_error,

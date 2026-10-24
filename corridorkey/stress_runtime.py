@@ -250,7 +250,8 @@ def execute_scenario(case, jobs, weights, root, *, check=None, progress=None,
         payload = {'batch': str(batch.resolve()), 'workspace': str(workspace.resolve()),
                    'max_cache_bytes': policy.get('max_cache_bytes', min(cap, 256 * 1024 ** 2)), 'resume': False,
                    **{name: policy.get(name, False) for name in
-                      ('durable_foundations', 'durable_rvm', 'durable_hann', 'durable_stage2', 'durable_writer_prefix')}}
+                      ('durable_foundations', 'durable_rvm', 'durable_hann', 'durable_stage2', 'durable_writer_prefix',
+                       'reuse_stage2_finishing_edits', 'reuse_upstream_finishing_edits')}}
         client = new_client()
         request_id = client.send('recover', payload)
         partial = {}

@@ -1,4 +1,4 @@
-"""Explicit bounded single-frame preview recipes for the shared inference engine.
+"""Explicit bounded full-context selected-frame preview recipes for the shared inference engine.
 
 Preparation imports no model or Qt and does not render. Native admission reads
 bounded encoded bytes without decoding. Runtime still reads source paths: the
@@ -19,10 +19,11 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from .diagnostics import json_value
+from .diagnostics import finite_json_float, json_value
 from .native_image_admission import MAX_ENCODED_BYTES, MAX_PIXELS, admit_image
 from .preview_sequence import SequenceIndex, scan_sequence
 from .progressive_preview import PreviewContext, PreviewStage
+from .project_collection import FilePin, admit_file, read_file
 from .runtime_paths import RuntimePaths
 from .session import JobRequest
 from .worker_protocol import MAX_FRAME_BYTES, job_from_wire
@@ -30,9 +31,9 @@ from .worker_protocol import MAX_FRAME_BYTES, job_from_wire
 Check = Callable[[], None]
 MAX_CLEANUP_FILES = 256
 MAX_CLEANUP_BYTES = 512 * 1024**2
-WARNING = ('Single-frame preview restarts temporal/recurrent context. Final means the '
-           'last configured preview stage, not equivalence to a full-range export. '
-           'Scratch budgets are admission/cleanup bounds, not allocation hard limits. '
+WARNING = ('Every selected preview processes the entire captured timeline with original temporal context and Stage 2 groups; '
+           'only the selected EXR is retained. This has full-timeline inference and temporary-disk cost, not a latency guarantee. '
+           'Scratch budgets are admission/cleanup bounds, not allocation hard limits; the original temp-map budget still applies. '
            'Model references are metadata only; compatibility and actual inference are unverified.')
 
 
@@ -130,6 +131,8 @@ class PreviewSource:
     _model_references_json: bytes = field(repr=False)
     _model_paths: tuple[str, ...] = field(repr=False)
     _model_pins: tuple[tuple[str, tuple[int, ...] | None], ...] = field(repr=False)
+    _dependency_pins: tuple[FilePin, ...] = field(repr=False)
+    _dependency_directories: tuple[tuple[str, tuple[int, ...]], ...] = field(repr=False)
 
     def check(self, frame: int, check: Check | None = None) -> None:
         check = check or (lambda: None)
@@ -140,9 +143,12 @@ class PreviewSource:
         _plain_parents(root)
         if _file_id(root) != self._directory_identity:
             raise ValueError('Source sequence membership changed; prepare previews again.')
-        self.index.check_path(frame)
-        if _file_id(Path(self.index.paths[frame]))[-1] != self._source_ctimes[frame]:
-            raise ValueError('Indexed source content metadata changed; prepare previews again.')
+        for path, identity in self._dependency_directories:
+            if _file_id(Path(path)) != identity:
+                raise ValueError('Preview context dependency directory changed; capture again.')
+        for pin in self._dependency_pins:
+            check()
+            read_file(pin, check=check)
         if _model_paths(json.loads(self._model_references_json)) != self._model_paths:
             raise ValueError('Selected model paths changed; capture a new preview context.')
         for path, identity in self._model_pins:
@@ -342,11 +348,10 @@ class PreviewRecipe:
         for name, scale in ((('draft', self.draft_scale), ('final', config.model_scale))
                             if self.draft_scale is not None else (('final', config.model_scale),)):
             effective = json.loads(_json(config))
-            effective.update(model_scale=scale, start_frame='selected_source_frame', num_frames=1,
-                             start_mode='begin', output_format='exr', temp_dir='owned_per_request_scratch')
+            effective.update(model_scale=scale, output_format='exr', temp_dir='owned_per_request_scratch')
             stages.append(PreviewStage.capture(name, {'inference_settings': effective,
                           'writer_settings': json_value(writer), 'output_dir': 'owned_per_request_exports',
-                          'temporal_context': 'restarted',
+                          'temporal_context': 'full original timeline and groups; selected output only',
                           'reservation_scope': 'Native pixel float-buffer estimate only; no model/GPU/RAM hard cap.'},
                           estimated_work_bytes=self.source.max_pixels * 16))
         return tuple(stages)
@@ -380,17 +385,16 @@ class PreviewRecipe:
         workspace = create_preview_workspace(self.scratch_parent, max_cleanup_files=self.max_cleanup_files,
                                              max_cleanup_bytes=self.max_cleanup_bytes, check=check)
         try:
-            offset = frame - self.source.source_start
-            effective = replace(config, start_frame=frame, start_mode='begin', num_frames=1, output_format='exr',
-                                temp_dir=workspace.root / 'scratch', model_scale=self.draft_scale if name == 'draft' else config.model_scale,
-                                quick_cut_frames=[value - offset for value in config.quick_cut_frames if offset <= value < offset + 1],
-                                quick_reset_frames=[value - offset for value in config.quick_reset_frames if offset <= value < offset + 1])
+            effective = replace(config, output_format='exr', temp_dir=workspace.root / 'scratch',
+                                model_scale=self.draft_scale if name == 'draft' else config.model_scale)
             job = JobRequest.create(self.source.original_job.input_path, workspace.root / 'exports', effective, writer,
+                                    initial_hint_path=self.source.original_job.initial_hint_path,
+                                    hint_video_path=self.source.original_job.hint_video_path,
                                     profile_stages=self.source.original_job.profile_stages)
             effective_json = _json(asdict(job))
             provenance = json.loads(self.source.provenance_json)
             provenance.update(stage=name, source_frame=frame, source_sha256=admitted.sha256,
-                              native_hw=list(admitted.shape), execution_range=[frame, frame + 1],
+                              native_hw=list(admitted.shape), execution_range=[self.source.source_start, self.source.source_end], selected_source_frame=frame,
                               effective_settings_identity=_digest(effective_json))
             provenance_json = _json(provenance)
             # Identity omits ephemeral scratch/output paths so compatible jobs can reuse thumbnails.
@@ -421,10 +425,12 @@ def prepare_preview(job: JobRequest, *, scratch_parent: Path, declared_fps: floa
         raise TypeError('Preview preparation requires a shared JobRequest instance.')
     job_from_wire(asdict(job))  # Validate strict original JSON before any normalizing serialization.
     config, _ = job.configurations()
+    from .shot_profiles import reject_derived_profiles
+    reject_derived_profiles(config, 'Full-context progressive preview')
     if not Path(job.input_path).is_dir():
         raise ValueError('Progressive preview currently supports image sequences only; video/VFR is unsupported.')
-    if config.start_mode != 'begin' or config.quick_key or job.initial_hint_path or job.hint_video_path or config.corrections_path:
-        raise ValueError('Single-frame preview requires explicit begin/In and no Quick Key, hints or corrections; context cannot be silently discarded.')
+    if config.start_mode != 'begin' or config.quick_key:
+        raise ValueError('Full-context preview requires explicit begin/In and no Quick Key; context cannot be silently discarded.')
     if isinstance(declared_fps, bool) or not isinstance(declared_fps, (int, float)) or not math.isfinite(declared_fps) or declared_fps <= 0 or declared_fps != config.frame_dir_fps:
         raise ValueError('Explicit declared sequence FPS must equal the captured job FPS.')
     for value, maximum, label in ((max_entries, 100000, 'Sequence entries'), (max_frames, 100000, 'Sequence frames'),
@@ -467,19 +473,120 @@ def prepare_preview(job: JobRequest, *, scratch_parent: Path, declared_fps: floa
     end = min(len(index.paths), start + config.num_frames) if config.num_frames > 0 else len(index.paths)
     if not 0 <= start < end:
         raise ValueError('Requested preview source range is empty or outside the sequence.')
+    # Reuse pinned-file admission for every context/dependency, not only the displayed frame.
+    # Read/hash budget is per capture/check; it does not bound inference allocations.
+    paths = list(index.paths)
+    directories = [(str(root), before)]
+    if job.initial_hint_path is not None:
+        paths.append(job.initial_hint_path)
+    if job.hint_video_path is not None:
+        hint = Path(job.hint_video_path)
+        _plain_parents(hint)
+        if hint.is_dir():
+            protected.append(hint)
+            hint_identity = _file_id(hint)
+            hint_index = scan_sequence(hint, check=check, max_entries=max_entries, max_frames=max_frames)
+            paths.extend(hint_index.paths)
+            directories.append((str(hint), hint_identity))
+        else:
+            paths.append(str(hint))
+    document = None
+    correction_pin = None
+    if config.corrections_path is not None:
+        from .corrections import MAX_CORRECTION_BYTES, CorrectionDocument, _unique_pairs
+        pin = admit_file(config.corrections_path)
+        if pin.size > MAX_CORRECTION_BYTES:
+            raise ValueError('Preview correction document exceeds its metadata byte bound')
+        digest, raw = read_file(pin, check=check, capture=True)
+        correction_pin = replace(pin, sha256=digest)
+        document = CorrectionDocument.parse(json.loads(raw, object_pairs_hook=_unique_pairs,
+            parse_float=finite_json_float, parse_constant=finite_json_float), Path(config.corrections_path).parent)
+        paths.extend((str(config.corrections_path), *map(str, document.asset_paths())))
+    pins = []
+    total = 0
+    for path in dict.fromkeys(paths):
+        check()
+        pin = correction_pin if correction_pin is not None and path == correction_pin.path else admit_file(path)
+        total += pin.size
+        if len(pins) >= max_entries or pin.size > max_encoded_bytes or total > MAX_CLEANUP_BYTES:
+            raise ValueError('Preview full-context dependencies exceed count/encoded/read byte bounds (512 MiB total)')
+        digest, _ = read_file(pin, check=check)
+        pins.append(replace(pin, sha256=digest))
+        protected.append(Path(path))
+    if any(parent == path or parent.is_relative_to(path) for path in protected):
+        raise ValueError('Preview scratch must be separate from all context/guidance dependencies')
+    if document is not None:
+        from .correction_tracking_context import tracking_cuts, tracking_decode
+        from .identities import sequence_identity
+        hashes = {pin.path: pin.sha256 for pin in pins}
+        actual_source = sequence_identity(job.input_path, [
+            {'name': Path(path).name, 'sha256': hashes[path]} for path in index.paths])
+        if actual_source['sha256'] != document.to_dict()['source']['sha256']:
+            raise ValueError('Preview correction source content hash mismatch')
+        document.verify_assets(check=check)
+        document.validate_track_context(cuts=tracking_cuts(config), decode=tracking_decode(config, job.input_path))
+        document.validate_guidance_context(decode=tracking_decode(config, job.input_path))
     requested = _json(asdict(job), 64 * 1024)
-    source_metadata_identity = _digest(_json({'sequence': index.identity, 'change_times': source_ctimes}))
-    provenance = _json({'schema_version': 1, 'kind': 'single_frame_progressive_preview',
-                        'source_identity': source_metadata_identity, 'source_identity_scope': 'Frozen natural-order paths and stat metadata including change times; per-frame content SHA on job admission.',
+    dependency_identity = _digest(_json([{'path': pin.path, 'sha256': pin.sha256,
+                                       'fingerprint': pin.fingerprint} for pin in pins], 32 * 1024**2))
+    source_metadata_identity = _digest(_json({'sequence': index.identity, 'change_times': source_ctimes,
+                                            'dependencies': dependency_identity}))
+    provenance = _json({'schema_version': 1, 'kind': 'full_context_selected_progressive_preview',
+                        'source_identity': source_metadata_identity,
+                        'source_identity_scope': 'All source/context and hint/correction/asset content hashes with pinned metadata; rechecked before/after execution.',
+                        'dependency_identity': dependency_identity, 'dependency_bytes': total,
+                        'dependency_read_limit_bytes': MAX_CLEANUP_BYTES,
                         'requested_job_identity': _digest(requested), 'requested_range': [start, end],
                         'requested_frame_count': config.num_frames, 'declared_fps': declared_fps,
                         'model_references': refs, 'model_compatibility': 'NOT VERIFIED',
                         'model_metadata_identity': _digest(_json(model_pins, 1024**2)),
                         'model_metadata_pins': len(model_pins), 'model_paths': model_paths,
                         'model_identity_scope': 'Bounded path/stat pins, including nested files; no content hashes/authenticity guarantee.',
-                        'restarted_temporal_context': True, 'warning': WARNING})
-    source = PreviewSource(job, index, start, end, requested, provenance, source_metadata_identity, max_pixels, max_encoded_bytes, before, tuple(source_ctimes), _json(refs), model_paths, model_pins)
+                        'restarted_temporal_context': False, 'warning': WARNING})
+    source = PreviewSource(job, index, start, end, requested, provenance, source_metadata_identity, max_pixels,
+                           max_encoded_bytes, before, tuple(source_ctimes), _json(refs), model_paths, model_pins,
+                           tuple(pins), tuple(directories))
+    source.check(start, check)
     check()
     recipe = PreviewRecipe(source, parent, draft_scale, max_cleanup_files, max_cleanup_bytes)
     _ = recipe.context, recipe.stages
     return recipe
+
+
+def selected_preview_view(prepared: PreparedPreview, record: dict[str, Any]):
+    """Admit sparse preview success without weakening ordinary completed export admission."""
+    from .desktop_comparison import RenderView
+    config, writer = prepared.job.configurations()
+    diagnostics = record.get('diagnostics', {})
+    if not isinstance(diagnostics, dict):
+        raise TypeError('Selected preview diagnostics must be an object')
+    source = diagnostics.get('source')
+    selection = diagnostics.get('preview_selection')
+    if (record.get('status') != 'preview_complete' or record.get('input') != prepared.job.input_path
+            or record.get('output_dir') != prepared.job.output_dir
+            or record.get('hints') != {'first_frame': prepared.job.initial_hint_path, 'full': prepared.job.hint_video_path}
+            or record.get('requested_settings') != json_value(config) or record.get('writer_settings') != json_value(writer)
+            or not isinstance(source, dict) or not isinstance(selection, dict)
+            or source.get('start_frame') != prepared.source.source_start
+            or source.get('num_frames') != prepared.source.source_end - prepared.source.source_start
+            or selection != {'source_frame': prepared.frame, 'relative_frame': prepared.frame - prepared.source.source_start,
+                'context_frames_processed': source['num_frames'], 'captured_frames': 1, 'full_context_processed': True}
+            or selection.get('full_context_processed') is not True
+            or type(diagnostics.get('frames_submitted')) is not int or diagnostics['frames_submitted'] != 1
+            or any(type(selection.get(key)) is not int for key in
+                   ('source_frame', 'relative_frame', 'context_frames_processed', 'captured_frames'))
+            or type(source.get('start_frame')) is not int or type(source.get('num_frames')) is not int):
+        raise ValueError('Preview requires its matching successful full-context selected capture')
+    hw, fps = source.get('native_hw'), source.get('native_fps')
+    outputs = diagnostics.get('outputs')
+    if (not isinstance(hw, (list, tuple)) or len(hw) != 2 or any(type(v) is not int or v < 1 for v in hw)
+            or isinstance(fps, bool) or not isinstance(fps, (int, float)) or not math.isfinite(fps) or fps <= 0
+            or not isinstance(outputs, dict) or set(outputs) != config.outputs
+            or any(not isinstance(path, str) or not Path(path).resolve().is_relative_to(Path(prepared.job.output_dir).resolve()) for path in outputs.values())):
+        raise ValueError('Selected preview has invalid geometry/timing/output paths')
+    for path in outputs.values():
+        _plain_parents(Path(path))
+    if list(hw) != json.loads(prepared.provenance_json)['native_hw'][:2] or fps != config.frame_dir_fps:
+        raise ValueError('Selected preview geometry/timing differs from captured source')
+    return RenderView(prepared.job.input_path, prepared.frame, 1, hw[0], hw[1], float(fps), tuple(outputs.items()),
+                      True, config.frame_dir_linear, config.frame_dir_alpha, config.source_colour_profile)

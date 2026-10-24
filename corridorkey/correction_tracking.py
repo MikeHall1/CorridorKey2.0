@@ -77,8 +77,8 @@ class TrackingAnchor:
             _integer(value, name)
         _integer(self.height, 'anchor height', 2)
         _integer(self.width, 'anchor width', 2)
-        if self.kind not in {'matte', 'keep', 'remove'}:
-            raise ValueError('Tracking supports matte/keep/remove coverage only, not trimap classes.')
+        if self.kind not in {'matte', 'keep', 'remove', 'region'}:
+            raise ValueError('Tracking supports matte/keep/remove/region coverage only, not trimap classes.')
         if type(self.strength) not in (int, float) or not math.isfinite(self.strength) or not 0 <= self.strength <= 1:
             raise ValueError('Anchor strength must be finite in [0,1].')
         if type(self.mask_bytes) is not bytes or len(self.mask_bytes) != self.height * self.width * 4:
@@ -165,6 +165,7 @@ class TrackingCandidate:
     provenance_json: str
     diagnostics_json: str
     requires_acceptance: bool = True
+    disagreement_bytes: bytes | None = None
 
     @property
     def identity(self) -> str:
@@ -176,7 +177,8 @@ class TrackingCandidate:
 
 def track_corrections(request: TrackingRequest, anchors: tuple[TrackingAnchor, ...],
                       read_frame: Callable[[int], TrackingFrame], *, control: JobControl | None = None,
-                      estimator=farneback, estimator_identity: str | None = None) -> Generator[TrackingCandidate, None, None]:
+                      estimator=farneback, estimator_identity: str | None = None,
+                      capture_diagnostics: bool = False) -> Generator[TrackingCandidate, None, None]:
     """Yield one bounded preview/event at a time; caller must bound retained results.
 
     Each target is warped directly from the nearest authored anchor(s), never
@@ -185,6 +187,8 @@ def track_corrections(request: TrackingRequest, anchors: tuple[TrackingAnchor, .
     Unreliable propagation blocks its interval until another artist anchor.
     No inference or files are changed, including when iteration is cancelled.
     """
+    if type(capture_diagnostics) is not bool:
+        raise TypeError('Diagnostic capture requires an explicit boolean')
     if not isinstance(request, TrackingRequest):
         raise TypeError('Tracking requires a request instance, not its class.')
     request.validate()
@@ -254,6 +258,7 @@ def track_corrections(request: TrackingRequest, anchors: tuple[TrackingAnchor, .
             'approximation_retained': False}
         hashes: dict[str, str] = {}
         mask = reliability = uncertain = None
+        disagreement_bytes = None
         if anchor is not None:
             _, frame_hash = read(local)
             hashes[str(local)] = frame_hash
@@ -278,7 +283,9 @@ def track_corrections(request: TrackingRequest, anchors: tuple[TrackingAnchor, .
                 hashes[str(selected[1].frame)] = second_hash
                 fraction = (local - selected[0].frame) / (selected[1].frame - selected[0].frame)
                 propagation = interpolate_alpha(first, second, target, selected[0].mask(), selected[1].mask(), fraction,
-                                                settings=request.motion, control=control, estimator=estimator)
+                                                settings=request.motion, control=control, estimator=estimator,
+                                                capture_disagreement=capture_diagnostics)
+                disagreement_bytes = propagation.disagreement_bytes
             else:
                 propagation = propagate_alpha(first, target, selected[0].mask(), settings=request.motion,
                                               control=control, estimator=estimator)
@@ -307,5 +314,5 @@ def track_corrections(request: TrackingRequest, anchors: tuple[TrackingAnchor, .
         yield TrackingCandidate(local, request.source_start + local, *shape, status, mask_bytes,
             None if reliability is None else np.asarray(reliability, dtype='<f4').tobytes(),
             None if uncertain is None else np.asarray(uncertain, dtype=np.bool_).tobytes(),
-            _canonical(provenance), _canonical(diagnostics))
+            _canonical(provenance), _canonical(diagnostics), disagreement_bytes=disagreement_bytes)
     control.checkpoint('tracking', request.end - request.start, request.end - request.start)

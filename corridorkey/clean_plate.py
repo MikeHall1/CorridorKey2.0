@@ -381,3 +381,107 @@ def assist_clean_plate(source_rgb: NDArray[np.float32], reference_rgb: NDArray[n
                                             'integration': 'Existing final-only correction/trimap refinement after deliberate acceptance; no new neural channels.'}})
     check()
     return finish(True, labels, field, residual.astype(np.float32), valid.astype(np.uint8))
+
+
+def screen_sample_reference(source_rgb, points, *, sample_radius=3, influence_radius=256,
+                            max_pixels=MAX_PIXELS, check=None):
+    """Build an explicitly synthetic screen from native source patch medians.
+
+    Inverse-square interpolation is an uncalibrated spatial colour heuristic.
+    Row tiles bound temporary work independently of sample count; no neural work
+    or geometric registration is performed. Unsupported pixels remain unknown.
+    """
+    check = check or (lambda: None)
+    check()
+    _integer(max_pixels, 'max_pixels', 1, MAX_PIXELS)
+    _integer(sample_radius, 'sample_radius', 1, 31)
+    _integer(influence_radius, 'influence_radius', 1, 32768)
+    if (not isinstance(source_rgb, np.ndarray) or source_rgb.dtype != np.float32
+            or source_rgb.ndim != 3 or source_rgb.shape[-1] != 3
+            or min(source_rgb.shape[:2]) < 4 or max(source_rgb.shape[:2]) > 32768
+            or source_rgb.shape[0] * source_rgb.shape[1] > max_pixels):
+        raise ValueError('Screen samples require bounded native float32 RGB geometry.')
+    if not np.isfinite(source_rgb).all():
+        raise ValueError('Screen samples require finite working-linear RGB.')
+    if not isinstance(points, list) or not 1 <= len(points) <= 32:
+        raise ValueError('Choose between1 and32 native screen sample points.')
+    height, width = source_rgb.shape[:2]
+    selected, colours = [], []
+    samples = np.zeros((height, width), np.uint8)
+    for point in points:
+        check()
+        if not isinstance(point, list) or len(point) != 2:
+            raise ValueError('Each screen sample must be a native [x,y] pair.')
+        x, y = point
+        _integer(x, 'sample x', 0, width - 1)
+        _integer(y, 'sample y', 0, height - 1)
+        if point in selected:
+            raise ValueError('Screen sample points must be unique.')
+        selected.append(point.copy())
+        patch = (slice(max(0, y - sample_radius), min(height, y + sample_radius + 1)),
+                 slice(max(0, x - sample_radius), min(width, x + sample_radius + 1)))
+        colours.append(np.median(source_rgb[patch].reshape(-1, 3), axis=0))
+        samples[patch] = 1
+    field = np.empty_like(source_rgb)
+    support = np.empty((height, width), np.bool_)
+    xx = np.arange(width, dtype=np.float64)[None, :]
+    for start in range(0, height, 128):
+        check()
+        stop = min(start + 128, height)
+        yy = np.arange(start, stop, dtype=np.float64)[:, None]
+        numerator = np.zeros((stop - start, width, 3), np.float64)
+        denominator = np.zeros((stop - start, width), np.float64)
+        nearest = np.full((stop - start, width), np.inf, np.float64)
+        for (x, y), colour in zip(selected, colours, strict=True):
+            check()
+            distance = (xx - x)**2 + (yy - y)**2
+            np.minimum(nearest, distance, out=nearest)
+            weight = 1. / np.maximum(distance, .25)
+            numerator += weight[..., None] * colour
+            denominator += weight
+        field[start:stop] = (numerator / denominator[..., None]).astype(np.float32)
+        support[start:stop] = nearest <= influence_radius**2
+    check()
+    return field, samples, support, {
+        'kernel_version': 'screen-colour-idw-v1', 'points': selected,
+        'sample_radius': sample_radius, 'influence_radius': influence_radius,
+        'sample_colours_linear_bt709': [colour.tolist() for colour in colours],
+        'interpolation': 'native inverse-square distance with0.25 square-pixel floor;128-row tiles',
+        'outside_influence': 'unknown trimap classes; not a processing-region gate',
+        'scope': 'Synthetic screen from artist-declared background samples, not an empty plate or calibrated foreground model.',
+    }
+
+
+def restrict_screen_candidate(candidate, support, sampling):
+    """Bind synthetic-reference provenance and remove unsupported guidance seeds."""
+    if not isinstance(candidate, CleanPlateCandidate):
+        raise TypeError('Screen guidance requires a CleanPlateCandidate instance.')
+    if (not isinstance(support, np.ndarray) or support.dtype != np.bool_
+            or support.shape != (candidate.height, candidate.width)):
+        raise ValueError('Screen influence support must be a native boolean mask.')
+    if (not isinstance(sampling, dict) or sampling.get('kernel_version') != 'screen-colour-idw-v1'
+            or len(_canonical(sampling).encode()) > 16 * 1024):
+        raise ValueError('Screen sampling provenance must be a bounded supported record.')
+    labels = candidate.labels().copy()
+    labels[~support] = 128
+    valid = candidate.validity().copy()
+    valid[~support] = 0
+    context, diagnostics = json.loads(candidate.provenance_json), json.loads(candidate.diagnostics_json)
+    context['screen_sampling'] = sampling
+    labels_raw, valid_raw = labels.tobytes(), valid.tobytes()
+    context['output_hashes'].update(trimap=_digest(labels_raw), validity=_digest(valid_raw))
+    usable = candidate.usable and bool(np.any(labels != 128))
+    diagnostics.update(usable=usable, status='candidate' if usable else 'unusable',
+                       reason=diagnostics['reason'] if candidate.usable is False else
+                              (None if usable else 'No guidance seeds remain inside the declared screen influence.'),
+                       screen_field='Explicit synthetic spatial screen from working-linear source patch medians; not an empty plate.',
+                       screen_sampling=sampling,
+                       class_counts={name: int(np.count_nonzero(labels == value)) for name, value in
+                                     (('background', 0), ('unknown', 128), ('foreground', 255))})
+    diagnostics['warnings'][0] = 'Screen-coloured foreground and contaminated artist samples can be mistaken for background.'
+    diagnostics['warnings'].append('This synthetic reference is not an empty plate; sample contamination, spatial extrapolation and lighting changes require visual inspection. No plate alignment or background-change proof is available.')
+    diagnostics['warnings'].append('Outside sample reach remains unknown; accepted trimaps still use existing full-frame unknown-class refinement, not a neural or output-region gate.')
+    context_json = _canonical(context)
+    return CleanPlateCandidate(candidate.height, candidate.width, usable, labels_raw, candidate.screen_field_bytes,
+                               candidate.residual_bytes, valid_raw, context_json, _canonical(diagnostics),
+                               _digest(context_json.encode()))

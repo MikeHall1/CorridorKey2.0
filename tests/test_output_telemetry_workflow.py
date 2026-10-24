@@ -98,6 +98,9 @@ class OutputTelemetryWorkflowTests(unittest.TestCase):
                 measured = self.terminal(self.client.submit(self.job(f'profile{quick}', profile=True, quick=quick)))
                 self.assertEqual(measured['kind'], 'result', measured)
                 after = measured['payload']['record']
+                self.assertTrue(after['diagnostics']['profiling_enabled'])
+                self.assertTrue(after['diagnostics']['stages'])
+                self.assertTrue(all(stage['method'] == 'host_wall_explicit_cpu_fixture' for stage in after['diagnostics']['stages']))
                 self.assert_completed(after)
                 for output in ('alpha', 'fg'):
                     self.assertEqual(hashes(after['diagnostics']['outputs'][output]), hashes(before['diagnostics']['outputs'][output]))

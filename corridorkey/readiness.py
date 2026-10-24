@@ -170,6 +170,8 @@ def prepare_short_render(job: JobRequest, start_frame: int, frame_count: int) ->
     if type(frame_count) is not int or not 1 <= frame_count <= MAX_RENDER_FRAMES:
         raise ValueError(f'Guided render length must be 1..{MAX_RENDER_FRAMES} frames.')
     config, writer = job.configurations()
+    from .shot_profiles import reject_derived_profiles
+    reject_derived_profiles(config, 'Guided short render')
     if config.start_mode != 'begin':
         raise ValueError('Choose an explicit source In with start_mode=begin before preparing a guided render.')
     if config.corrections_path is not None:

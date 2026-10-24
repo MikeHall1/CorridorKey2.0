@@ -146,12 +146,15 @@ class PreviewLimits:
     max_work_bytes: int = 64 * 1024 * 1024
     surround_radius: int = 2
     upcoming_frames: int = 4
+    max_range_frames: int = 256
+    max_range_requests: int = 1024
 
     def __post_init__(self):
         for name, low, high in (('max_queued', 1, 512), ('max_cache_entries', 1, 256),
                                 ('max_cache_bytes', 1, 512 * 1024 * 1024),
                                 ('max_result_bytes', 1, MAX_PAYLOAD_BYTES), ('max_work_bytes', 1, 2**31),
-                                ('surround_radius', 0, 16), ('upcoming_frames', 0, 64)):
+                                ('surround_radius', 0, 16), ('upcoming_frames', 0, 64),
+                                ('max_range_frames', 1, 1024), ('max_range_requests', 1, 1024)):
             _integer(getattr(self, name), name, low, high)
         if self.max_result_bytes > self.max_cache_bytes:
             raise ValueError('Result payload bound must fit the cache byte budget')
@@ -218,6 +221,19 @@ class _Task:
     distance: int
 
 
+@dataclass(frozen=True)
+class PreviewRangeState:
+    selected: tuple[int, int] | None
+    remaining: bool
+    total_frames: int
+    completed_frames: int
+    failed_frames: int
+    attempts: int
+    max_frames: int
+    max_requests: int
+    budget_exhausted: bool
+
+
 class ProgressivePreview:
     """One-owner scheduler; public methods/check() are thread-safe.
 
@@ -255,6 +271,7 @@ class ProgressivePreview:
         self._direction = 1
         self._playing = False
         self._stale_completions = 0
+        self._reset_ranges()
         self._rebuild()
 
     @property
@@ -280,6 +297,74 @@ class ProgressivePreview:
     def generation(self) -> int:
         with self._lock:
             return self._generation
+
+    def _reset_ranges(self):
+        self._selected: tuple[int, int] | None = None
+        self._remaining = False
+        self._range_done: dict[int, bool] = {}
+        self._selected_cursor = self._remaining_cursor = self._context.source_start
+        self._range_attempts = 0
+
+    @property
+    def range_state(self) -> PreviewRangeState:
+        with self._lock:
+            total = (self._context.source_end - self._context.source_start if self._remaining else
+                     self._selected[1] - self._selected[0] if self._selected else 0)
+            return PreviewRangeState(self._selected, self._remaining, total,
+                                     sum(self._range_done.values()), len(self._range_done) - sum(self._range_done.values()),
+                                     self._range_attempts, self._limits.max_range_frames, self._limits.max_range_requests,
+                                     self._range_attempts >= self._limits.max_range_requests and len(self._range_done) < total)
+
+    def set_ranges(self, *, selected: tuple[int, int] | None = None, remaining: bool = False) -> None:
+        """Explicit absolute [In,Out) coverage; final recipe only, admitted at idle.
+
+        Bounded cursors/terminal acknowledgements survive focus and eviction.
+        Changing range/context resets progress and fences the outstanding owner.
+        """
+        with self._lock:
+            if type(remaining) is not bool:
+                raise TypeError('Remaining preview range must be boolean')
+            if selected is not None:
+                if not isinstance(selected, tuple) or len(selected) != 2:
+                    raise ValueError('Selected preview range requires an immutable (In,Out) pair')
+                _integer(selected[0], 'Selected source In', self._context.source_start, self._context.source_end - 1)
+                _integer(selected[1], 'Selected source Out (exclusive)', selected[0] + 1, self._context.source_end)
+            total = (self._context.source_end - self._context.source_start if remaining else
+                     selected[1] - selected[0] if selected else 0)
+            if total > self._limits.max_range_frames:
+                raise ValueError(f'Preview range has {total} frames; limit {self._limits.max_range_frames}. Capture a smaller requested/selected range; no automatic worker restart.')
+            self._reset_ranges()
+            self._selected, self._remaining = selected, remaining
+            self._selected_cursor = selected[0] if selected else self._context.source_start
+            self._generation += 1
+            self._rebuild()
+
+    def _range_includes(self, frame):
+        return self._remaining or (self._selected is not None and self._selected[0] <= frame < self._selected[1])
+
+    def _ack_range(self, request, success):
+        if request.stage == self._stages[-1] and self._range_includes(request.source_frame):
+            self._range_done[request.source_frame] = success
+
+    def _range_task(self):
+        if self._range_attempts >= self._limits.max_range_requests:
+            return None
+        for band, stop in ((4, self._selected[1] if self._selected else self._selected_cursor),
+                           (5, self._context.source_end if self._remaining else self._remaining_cursor)):
+            while (frame := self._selected_cursor if band == 4 else self._remaining_cursor) < stop:
+                if frame not in self._range_done:
+                    best, _ = self._best(frame)
+                    if best == len(self._stages) - 1:
+                        self._range_done[frame] = True
+                    elif self._key(frame, len(self._stages) - 1) in self._seen:
+                        self._range_done[frame] = False
+                    else:
+                        return _Task(frame, len(self._stages) - 1, band, 0)
+                if band == 4:
+                    self._selected_cursor += 1
+                else:
+                    self._remaining_cursor += 1
+        return None
 
     def _validate_recipe(self, context, stages):
         if not isinstance(context, PreviewContext):
@@ -335,6 +420,7 @@ class ProgressivePreview:
             self._frame = min(max(self._frame, context.source_start), context.source_end - 1)
             self._generation += 1
             self._focused = True
+            self._reset_ranges()
             self._rebuild()
 
     def focus(self, source_frame: int, *, direction: int = 1, playing: bool = False) -> None:
@@ -384,26 +470,34 @@ class ProgressivePreview:
         if type(idle) is not bool:
             raise TypeError('idle must be boolean')
         with self._lock:
-            if not self._enabled or self._pending is not None:
+            if not self._enabled or not self._focused or self._pending is not None:
                 return None
-            while self._queue:
-                task = self._queue[0]
-                if task.band == 3 and not idle:
-                    return None
-                self._queue.pop(0)
+            while True:
+                if self._queue:
+                    task = self._queue[0]
+                    if task.band == 3 and not idle:
+                        return None
+                    self._queue.pop(0)
+                else:
+                    task = self._range_task() if idle else None
+                    if task is None:
+                        return None
                 key = self._key(task.source_frame, task.stage_index)
                 best, _ = self._best(task.source_frame)
+                if task.band != 0 and task.source_frame in self._range_done:
+                    continue
                 if key in self._seen or best >= task.stage_index:
                     continue
                 self._seen.add(key)
                 self._serial += 1
                 attempt = hashlib.sha256(f'{self._generation}:{self._serial}:{key}'.encode()).hexdigest()
                 request = PreviewRequest(self._serial, self._generation, attempt, self._context_identity,
-                                         task.source_frame, ('current', 'surround', 'upcoming', 'idle')[task.band],
+                                         task.source_frame, ('current', 'surround', 'upcoming', 'idle', 'selected', 'remaining')[task.band],
                                          self._stages[task.stage_index], self._context)
+                if task.band >= 4:
+                    self._range_attempts += 1
                 self._pending = request
                 return request
-            return None
 
     def complete(self, request: PreviewRequest, artifact: PreviewArtifact) -> bool:
         """Terminal completion; True accepts into cache. Present snapshot().result.
@@ -423,9 +517,11 @@ class ProgressivePreview:
                 return False
             if artifact.request_identity != request.identity:
                 self._errors[request.cache_identity] = 'Result request/provenance identity differs from the captured request'
+                self._ack_range(request, False)
                 return False
             if len(artifact.payload) > self._limits.max_result_bytes:
                 self._errors[request.cache_identity] = 'Result payload exceeds the explicit result byte budget'
+                self._ack_range(request, False)
                 return False
             key = request.cache_identity
             _, focused = self._best(self._frame)
@@ -434,11 +530,13 @@ class ProgressivePreview:
                 victim = next((candidate for candidate in self._cache if candidate != protected), None)
                 if victim is None:
                     self._errors[key] = 'Preview cache admission refused: byte/entry budget preserves the focused result'
+                    self._ack_range(request, False)
                     return False
                 evicted = self._cache.pop(victim)
                 self._cache_bytes -= len(evicted.artifact.payload)
             self._cache[key] = PreviewResult(request, artifact)
             self._cache_bytes += len(artifact.payload)
+            self._ack_range(request, True)
             if request.source_frame == self._frame:
                 self._last_visible = key
             return True
@@ -455,6 +553,7 @@ class ProgressivePreview:
                 self._stale_completions += 1
                 return False
             self._errors[request.cache_identity] = error[:2048]
+            self._ack_range(request, False)
             return True
 
     def snapshot(self, source_frame: int | None = None) -> PreviewState:

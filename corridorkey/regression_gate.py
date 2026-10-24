@@ -7,6 +7,7 @@ import json
 import math
 import statistics
 from pathlib import Path
+from typing import Any
 
 from .benchmark_report import read_report
 from .control import CancelledError
@@ -162,7 +163,14 @@ def _policy(path, expected):
         raise ValueError('Policy bytes differ from the externally pinned SHA256')
     keys = {'schema_version', 'kind', 'context_sha256', 'repetitions', 'performance',
             'quality', 'required_evidence', 'visual_review_required', 'accepted_tradeoffs'}
-    if (set(policy) != keys or type(policy['schema_version']) is not int or policy['schema_version'] != 1
+    version = policy.get('schema_version')
+    if version in (2, 4) or version == 3 and 'numerical' in policy:
+        keys.add('numerical')
+    if version == 3 or version == 4 and 'resources' in policy:
+        keys.add('resources')
+    if version == 4:
+        keys.add('visual')
+    if (set(policy) != keys or type(version) is not int or version not in (1, 2, 3, 4)
             or policy['kind'] != 'regression_policy'):
         raise ValueError('Unsupported regression policy schema')
     if (not isinstance(policy['context_sha256'], str) or len(policy['context_sha256']) != 64
@@ -191,10 +199,60 @@ def _policy(path, expected):
             or not isinstance(policy['accepted_tradeoffs'], list) or len(policy['accepted_tradeoffs']) > 32
             or any(not isinstance(v, str) or not v.strip() or len(v) > 4096 for v in policy['accepted_tradeoffs'])):
         raise ValueError('Invalid explicit evidence/review/tradeoff contract')
+    if version == 3 or version == 4 and 'resources' in policy:
+        from .regression_resources import validate_policy
+        if 'observed_memory' not in policy['required_evidence']:
+            raise ValueError('Version3 requires explicit required observed_memory')
+        validate_policy(policy['resources'])
+    if version in (2, 4) or version == 3 and 'numerical' in policy:
+        from .project_collection import admit_file
+        admit_file(path)
+        from .regression_numerical import METRIC_UNITS, validate_budgets
+        numerical = policy['numerical']
+        if (not isinstance(numerical, dict) or set(numerical) != {'constraints', 'budgets'}
+                or 'numerical_parity' not in policy['required_evidence']):
+            raise ValueError('Version2 requires explicit numerical constraints/budgets and required numerical_parity')
+        validate_budgets(numerical['budgets'])
+        constraints = numerical['constraints']
+        if not isinstance(constraints, list) or not 1 <= len(constraints) <= 32:
+            raise ValueError('Numerical evidence requires1..32 constraints')
+        seen = set()
+        for c in constraints:
+            if (not isinstance(c, dict) or set(c) != {'job', 'metric', 'units', 'maximum'}
+                    or type(c['job']) is not int or c['job'] < 0 or c['metric'] not in METRIC_UNITS
+                    or c['units'] != METRIC_UNITS[c['metric']] or not _number(c['maximum']) or c['maximum'] < 0
+                    or (c['job'], c['metric']) in seen):
+                raise ValueError('Invalid numerical job/metric/units/absolute tolerance')
+            seen.add((c['job'], c['metric']))
+    if version == 4:
+        from .regression_visual import validate_policy
+        if policy['visual_review_required'] is not True:
+            raise ValueError('Version4 requires explicit visual_review_required=true')
+        if ('observed_memory' in policy['required_evidence']) != ('resources' in policy):
+            raise ValueError('Version4 observed_memory requires its independent resource contract')
+        validate_policy(policy['visual'])
     return policy, raw
 
 
-def evaluate(report_path, policy_path, policy_sha256, *, check=None):
+def capture_numerical(report_path, policy_path, policy_sha256, *, check=None):
+    from .regression_numerical import snapshot
+    policy, _ = _policy(policy_path, policy_sha256)
+    if 'numerical' not in policy:
+        raise ValueError('Numerical capture requires explicit predeclared numerical constraints')
+    evidence, _ = snapshot(report_path, policy['numerical']['budgets'], check=check)
+    if evidence['context_sha256'] != policy['context_sha256']:
+        raise ValueError('Numerical capture context differs from the predeclared workload')
+    evidence['policy_sha256'] = policy_sha256
+    if len(json.dumps(evidence, allow_nan=False).encode()) > 4 * 1024**2:
+        raise ValueError('Numerical evidence exceeds its4MiB metadata bound')
+    return evidence
+
+
+def numerical_protection(evidence):
+    return ([a['path'] for a in evidence.get('assets', [])], evidence.get('protected_directories', []))
+
+
+def evaluate(report_path, policy_path, policy_sha256, *, check=None, numerical_evidence_path=None, numerical_evidence_sha256=None, resource_evidence_path=None, resource_evidence_sha256=None, visual_evidence_path=None, visual_evidence_sha256=None):
     """Return immutable JSON evidence; invalid/absent evidence never becomes a pass."""
     result = {'schema_version': 1, 'kind': 'regression_gate', 'status': 'not_verified', 'checks': [],
               'predeclaration': 'NOT VERIFIED: pinned bytes do not prove chronological predeclaration.',
@@ -247,7 +305,65 @@ def evaluate(report_path, policy_path, policy_sha256, *, check=None):
                            raw_increases=deltas, max_increase=item['max_increase'], units=item['units'])
             except (ValueError, KeyError, TypeError, AttributeError) as exc:
                 row['reason'] = str(exc)
+        numerical_done = False
+        if 'numerical' in policy:
+            from .regression_numerical import evaluate as evaluate_numerical
+            from .regression_numerical import snapshot
+            row: dict[str, Any] = {'name': 'numerical_parity', 'status': 'not_verified',
+                   'scope': 'Selected alpha/native linear black-composite reference agreement, not invisible foreground pixel parity or visual acceptance.'}
+            checks.append(row)
+            if numerical_evidence_path is None or numerical_evidence_sha256 is None:
+                row['reason'] = 'Required numerical evidence receipt/path is missing'
+            else:
+                from .project_collection import admit_file, assert_pin
+                evidence_pin = admit_file(numerical_evidence_path)
+                supplied, evidence_raw = read_object(Path(numerical_evidence_path), max_bytes=4 * 1024**2, max_depth=64, regular_file=True)
+                if hashlib.sha256(evidence_raw).hexdigest() != numerical_evidence_sha256:
+                    raise ValueError('Numerical evidence byte receipt differs')
+                current, measured = snapshot(report_path, policy['numerical']['budgets'], check=check)
+                current['policy_sha256'] = policy_sha256
+                if supplied != current:
+                    raise ValueError('Numerical evidence/report/policy/export identities differ')
+                result['numerical_inputs'] = current
+                observations = evaluate_numerical(current, measured, policy['numerical']['constraints'], check=check)
+                final, _ = snapshot(report_path, policy['numerical']['budgets'], check=check)
+                final['policy_sha256'] = policy_sha256
+                if final != current:
+                    raise ValueError('Numerical inputs changed during evaluation')
+                assert_pin(evidence_pin)
+                row.update(status='fail' if any(r['status'] == 'fail' for r in observations) else 'pass', observations=observations,
+                           evidence_sha256=numerical_evidence_sha256)
+            numerical_done = True
+        resources_done = False
+        if policy['schema_version'] == 3 or policy['schema_version'] == 4 and 'resources' in policy:
+            resources_done = True
+            if resource_evidence_path is None or resource_evidence_sha256 is None:
+                checks.append({'name': 'observed_memory', 'status': 'not_verified', 'reason': 'Separate profiled resource receipt is required'})
+            else:
+                from .regression_resources import admit
+                row, paths, root = admit(resource_evidence_path, resource_evidence_sha256,
+                                         report_path, policy_path, policy_sha256, check=check)
+                checks.append(row)
+                result['resource_inputs'] = {'assets': paths, 'protected_directories': [root]}
+        visual_done = policy['schema_version'] == 4
+        if visual_done:
+            from .regression_visual import TRUST_SCOPE
+            if any(v is None for v in (visual_evidence_path, visual_evidence_sha256,
+                                       numerical_evidence_path, numerical_evidence_sha256)):
+                checks.append({'name': 'visual_review', 'status': 'not_verified',
+                               'requirement': policy['visual']['mode'], 'human_inspection_status': 'not_verified',
+                               'trust_scope': TRUST_SCOPE,
+                               'reason': 'Bound visual declaration and numerical receipts are required'})
+            else:
+                from .regression_visual import admit
+                row, inputs = admit(visual_evidence_path, visual_evidence_sha256, report_path, policy_path,
+                                    policy_sha256, numerical_evidence_path, numerical_evidence_sha256, check=check)
+                checks.append(row)
+                result['visual_inputs'] = inputs
         for name in policy['required_evidence'] + (['visual_review'] if policy['visual_review_required'] else []):
+            if ((name == 'numerical_parity' and numerical_done) or (name == 'observed_memory' and resources_done)
+                    or (name == 'visual_review' and visual_done)):
+                continue
             checks.append({'name': name, 'status': 'not_verified',
                            'reason': 'No supported independently bound evidence in this inference_pair schema'})
         statuses = {r['status'] for r in checks}
@@ -266,17 +382,114 @@ def main(argv=None):
     parser.add_argument('--policy', type=Path, required=True)
     parser.add_argument('--policy-sha256', required=True, help='Externally pinned exact policy byte digest; not chronology proof.')
     parser.add_argument('--output', type=Path, required=True)
+    captures = parser.add_mutually_exclusive_group()
+    captures.add_argument('--capture-numerical', action='store_true', help='Capture post-run bytes against the unchanged version2 policy.')
+    captures.add_argument('--capture-visual', action='store_true', help='Bind an existing reviewer-authored declaration; no human authentication.')
+    parser.add_argument('--visual-declaration', type=Path)
+    parser.add_argument('--visual-declaration-sha256')
+    parser.add_argument('--visual-evidence', type=Path)
+    parser.add_argument('--visual-evidence-sha256')
+    parser.add_argument('--numerical-evidence', type=Path)
+    parser.add_argument('--numerical-evidence-sha256')
+    parser.add_argument('--resource-evidence', type=Path)
+    parser.add_argument('--resource-evidence-sha256')
     args = parser.parse_args(argv)
+    if args.capture_visual and (any(v is None for v in (args.numerical_evidence, args.numerical_evidence_sha256,
+            args.visual_declaration, args.visual_declaration_sha256)) or args.visual_evidence is not None):
+        parser.error('Visual capture requires numerical receipt and existing declaration paths/SHAs; no visual receipt input')
+    if not args.capture_visual and (args.visual_declaration is not None or args.visual_declaration_sha256 is not None):
+        parser.error('Reviewer-authored declaration arguments apply only to --capture-visual')
     from .output_paths import prepare_report_destination
+    from .project_collection import real_path
 
-    guard = prepare_report_destination(args.output, (), protected_paths=(args.report, args.policy))
+    protected = [args.report, args.policy]
+    directories = []
+    if args.visual_declaration is not None:
+        protected.append(args.visual_declaration)
+    if args.visual_evidence is not None:
+        from .regression_visual import MAX_RECEIPT_BYTES
+        receipt, _ = read_object(args.visual_evidence, max_bytes=MAX_RECEIPT_BYTES, max_depth=64, regular_file=True)
+        paths, directories = numerical_protection(receipt)
+        protected.extend([args.visual_evidence, *paths])
+    if args.numerical_evidence is not None:
+        receipt, _ = read_object(args.numerical_evidence, max_bytes=4 * 1024**2, max_depth=64, regular_file=True)
+        paths, roots = numerical_protection(receipt)
+        directories.extend(roots)
+        protected.extend([args.numerical_evidence, *paths])
+    if args.resource_evidence is not None:
+        receipt, _ = read_object(args.resource_evidence, max_bytes=32 * 1024**2, max_depth=128, regular_file=True)
+        protected.extend([args.resource_evidence, *(a['path'] for a in receipt.get('inputs', [])), *(a['path'] for a in receipt.get('artifacts', []))])
+        if isinstance(receipt.get('attempt_root'), str):
+            directories.append(receipt['attempt_root'])
+    if args.capture_numerical or args.capture_visual or args.numerical_evidence is not None or args.resource_evidence is not None or args.visual_evidence is not None:
+        admitted, _ = read_report(args.report, regular_file=True)
+        for pair in admitted.get('pairs', []):
+            for sample in pair.get('samples', {}).values():
+                if args.resource_evidence is not None and isinstance(sample.get('weights'), dict):
+                    protected.extend(sample['weights'])
+                for run in sample.get('runs', []):
+                    for job in run.get('jobs', []):
+                        assets = job.get('asset_paths') or {}
+                        if args.resource_evidence is not None and isinstance(assets, dict) and isinstance(assets.get('cradio_dir'), str):
+                            directories.append(assets['cradio_dir'])
+                        if isinstance(job.get('input'), str):
+                            protected.append(job['input'])
+                        if isinstance(job.get('output_dir'), str):
+                            directories.append(job['output_dir'])
+        directories = list(set(directories))
+    initial_directories = list(directories)
+    guard = prepare_report_destination(args.output, (), protected_paths=protected, protected_directories=directories)
     guard()
-    result = evaluate(args.report, args.policy, args.policy_sha256)
+    if args.capture_numerical:
+        result = capture_numerical(args.report, args.policy, args.policy_sha256)
+        paths, directories = numerical_protection(result)
+    elif args.capture_visual:
+        from .regression_visual import capture
+        result = capture(args.report, args.policy, args.policy_sha256, args.numerical_evidence,
+                         args.numerical_evidence_sha256, args.visual_declaration, args.visual_declaration_sha256)
+        paths, directories = numerical_protection(result)
+    else:
+        result = evaluate(args.report, args.policy, args.policy_sha256,
+                          numerical_evidence_path=args.numerical_evidence,
+                          numerical_evidence_sha256=args.numerical_evidence_sha256,
+                          resource_evidence_path=args.resource_evidence, resource_evidence_sha256=args.resource_evidence_sha256,
+                          visual_evidence_path=args.visual_evidence, visual_evidence_sha256=args.visual_evidence_sha256)
+        paths, directories = numerical_protection(result.get('numerical_inputs', {}))
+    visual_paths, visual_directories = numerical_protection(result.get('visual_inputs', {}))
+    protected.extend(visual_paths)
+    initial_directories.extend(visual_directories)
+    resource_paths, resource_directories = numerical_protection(result.get('resource_inputs', {}))
+    protected.extend(resource_paths)
+    initial_directories.extend(resource_directories)
+    guard = prepare_report_destination(args.output, (), protected_paths=(*protected, *paths), protected_directories=(*initial_directories, *directories))
     guard()
+    if args.capture_numerical or args.capture_visual or args.numerical_evidence is not None or args.resource_evidence is not None or args.visual_evidence is not None:
+        real_path(args.output, missing=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
+    guard()
+    numerical_inputs = result if args.capture_numerical else result.get('numerical_inputs')
+    if numerical_inputs is not None:
+        from .regression_numerical import fence
+        fence(numerical_inputs)
+        guard()
+    visual_inputs = result if args.capture_visual else result.get('visual_inputs')
+    if visual_inputs is not None:
+        from .regression_numerical import fence
+        fence(visual_inputs)
+        guard()
+    if result.get('resource_inputs') is not None:
+        from .regression_numerical import fence
+        fence(result['resource_inputs'])
+        guard()
     with args.output.open('x', encoding='utf-8') as stream:
         json.dump(result, stream, indent=2, allow_nan=False)
         stream.write('\n')
+    if args.capture_numerical:
+        print(f'Numerical evidence captured: {args.output}')
+        return 0
+    if args.capture_visual:
+        print(f'Local visual declaration evidence captured: {args.output}; not authenticated approval')
+        return 0
     print(f"Regression screen {result['status']}; report: {args.output}")
     return 130 if result['status'] == 'cancelled' else 0 if result['status'] == 'pass' else 1
 

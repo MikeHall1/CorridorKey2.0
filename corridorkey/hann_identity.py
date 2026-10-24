@@ -6,7 +6,7 @@ import json
 import re
 from dataclasses import dataclass
 
-from .recovery_identity import ReplayIdentity, canonical
+from .recovery_identity import ReplayIdentity, UpstreamFinishingContext, canonical
 
 
 def _sha(value):
@@ -68,8 +68,10 @@ class HannWindowIdentity:
         return json.loads(self.payload)
 
 
-def hann_window_identity(parent: ReplayIdentity, *, schedule_sha256, incoming_replay_sha256,
+def hann_window_identity(parent: ReplayIdentity | UpstreamFinishingContext, *, schedule_sha256, incoming_replay_sha256,
                          index, start, stop, next_start, segment, carry, d_16, inputs):
+    if not isinstance(parent, (ReplayIdentity, UpstreamFinishingContext)):
+        raise TypeError('Parent must be an explicit replay or upstream finishing context instance')
     return HannWindowIdentity(canonical({
         'schema_version': 1, 'kind': 'hann_stage1_event', 'parent_key': parent.key,
         'schedule_sha256': schedule_sha256, 'incoming_replay_sha256': incoming_replay_sha256,

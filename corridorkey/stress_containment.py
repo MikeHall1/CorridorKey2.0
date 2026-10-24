@@ -50,6 +50,17 @@ class StressContainment:
                 # Unknown is still owned/uncertain, never silently retired.
                 self._fail(f'Pinned identity retirement unverified: {type(exc).__name__}: {exc}')
 
+    def _confirm_terminal_exit(self):
+        # Native PID absence can precede Popen's waitpid confirmation. Retry only
+        # this typed terminal race, not discovery errors or identity reuse. An
+        # attempt bound also terminates under a frozen/injected monotonic clock.
+        for attempt in range(10):
+            if self.root_exited():
+                return True
+            if attempt < 9:
+                time.sleep(.01)
+        return False
+
     def sample(self, *, force=False):
         if self.root_exited():
             if self.samples == 0:
@@ -80,7 +91,7 @@ class StressContainment:
             if data['status'] == 'available':
                 self.complete_samples += 1
             elif (data.get('reason_code') == 'root_exited' and self.complete_samples > 0
-                  and self.root_exited()):
+                  and self._confirm_terminal_exit()):
                 # The Popen owner confirms normal disappearance after an earlier
                 # complete discovery. RSS stays unavailable; existing/new pins
                 # above still undergo termination and final group/exit checks.

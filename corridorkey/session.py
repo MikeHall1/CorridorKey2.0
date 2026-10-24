@@ -102,6 +102,7 @@ class InferenceSession:
         self.weights = str(weights) if weights is not None else None
         self._loader = loader or self._load
         self._runner = runner or self._run
+        self._custom_runner = runner is not None
         self._disposer = disposer or self._dispose
         self._model = None
         self._asset_paths = None
@@ -132,7 +133,7 @@ class InferenceSession:
         from .runtime import run_inference
         return run_inference(model, job.input_path, job.output_dir, config, writer,
                              initial_hint_path=job.initial_hint_path, hint_video_path=job.hint_video_path,
-                             diagnostics=diagnostics)
+                             diagnostics=diagnostics, preview_frame=diagnostics.preview_frame)
 
     @staticmethod
     def _dispose(model):
@@ -145,7 +146,7 @@ class InferenceSession:
             model, self._model = self._model, None
             self._disposer(model)
 
-    def run(self, job: JobRequest, *, cancellation=None, progress=None,
+    def run(self, job: JobRequest, *, cancellation=None, progress=None, preview_frame: int | None = None,
             durable_foundations: DurableFeatureFrames | None = None,
             durable_rvm: DurableRvmChunks | None = None,
             durable_hann: DurableHannWindows | None = None,
@@ -157,6 +158,7 @@ class InferenceSession:
         started = time.perf_counter()
         diagnostics = RunDiagnostics(profile_stages=job.profile_stages)
         diagnostics.control = JobControl(cancellation, progress)
+        diagnostics.preview_frame = preview_frame
         diagnostics.durable_foundations = durable_foundations
         diagnostics.durable_rvm = durable_rvm
         diagnostics.durable_hann = durable_hann
@@ -179,6 +181,15 @@ class InferenceSession:
                 raise RuntimeError("session is closed")
             diagnostics.control.checkpoint("validate", 0, 1)
             config, writer = job.configurations()
+            if preview_frame is not None:
+                if type(preview_frame) is not int or preview_frame < 0:
+                    raise ValueError('Selected preview frame must be an absolute nonnegative integer')
+                if self._custom_runner:
+                    raise ValueError('Selected previews require the shared runtime; custom runners have no capture contract')
+                if (config.output_format != 'exr' or config.quick_key or not Path(job.input_path).is_dir()
+                        or any(store is not None for store in (durable_foundations, durable_rvm, durable_hann,
+                                                              durable_stage2, durable_writer_prefix))):
+                    raise ValueError('Selected previews require a full-rate EXR sequence job without durable recovery stores')
             if durable_writer_prefix is not None and config.output_format != 'exr':
                 raise ValueError('durable writer-prefix recovery requires EXR output')
             record["requested_settings"] = json_value(config)
@@ -264,8 +275,20 @@ class InferenceSession:
                     guard.check(force=True)
             finally:
                 record["processing_seconds"] = time.perf_counter() - processing_started
-            record["status"] = "complete"
-            if diagnostics.frames_submitted:
+            if preview_frame is not None:
+                outcome = diagnostics.preview_selection
+                source = diagnostics.source
+                if (not isinstance(outcome, dict) or not isinstance(source, dict)
+                        or outcome.get('source_frame') != preview_frame
+                        or outcome.get('relative_frame') != preview_frame - source['start_frame']
+                        or outcome.get('context_frames_processed') != source['num_frames']
+                        or outcome.get('full_context_processed') is not True
+                        or outcome.get('captured_frames') != 1 or diagnostics.frames_submitted != 1):
+                    raise RuntimeError('Selected preview did not complete its exact full-context capture')
+                record["status"] = "preview_complete"
+            else:
+                record["status"] = "complete"
+            if diagnostics.frames_submitted and preview_frame is None:
                 record["end_to_end_fps"] = diagnostics.frames_submitted / record["processing_seconds"]
         except BaseException as exc:
             record["status"] = "cancelled" if isinstance(exc, (KeyboardInterrupt, CancelledError)) else "failed"

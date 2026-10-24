@@ -1,5 +1,7 @@
 # Continuous code health — milestone 9
 
+Current checkpoint32:481-source compile/import/dependency/static gate passes with0new fingerprints versus actual checkpoint31 and legacy.510 Ruff/678 Pyright errors+17 warnings remain;1 existing import-order finding resolved, not a clean-static or performance claim. Exact raw reports: `benchmark-results/product-next/batch23-health/`, summary `batch23-summary.json`.
+
 The current audit and [product extension](product-improvements-brief.md) use the task and issue ledgers; the milestone review notes below are historical evidence. Read the current ledgers and checkpoint at each resume. Keep pre-existing static findings distinct from runtime defects and new regressions; CPU checks do not establish GPU, quality or Resolve acceptance.
 
 ## Reproducible local environment
@@ -21,7 +23,7 @@ No owned checker configuration existed. Ruff default settings and Pyright with P
 
 The original Pyright `is_dataclass/asdict` error was actually reproduced and fixed. Serializer tests plus new code-health/alpha-evaluation modules pass focused Ruff/Pyright. The full repository remains **not static-clean**. Complete findings remain in ignored raw reports; `.ralph/static-baseline.json` records message/path/rule/severity fingerprints and occurrence counts from the pre-change baseline. Line movement alone does not hide/add findings; duplicate occurrences and severity changes count. The baseline is never refreshed automatically.
 
-`scripts/code_health.py` checks every nonignored Python source discovered by rg, AST syntax, selected runtime imports, requirements/VCS origins, installed dependency consistency and both full-repository checkers. It writes raw diagnostics and `health.json` separately. A successful result means available prerequisites, valid syntax/imports/dependencies and **no new static findings**, while `static_clean` explicitly remains false for the known backlog. Missing tools are **NOT VERIFIED** and fail the comparison. Interpreter/tool versions must match the recorded baseline; an environment change requires deliberate investigation. Reports with known findings are not described as a clean lint/type pass. Ralph verification now invokes this gate alongside tests, compilation and whitespace checks.
+`scripts/code_health.py` checks every existing Git-tracked or nonignored untracked Python source (including hidden paths), discovered with null-delimited `git ls-files`; no ripgrep installation is required, AST syntax, selected runtime imports, requirements/VCS origins, installed dependency consistency and both full-repository checkers. It writes raw diagnostics and `health.json` separately. A successful result means available prerequisites, valid syntax/imports/dependencies and **no new static findings**, while `static_clean` explicitly remains false for the known backlog. Missing tools are **NOT VERIFIED** and fail the comparison. Interpreter/tool versions must match the recorded baseline; an environment change requires deliberate investigation. Reports with known findings are not described as a clean lint/type pass. Ralph verification now invokes this gate alongside tests, compilation and whitespace checks.
 
 Initial post-fix comparison: **523 Ruff findings, 826 Pyright errors/17 warnings, zero new findings**. The current final scope includes new code/tests; see `.ralph/runs/manual-check/code-health/health.json` for exact final counts. Persistent classifications and root-cause evidence are in `.ralph/issues.json`. The broader backlog remains HEALTH-STATIC-005 and needs individual triage; no mass formatting/refactor was performed. Documented false positives include F821 closures invoked before later cell deletion and B023 factories invoked synchronously before advancing the loop; they remain visible without ignore directives.
 
@@ -225,3 +227,8 @@ Final427-source-file regression gate PASS: syntax/imports/dependency consistency
 
 
 Product performance batch1:433-file complete gate PASS with0new Counter fingerprints vs legacy and actual accepted audit (511 Ruff,684 Pyright errors17warnings remain).1597tests PASS135.731s/no skips. No checker/baseline/environment changes. Evidence `benchmark-results/product-next/batch1-summary.json`.
+
+
+## Hosted CPU runner prerequisites and failure evidence
+
+The CPU workflow installs Linux `libegl1` and `libopengl0` before the offscreen Qt import check. Python desktop wheels alone did not supply `libEGL.so.1` on the observed Ubuntu runner. Windows does not run this Linux setup. The unchanged test inventory runs with unittest `--failfast`, so the first failing platform test emits its full traceback before the job deadline; a stopped/failed run is not a full-suite pass. No checkers or cleanup guards are disabled, no baseline is refreshed, and the 30-minute job limit is unchanged. Hosted acceptance requires a successful exact-commit run; local Mac tests do not substitute for Windows evidence.

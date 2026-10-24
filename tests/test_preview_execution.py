@@ -58,11 +58,11 @@ class PreviewExecutionTests(unittest.TestCase):
         self.assertEqual(json.loads(recipe.source.requested_settings_json), asdict(self.job))
         self.assertEqual(recipe.context.source_identity, recipe.source.source_identity)
         self.assertEqual([stage.name for stage in recipe.stages], ['draft', 'final'])
-        self.assertTrue(json.loads(recipe.source.provenance_json)['restarted_temporal_context'])
-        self.assertIn('not equivalence', recipe.summary()['warning'])
+        self.assertFalse(json.loads(recipe.source.provenance_json)['restarted_temporal_context'])
+        self.assertIn('full-timeline inference', recipe.summary()['warning'])
         self.assertIn('NOT VERIFIED', json.loads(recipe.source.provenance_json)['model_compatibility'])
 
-    def test_actual_png_single_frame_draft_final_preserves_other_settings_and_original(self):
+    def test_actual_png_full_context_draft_final_preserves_other_settings_and_original(self):
         recipe = self.recipe(draft_scale=.5)
         with patch('cv2.imread', side_effect=AssertionError('decode')), patch('cv2.imdecode', side_effect=AssertionError('decode')):
             draft = recipe.job_for(2, recipe.stages[0])
@@ -76,12 +76,12 @@ class PreviewExecutionTests(unittest.TestCase):
         for prepared, scale in ((draft, .5), (final, 1.0), (again, 1.0)):
             config, actual_writer = prepared.job.configurations()
             self.assertEqual(actual_writer, writer)
-            expected = replace(original, model_scale=scale, start_frame=2, num_frames=1, output_format='exr',
+            expected = replace(original, model_scale=scale, output_format='exr',
                                temp_dir=prepared.workspace.root / 'scratch')
             self.assertEqual(config, expected)
             self.assertEqual(Path(prepared.job.output_dir), prepared.workspace.root / 'exports')
             self.assertEqual(json.loads(prepared.requested_settings_json), asdict(self.job))
-            self.assertEqual(json.loads(prepared.provenance_json)['execution_range'], [2, 3])
+            self.assertEqual(json.loads(prepared.provenance_json)['execution_range'], [1, 3])
             prepared.workspace.cleanup()
             self.assertTrue(prepared.workspace.closed)
             self.assertFalse(prepared.workspace.root.exists())
@@ -111,11 +111,11 @@ class PreviewExecutionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'FPS'):
             prepare_preview(self.job, scratch_parent=self.scratch, declared_fps=24)
         config, _ = self.job.configurations()
-        for changed in (replace(config, quick_key=True), replace(config, corrections_path=self.root / 'mask.json')):
+        for changed in (replace(config, quick_key=True),):
             with self.assertRaisesRegex(ValueError, 'context'):
                 prepare_preview(JobRequest.create(self.source, self.root / 'out', changed), scratch_parent=self.scratch, declared_fps=25)
         for hint_field in ('initial_hint_path', 'hint_video_path'):
-            with self.assertRaisesRegex(ValueError, 'context'):
+            with self.assertRaises(FileNotFoundError):
                 prepare_preview(replace(self.job, **{hint_field: str(self.root / 'hint.png')}), scratch_parent=self.scratch, declared_fps=25)
         video = self.root / 'clip.mov'
         video.write_bytes(b'fixture')
@@ -137,8 +137,9 @@ class PreviewExecutionTests(unittest.TestCase):
                 prepare_preview(self.job, scratch_parent=parent, declared_fps=25)
 
     def test_frame_pixel_encoded_and_estimated_output_bounds_before_workspace(self):
-        for kwargs, message in (({'max_pixels': 100}, 'geometry'), ({'max_encoded_bytes': 8}, 'byte bound'),
-                                ({'max_cleanup_bytes': 1000}, 'EXR')):
+        with self.assertRaisesRegex(ValueError, 'encoded/read byte bounds'):
+            self.recipe(max_encoded_bytes=8)
+        for kwargs, message in (({'max_pixels': 100}, 'geometry'), ({'max_cleanup_bytes': 1000}, 'EXR')):
             recipe = self.recipe(**kwargs)
             with self.subTest(kwargs=kwargs), self.assertRaisesRegex(ValueError, message):
                 recipe.job_for(1, 'final')

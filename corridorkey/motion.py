@@ -1,7 +1,7 @@
 """CPU draft alpha propagation. Reliability is diagnostic, not confidence."""
-from dataclasses import dataclass
 import math
 import time
+from dataclasses import dataclass
 
 import cv2
 import numpy as np
@@ -34,6 +34,7 @@ class Propagation:
     reliability: np.ndarray
     uncertain: np.ndarray
     diagnostics: dict
+    disagreement_bytes: bytes | None = None
 
 
 def coverage(alpha, shape):
@@ -95,12 +96,14 @@ def warp_anchor(alpha, anchor_rgb, target_rgb, backward, forward, settings):
 
 
 def interpolate_alpha(left_rgb, right_rgb, target_rgb, left_alpha, right_alpha, fraction,
-                      *, settings=None, control=None, estimator=farneback):
+                      *, settings=None, control=None, estimator=farneback, capture_disagreement=False):
     """Bidirectional offline propagation toward the actual target source frame.
 
     Callers must keep all three frames in the same shot/reset segment. The
     uncertain mask requires an explicit fallback policy before exporting.
     """
+    if type(capture_disagreement) is not bool:
+        raise TypeError('Spatial disagreement capture requires an explicit boolean')
     settings = settings if settings is not None else MotionSettings()
     settings.validate()
     control = control if control is not None else JobControl()
@@ -139,7 +142,7 @@ def interpolate_alpha(left_rgb, right_rgb, target_rgb, left_alpha, right_alpha, 
         "motion_fraction": float(max(np.percentile(np.linalg.norm(left_backward, axis=-1), 95),
                                      np.percentile(np.linalg.norm(right_backward, axis=-1), 95)) / math.hypot(*shape)),
         "reliability_calibrated": False,
-    })
+    }, disagreement_bytes=disagreement.astype('<f4', copy=False).tobytes() if capture_disagreement else None)
 
 
 def conservative_approximation(propagation, nearest_alpha):

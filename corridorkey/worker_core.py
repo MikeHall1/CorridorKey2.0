@@ -58,7 +58,8 @@ class SharedEngine:
             if self.session is None:
                 self.session = InferenceSession(weights=self.weights, package_root=self.root, asset_root=self.asset_root)
             try:
-                return self.session.run(job_from_wire(payload['job']), cancellation=cancellation, progress=progress).to_dict()
+                return self.session.run(job_from_wire(payload['job']), cancellation=cancellation, progress=progress,
+                                        **({'preview_frame': payload['selected_frame']} if 'selected_frame' in payload else {})).to_dict()
             except BaseException:
                 if self.session.last_result is not None:
                     self.record = self.session.last_result.to_dict()
@@ -86,6 +87,8 @@ class SharedEngine:
             cancellation=cancellation, progress=progress, resume=payload['resume'],
             durable_foundations=payload['durable_foundations'], durable_rvm=payload['durable_rvm'],
             durable_hann=payload['durable_hann'], durable_stage2=payload['durable_stage2'],
+            reuse_upstream_finishing_edits=payload['reuse_upstream_finishing_edits'],
+            reuse_stage2_finishing_edits=payload['reuse_stage2_finishing_edits'],
             durable_writer_prefix=payload['durable_writer_prefix'])
         return {'status': report['status'], 'report_path': report['report_path'], 'journal': report['journal'],
                 'job_count': len(report['jobs']), 'session_scope': 'fresh_recovery_batch',

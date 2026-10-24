@@ -100,7 +100,7 @@ class ProgressiveDesktopTests(unittest.TestCase):
         self.assertEqual(json.loads(scheduler.stages[-1].effective_settings_json)['inference_settings']['model_scale'], 1.)
         self.assertEqual(set(result.artifact.payload), {128})
         artifact_metadata = json.loads(result.artifact.metadata_json)
-        self.assertIn('single frame', artifact_metadata['temporal_context'])
+        self.assertIn('full captured timeline', artifact_metadata['temporal_context'])
         self.assertIs(artifact_metadata['execution_observations']['neural_inference'], False)
         self.assertGreaterEqual(artifact_metadata['execution_observations']['fixture_loads'], 1)
         self.assertFalse(self.window.jobs)

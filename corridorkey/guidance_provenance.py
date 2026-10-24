@@ -196,7 +196,7 @@ def attach_guidance(document, entry_id, *, guidance_id, kind, resources, paramet
         raise ValueError('guidance requires one entry without an existing origin')
     binding = guidance_binding(data, entry_id, kind=kind, resources=resources, parameters=parameters,
                                decode=decode, observation=observation)
-    data['schema_version'] = 4
+    data['schema_version'] = max(4, data['schema_version'])
     data.setdefault('tracks', [])
     data.setdefault('guidance', []).append({
         'id': guidance_id, 'entry_id': entry_id, 'kind': kind, 'resources': resources,

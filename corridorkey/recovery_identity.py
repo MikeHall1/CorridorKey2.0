@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .diagnostics import json_value
-from .identities import file_sha256, source_identity
+from .identities import file_sha256, sequence_identity, source_identity
+from .scheduling import frame_path_key
 
 ASSETS = {'weights', 'foundation_stats', 'rvm_ckpt', 'moge_checkpoint', 'cradio_dir'}
 
@@ -68,6 +69,226 @@ class ReplayIdentity:
         return json.loads(self.payload)
 
 
+_PURE_REGION_FIELDS = frozenset({'kind', 'schema_version', 'document_schema_version', 'present', 'source', 'shots'})
+
+
+def _validate_pure_region_projection(data):
+    from .corrections import CorrectionDocument
+
+    projected = data['corrections']
+    if (not isinstance(projected, dict) or set(projected) != _PURE_REGION_FIELDS
+            or projected['kind'] != 'pure_render_region_schedule'
+            or type(projected['schema_version']) is not int or projected['schema_version'] != 1
+            or type(projected['document_schema_version']) is not int or projected['document_schema_version'] != 5
+            or projected['present'] is not True or 'corrections_path' in data['settings']):
+        raise ValueError('Invalid pure render-region dependency projection')
+    # Reuse strict source/shot validation without reading any mask assets.
+    CorrectionDocument.parse({'schema_version': 5, 'revision': 0, 'source': projected['source'],
+                              'shots': projected['shots'], 'entries': [], 'tracks': [], 'guidance': []})
+    if data['source'].get('sha256') != projected['source']['sha256']:
+        raise ValueError('Projected correction source differs from full source binding')
+
+
+def _is_render_region(entry):
+    return entry['kind'] == 'region' and (entry['purpose'], entry['target']) in (
+        ('composite', 'despill'), ('diagnostic', 'tracking_overlay'))
+
+
+def _validate_mixed_region_projection(data):
+    from .corrections import CorrectionDocument
+
+    projected = data['corrections']
+    if (not isinstance(projected, dict) or set(projected) != {'kind', 'schema_version', 'present', 'document'}
+            or projected['kind'] != 'mixed_finishing_dependencies'
+            or type(projected['schema_version']) is not int or projected['schema_version'] != 1
+            or projected['present'] is not True or 'corrections_path' in data['settings']):
+        raise ValueError('Invalid mixed finishing dependency projection')
+    document = CorrectionDocument.parse(projected['document']).to_dict()
+    if (document['schema_version'] != 5 or document['revision'] != 0 or not document['entries']
+            or document['tracks'] or any(_is_render_region(entry) for entry in document['entries'])
+            or data['source'].get('sha256') != document['source']['sha256']):
+        raise ValueError('Mixed finishing projection must retain exact nonfinal dependencies only')
+
+
+def _original_correction_document(data):
+    """Validate the complete original wrapper before any private projection."""
+    from .corrections import CorrectionDocument
+
+    wrapper = data.get('corrections')
+    if wrapper is None:
+        return None
+    path = data['settings'].get('corrections_path')
+    source = data.get('source')
+    if (not isinstance(source, dict) or not isinstance(wrapper, dict) or set(wrapper) != {'manifest_sha256', 'identity', 'document'}
+            or not isinstance(path, str) or not path
+            or any(not isinstance(wrapper[name], str) or re.fullmatch('[0-9a-f]{64}', wrapper[name]) is None
+                   for name in ('manifest_sha256', 'identity'))):
+        raise ValueError('Finishing reuse requires an original complete correction wrapper')
+    document = CorrectionDocument.parse(wrapper['document'])
+    if document.identity != wrapper['identity'] or source.get('sha256') != document.to_dict()['source']['sha256']:
+        raise ValueError('Correction wrapper identity/source differs from its document')
+    return document
+
+
+def _finishing_correction_version(data):
+    """Choose a private policy only after strict complete original-document validation."""
+    from .corrections import CorrectionDocument
+
+    document = _original_correction_document(data)
+    if document is None:
+        return 2
+    authored = document.to_dict()
+    if authored['schema_version'] != 5 or not authored['entries']:
+        return 2
+    retained = [entry for entry in authored['entries'] if not _is_render_region(entry)]
+    if not retained:
+        data['corrections'] = {'kind': 'pure_render_region_schedule', 'schema_version': 1,
+                               'document_schema_version': 5, 'present': True,
+                               'source': authored['source'], 'shots': authored['shots']}
+        version = 3
+    else:
+        # Accepted derived tracks are downstream-only; validate originals above,
+        # never rebind their entry_order/SHA against this private filtered document.
+        filtered = {**authored, 'revision': 0, 'entries': retained, 'tracks': []}
+        CorrectionDocument.parse(filtered)
+        data['corrections'] = {'kind': 'mixed_finishing_dependencies', 'schema_version': 1,
+                               'present': True, 'document': filtered}
+        version = 4
+    del data['settings']['corrections_path']
+    return version
+
+
+
+def _validate_hint_identity(record):
+    """Admit only existing file/ordered-sequence identity forms; do no I/O."""
+    if record is None:
+        return
+    if (not isinstance(record, dict) or set(record) not in ({'path', 'sha256'}, {'path', 'files', 'sha256'})
+            or not isinstance(record['path'], str) or not record['path']
+            or not isinstance(record['sha256'], str) or re.fullmatch('[0-9a-f]{64}', record['sha256']) is None):
+        raise ValueError('Stage2 reuse requires an original hint file/sequence identity')
+    if 'files' not in record:
+        return
+    rows = record['files']
+    if type(rows) is not list:
+        raise ValueError('Hint sequence requires ordered file identities')
+    names = []
+    for row in rows:
+        if (not isinstance(row, dict) or set(row) != {'name', 'sha256'}
+                or not isinstance(row['name'], str) or not row['name'] or row['name'] in ('.', '..')
+                or Path(row['name']).name != row['name']
+                or not isinstance(row['sha256'], str) or re.fullmatch('[0-9a-f]{64}', row['sha256']) is None):
+            raise ValueError('Invalid hint sequence file identity')
+        names.append(row['name'])
+    if (len(set(names)) != len(names) or names != sorted(names, key=lambda name: frame_path_key(Path(name)))
+            or sequence_identity(record['path'], rows)['sha256'] != record['sha256']):
+        raise ValueError('Hint sequence order or aggregate differs')
+
+
+
+def _validate_conditioning_projection(data, *, prefix):
+    if 'corrections_path' in data['settings']:
+        raise ValueError('Exact-input context cannot retain the private correction path')
+    for record, kind in ((data['corrections'], prefix + '_exact_call_corrections'),
+                         (data['hints']['first'], prefix + '_exact_call_hint'),
+                         (data['hints']['full'], prefix + '_exact_call_hint')):
+        if (not isinstance(record, dict) or set(record) != {'kind', 'schema_version'}
+                or type(record['schema_version']) is not int
+                or record != {'kind': kind, 'schema_version': 1}):
+            raise ValueError('Invalid closed exact-input dependency projection')
+
+
+def _project_conditioning_inputs(data, *, prefix):
+    document = _original_correction_document(data)
+    if document is None and data['settings'].get('corrections_path') is not None:
+        raise ValueError('Correction path requires an original correction document')
+    for name in ('first', 'full'):
+        _validate_hint_identity(data['hints'][name])
+    # Only raw exact-input child entries use this projection. Original full-job
+    # validation and current postprocessing remain mandatory at their boundaries.
+    data['corrections'] = {'kind': prefix + '_exact_call_corrections', 'schema_version': 1}
+    for name in ('first', 'full'):
+        data['hints'][name] = {'kind': prefix + '_exact_call_hint', 'schema_version': 1}
+    data['settings'].pop('corrections_path', None)
+
+_UPSTREAM_LEGACY_FINAL_SETTINGS = frozenset({'alpha_expand_radius', 'alpha_feather_radius'})
+_UPSTREAM_FINAL_SETTINGS = _UPSTREAM_LEGACY_FINAL_SETTINGS | frozenset({
+    'despill_strength', 'despill_screen', 'despill_space', 'despill_preserve_luma', 'despill_edges_only'})
+_UPSTREAM_CONTEXT_FIELDS = frozenset({'schema_version', 'kind', 'source', 'hints', 'corrections',
+    'settings', 'writer', 'profile_stages', 'assets', 'environment', 'implementation', 'scope', 'reuse_scope'})
+
+
+@dataclass(frozen=True)
+class UpstreamFinishingContext:
+    """Domain-separated IID/RVM/Hann dependencies minus versioned final-only controls."""
+    payload: str
+
+    def __post_init__(self):
+        data = json.loads(self.payload)
+        if (not isinstance(data, dict) or type(data.get('schema_version')) is not int
+                or data['schema_version'] not in (1, 2, 3, 4, 5) or data.get('kind') != 'upstream_finishing_context'
+                or not _UPSTREAM_CONTEXT_FIELDS <= data.keys()
+                or data.get('reuse_scope') != ('rvm_hann_exact_inputs' if data['schema_version'] == 5 else 'iid_rvm_hann_raw_inputs')
+                or any(not isinstance(data[name], dict) for name in
+                       ('source', 'hints', 'settings', 'writer', 'assets', 'environment', 'implementation'))
+                or not {'first', 'full'} <= data['hints'].keys()
+                or (data['corrections'] is not None and not isinstance(data['corrections'], dict))
+                or type(data['profile_stages']) is not bool or not isinstance(data['scope'], str)
+                or (_UPSTREAM_LEGACY_FINAL_SETTINGS if data['schema_version'] == 1 else _UPSTREAM_FINAL_SETTINGS).intersection(data['settings'])
+                or self.payload != canonical(data)):
+            raise ValueError('Invalid canonical upstream finishing context')
+        if data['schema_version'] == 3:
+            _validate_pure_region_projection(data)
+        elif data['schema_version'] == 4:
+            _validate_mixed_region_projection(data)
+        elif data['schema_version'] == 5:
+            _validate_conditioning_projection(data, prefix='temporal')
+        object.__setattr__(self, '_reuse_scope', data['reuse_scope'])
+
+    @property
+    def reuse_scope(self):
+        return self.__dict__['_reuse_scope']
+
+    @property
+    def key(self):
+        return hashlib.sha256(self.payload.encode()).hexdigest()
+
+    def to_dict(self):
+        return json.loads(self.payload)
+
+
+def upstream_finishing_context(parent: ReplayIdentity):
+    if not isinstance(parent, ReplayIdentity):
+        raise TypeError('Upstream finishing context requires a replay identity instance')
+    data = parent.to_dict()
+    settings = data.get('settings')
+    if not isinstance(settings, dict) or not _UPSTREAM_FINAL_SETTINGS <= settings.keys():
+        raise ValueError('Upstream finishing reuse requires all seven final coverage/composite settings')
+    data['schema_version'] = _finishing_correction_version(data)
+    data['kind'] = 'upstream_finishing_context'
+    data['reuse_scope'] = 'iid_rvm_hann_raw_inputs'
+    data['settings'] = {name: value for name, value in settings.items() if name not in _UPSTREAM_FINAL_SETTINGS}
+    return UpstreamFinishingContext(canonical(data))
+
+
+def temporal_finishing_context(parent: ReplayIdentity):
+    """RVM/Hann-only parent; every raw child still binds complete actual state."""
+    if not isinstance(parent, ReplayIdentity):
+        raise TypeError('Temporal context requires a replay identity instance')
+    data = parent.to_dict()
+    settings = data.get('settings')
+    if (not isinstance(settings, dict) or not _UPSTREAM_FINAL_SETTINGS <= settings.keys()
+            or not (_UPSTREAM_CONTEXT_FIELDS - {'reuse_scope'}) <= data.keys()
+            or not isinstance(data.get('hints'), dict) or not {'first', 'full'} <= data['hints'].keys()):
+        raise ValueError('Temporal reuse requires the complete original dependency inventory')
+    _project_conditioning_inputs(data, prefix='temporal')
+    data['schema_version'] = 5
+    data['kind'] = 'upstream_finishing_context'
+    data['reuse_scope'] = 'rvm_hann_exact_inputs'
+    data['settings'] = {name: value for name, value in settings.items() if name not in _UPSTREAM_FINAL_SETTINGS}
+    return UpstreamFinishingContext(canonical(data))
+
+
 @dataclass(frozen=True)
 class FeatureFrameIdentity:
     payload: str
@@ -104,7 +325,11 @@ class FeatureFrameIdentity:
         return json.loads(self.payload)
 
 
-def feature_identity(parent: ReplayIdentity, frame, proxy_sha256, input_shape, channels, grid_hw, input_dtype='torch.float32'):
+def feature_identity(parent: ReplayIdentity | UpstreamFinishingContext, frame, proxy_sha256, input_shape, channels, grid_hw, input_dtype='torch.float32'):
+    if not isinstance(parent, (ReplayIdentity, UpstreamFinishingContext)):
+        raise TypeError('IID parent must be an explicit replay or upstream finishing context instance')
+    if isinstance(parent, UpstreamFinishingContext) and parent.reuse_scope != 'iid_rvm_hann_raw_inputs':
+        raise ValueError('Temporal-only context cannot enter the IID cache')
     if not isinstance(channels, dict) or set(channels) - {'moge', 'cradio'}:
         raise ValueError('RVM/unknown stages cannot enter the IID cache')
     if any(type(value) is not int or value < 0 for value in channels.values()):

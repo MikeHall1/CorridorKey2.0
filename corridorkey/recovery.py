@@ -123,7 +123,7 @@ def _separate_workspace(root, jobs, assets, *, check=None):
 
 def run_recoverable(jobs, *, workspace, max_cache_bytes, assets, environment, implementation_root=ROOT,
                     weights=None, resume=False, durable_foundations=False, durable_rvm=False, durable_hann=False,
-                    durable_stage2=False, durable_writer_prefix=False,
+                    durable_stage2=False, durable_writer_prefix=False, reuse_stage2_finishing_edits=False, reuse_upstream_finishing_edits=False,
                     session_factory: Callable[..., InferenceSession] = InferenceSession, cancellation=None, progress=None):
     if not jobs:
         raise ValueError('recoverable batch requires jobs')
@@ -137,10 +137,20 @@ def run_recoverable(jobs, *, workspace, max_cache_bytes, assets, environment, im
         raise ValueError('durable_stage2 must be a boolean')
     if type(durable_writer_prefix) is not bool:
         raise ValueError('durable_writer_prefix must be a boolean')
+    if type(reuse_stage2_finishing_edits) is not bool:
+        raise ValueError('reuse_stage2_finishing_edits must be a boolean')
+    if reuse_stage2_finishing_edits and not durable_stage2:
+        raise ValueError('finishing-edit reuse requires durable_stage2')
+    if type(reuse_upstream_finishing_edits) is not bool:
+        raise ValueError('reuse_upstream_finishing_edits must be a boolean')
+    if reuse_upstream_finishing_edits and not (durable_foundations or durable_rvm or durable_hann):
+        raise ValueError('upstream finishing-edit reuse requires an explicit upstream durable cache')
     policy = {name: True for name, enabled in
               (('durable_foundations', durable_foundations), ('durable_rvm', durable_rvm),
                ('durable_hann', durable_hann), ('durable_stage2', durable_stage2),
-               ('durable_writer_prefix', durable_writer_prefix)) if enabled}
+               ('durable_writer_prefix', durable_writer_prefix),
+               ('reuse_stage2_finishing_edits', reuse_stage2_finishing_edits),
+               ('reuse_upstream_finishing_edits', reuse_upstream_finishing_edits)) if enabled}
     identity_environment = {**environment, 'recovery_policy': policy} if policy else environment
     control = JobControl(cancellation, progress)
     root = Path(workspace).resolve()
@@ -175,6 +185,8 @@ def run_recoverable(jobs, *, workspace, max_cache_bytes, assets, environment, im
                           'only on explicit resume; native writes cover the remaining suffix in fresh output.',
                   'durable_foundations_enabled': durable_foundations, 'durable_rvm_enabled': durable_rvm,
                   'durable_hann_enabled': durable_hann, 'durable_stage2_enabled': durable_stage2,
+                  'reuse_stage2_finishing_edits': reuse_stage2_finishing_edits,
+                  'reuse_upstream_finishing_edits': reuse_upstream_finishing_edits,
                   'durable_writer_prefix_enabled': durable_writer_prefix}
 
         def identify(job):
@@ -246,12 +258,21 @@ def run_recoverable(jobs, *, workspace, max_cache_bytes, assets, environment, im
                                          for item in manifest['files']]
                         else:
                             destination.mkdir(parents=True, exist_ok=False)
+                            from .recovery_identity import (
+                                temporal_finishing_context,
+                                upstream_finishing_context,
+                            )
+
+                            upstream_parent = (upstream_finishing_context(identity)
+                                               if reuse_upstream_finishing_edits and durable_foundations else identity)
+                            temporal_parent = (temporal_finishing_context(identity)
+                                               if reuse_upstream_finishing_edits and (durable_rvm or durable_hann) else identity)
                             frame_store = None
                             if durable_foundations:
                                 from .durable_foundations import DurableFeatureFrames
 
                                 frame_store = DurableFeatureFrames(
-                                    store, identity,
+                                    store, upstream_parent,
                                     validate_context=partial(_validate_cache_context, identify, job, identity),
                                     check=control.check)
                             rvm_store = None
@@ -259,7 +280,7 @@ def run_recoverable(jobs, *, workspace, max_cache_bytes, assets, environment, im
                                 from .durable_rvm import DurableRvmChunks
 
                                 rvm_store = DurableRvmChunks(
-                                    store, identity,
+                                    store, temporal_parent,
                                     validate_context=partial(_validate_cache_context, identify, job, identity),
                                     check=control.check)
                             hann_store = None
@@ -267,15 +288,17 @@ def run_recoverable(jobs, *, workspace, max_cache_bytes, assets, environment, im
                                 from .durable_hann import DurableHannWindows
 
                                 hann_store = DurableHannWindows(
-                                    store, identity,
+                                    store, temporal_parent,
                                     validate_context=partial(_validate_cache_context, identify, job, identity),
                                     check=control.check)
                             stage2_store = None
                             if durable_stage2:
                                 from .durable_stage2 import DurableStage2Batches
+                                from .stage2_identity import stage2_finishing_context
 
+                                stage2_parent = stage2_finishing_context(identity) if reuse_stage2_finishing_edits else identity
                                 stage2_store = DurableStage2Batches(
-                                    store, identity,
+                                    store, stage2_parent,
                                     validate_context=partial(_validate_cache_context, identify, job, identity),
                                     check=control.check)
                             writer_options: _WriterRunOptions = {}
@@ -418,6 +441,10 @@ def main(argv=None):
                      help='replay exact Stage1 window events to reconstruct Hann state; Stage2/writers restart')
     run.add_argument('--durable-stage2', action='store_true',
                      help='reuse verified exact Stage2 prediction batches; upstream state, rendering and writers restart')
+    run.add_argument('--reuse-upstream-finishing-edits', action='store_true',
+                     help='reuse enabled IID under conservative v2-v4; RVM/Hann use temporal-only v5 exact-input/state qualification across corrections and first/full hints; full current validation and fresh output required')
+    run.add_argument('--reuse-stage2-finishing-edits', action='store_true',
+                     help='with durable-stage2, reuse whole matching RGB/baton calls across final controls, corrections and first/full hint edits (private v5); complete current validation and fresh output still required')
     run.add_argument('--durable-writer-prefix', action='store_true',
                      help='seal checked EXR prefixes; copy only on explicit resume, with full chronology/render replay')
     status = subparsers.add_parser('status')
@@ -433,6 +460,10 @@ def main(argv=None):
         return 0
     if args.max_cache_bytes < 0:
         parser.error('max-cache-bytes must be nonnegative')
+    if args.reuse_stage2_finishing_edits and not args.durable_stage2:
+        parser.error('finishing-edit reuse requires --durable-stage2')
+    if args.reuse_upstream_finishing_edits and not (args.durable_foundations or args.durable_rvm or args.durable_hann):
+        parser.error('upstream finishing-edit reuse requires an upstream durable cache')
     jobs, weights = load_jobs(args.batch)
     if any(config.output_format != 'exr' or config.auto_vram for job in jobs for config, _ in (job.configurations(),)):
         parser.error('recovery requires EXR jobs with explicit scheduling (auto_vram=false)')
@@ -445,7 +476,9 @@ def main(argv=None):
                              assets=assets, environment=cuda_environment(), weights=weights, resume=args.resume,
                              durable_foundations=args.durable_foundations, durable_rvm=args.durable_rvm,
                              durable_hann=args.durable_hann, durable_stage2=args.durable_stage2,
-                             durable_writer_prefix=args.durable_writer_prefix)
+                             durable_writer_prefix=args.durable_writer_prefix,
+                             reuse_stage2_finishing_edits=args.reuse_stage2_finishing_edits,
+                             reuse_upstream_finishing_edits=args.reuse_upstream_finishing_edits)
     print(f"recoverable EXR batch: {report['status']}; report: {report['report_path']}")
     for job in report['jobs']:
         print(f"{job['mode']}: {job['output_dir']}")

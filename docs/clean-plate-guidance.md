@@ -61,3 +61,55 @@ python -m corridorkey.benchmark
 Tests use local generated images and toy models. Representative moving plates,
 shadows, hair, occlusion, exposure drift and actual pretrained GPU matting quality
 remain NOT VERIFIED. No footage, model or dependency was downloaded or installed.
+
+## Multiple source screen-colour samples
+
+The same assistance panel optionally builds an **explicitly synthetic** spatial
+screen reference without an empty plate. Enable source screen samples and enter
+one native `x,y` coordinate per line (up to32 unique points). Coordinates refer to
+the currently selected original source frame, not the thumbnail. Each colour is
+the channel-wise median of a clipped native square patch (radius1–31pixels,
+default3), after the existing explicit source transfer/primary interpretation.
+Signed and above-one working-linear BT.709/D65 values are not clipped. The RGB
+reference is inverse-square distance interpolated using bounded128-row tiles,
+not a stack proportional to samples × all pixels. This is an **uncalibrated
+colour heuristic**, not a measured subject boundary or learned foreground model.
+
+`Seed reach` (1–32768native pixels, default256) limits **foreground/background
+seed classes** to pixels near a sample; farther pixels remain unknown. It does
+not crop inference or guarantee unchanged output there: accepted trimaps retain
+existing full-frame unknown-class refinement. Screen-coloured foreground,
+contaminated sample patches, lighting changes and interpolation between different
+backgrounds may produce wrong guidance. Inspect rough guidance, spatial field,
+residual and the synthetic-reference thumbnail before accepting. Insufficient
+sample support or failed sample agreement remains unusable; no fallback plate,
+registration or exposure fit is invented. Actual-plate controls cannot be combined
+with synthetic mode; switch modes deliberately. Existing empty-plate behavior and
+defaults are unchanged.
+
+`Guidance strength` (0–1, default1) is passed to the existing final trimap
+correction operator, blending current alpha toward its target once. Zero persists
+an explicitly disabled entry, with no alpha effect. Later range/strength edits,
+undo/redo and save/reopen use the existing correction history. This creates no
+new pretrained input channels and does not automatically update queued jobs.
+
+Acceptance retains the exact generated FLOAT EXR reference as a hashed private
+workspace asset before attaching the generated trimap origin. Provenance uses
+the existing `clean_plate` producer contract but explicitly records the synthetic
+kernel, native coordinates, patch medians, radii, source/decode/frame binding,
+output hashes and limitations; it never claims an observed empty plate. Generated
+reference files join normal correction asset collection, output protection and
+recovery identity. Preview files remain disposable; accepted resources survive
+preview discard and undo/redo. Failed copies/checkpoints clean only files created
+by that attempt; locked cleanup has bounded ownership and blocks further growth.
+Original source images and real plates are never changed.
+
+Focused synthetic-fixture check (no GPU/weights needed):
+
+```sh
+python -W error -m unittest tests.test_screen_samples -v
+```
+
+Real video timing, plate/background-change detection from absent data, moving
+subjects, representative hair/transparency quality and pretrained GPU benefit
+remain **NOT VERIFIED**. No speed or memory-saving claim follows from this feature.

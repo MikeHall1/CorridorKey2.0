@@ -74,8 +74,12 @@ class InferenceConfig:
     despill_space: str = "legacy"
     despill_preserve_luma: bool = False
     despill_edges_only: bool = False
+    shot_profiles: dict | None = None
 
     def validate(self):
+        if self.shot_profiles is not None:
+            from .shot_profiles import ProfilePlan
+            ProfilePlan.parse(self.shot_profiles)
         for name, minimum in (("alpha_expand_radius", -32), ("alpha_feather_radius", 0)):
             if type(getattr(self, name)) is not int or not minimum <= getattr(self, name) <= 32:
                 raise ValueError(f"{name} must be an integer in [{minimum},32]")

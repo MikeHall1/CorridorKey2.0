@@ -57,6 +57,7 @@ from .desktop_readiness import ReadinessPanel
 from .desktop_recovery import RecoveryPanel
 from .desktop_resources import ResourcesPanel
 from .desktop_settings import SettingsPanel
+from .desktop_shot_profiles import ShotProfilesPanel
 from .desktop_state import (
     DESKTOP_MAX_PREVIEW_FRAME,
     load_project,
@@ -144,6 +145,12 @@ class DesktopWindow(QMainWindow):
         self.readiness.run_requested.connect(self.submit_readiness)
         self._build()
         self.progressive = ProgressivePreviewPanel(self)
+        self.shot_profiles = ShotProfilesPanel(self)
+        for field in (self.source, self.output, self.first_hint, self.full_hint):
+            field.textChanged.connect(self.shot_profiles.invalidate)
+        self.config.textChanged.connect(self.shot_profiles.invalidate)
+        self.writer.textChanged.connect(self.shot_profiles.invalidate)
+        self.profile.toggled.connect(self.shot_profiles.invalidate)
         self.source.textChanged.connect(self.playback.navigate)
         self.config.textChanged.connect(self.playback.navigate)
         for field in (self.source, self.output, self.first_hint, self.full_hint):
@@ -197,6 +204,7 @@ class DesktopWindow(QMainWindow):
         backend_bar.addWidget(self.backend, 1)
         self._button('Progressive preview…', lambda: self.progressive.show(), backend_bar)
         self._button('Calibrate performance…', self.open_calibration, backend_bar)
+        self._button('Shot profiles…', lambda: self.shot_profiles.show(), backend_bar)
         self._button('Resources…', self.resources.show, backend_bar)
         layout.addLayout(backend_bar)
         self.queue_label = QLabel('Queue: session only · choose Queue history to create/open durable storage')
@@ -285,6 +293,10 @@ class DesktopWindow(QMainWindow):
         self._button('Preview', self.request_preview, viewer_bar)
         self._button('Background…', self.choose_background, viewer_bar)
         self._button('Photo…', self.open_background, viewer_bar)
+        self.native_pixels = QCheckBox('Native pixels · still inspection')
+        self.native_pixels.setToolTip('View only: admitted image/sequence frames ≤16 Mi-pixels /256 MiB encoded each; no video or autoplay. No RAM cap.')
+        self.native_pixels.toggled.connect(self.change_native_pixels)
+        viewer_bar.addWidget(self.native_pixels)
         workspace.addLayout(viewer_bar)
         self.viewport_state = ViewportState(self)
         self.image = PreviewViewport(self.viewport_state, 'Open a video or frame directory, then select Preview.\nExport views use a selected completed queue job.')
@@ -304,8 +316,9 @@ class DesktopWindow(QMainWindow):
         self._button('Zoom in', lambda: self.viewport_state.zoom_by(1.25), comparison_bar)
         self._button('Zoom out', lambda: self.viewport_state.zoom_by(.8), comparison_bar)
         self._button('Fit A/B', self.viewport_state.fit, comparison_bar)
+        self._button('1:1 decoded pixels', lambda: self.viewport_state.set_transform(1.), comparison_bar)
         self.zoom_label = QLabel(self.viewport_state.label)
-        self.zoom_label.setToolTip('Matched A/B wheel zoom and left-drag pan. Scale refers to the decoded preview, capped at 1280 pixels; no native-pixel inspection claim.')
+        self.zoom_label.setToolTip('Matched A/B wheel zoom and left-drag pan. Default decoded preview is capped at1280; opt-in native image mode retains source pixels. 1:1 means one image pixel per logical Qt canvas pixel, not physical monitor calibration.')
         self.viewport_state.changed.connect(lambda: self.zoom_label.setText(self.viewport_state.label))
         comparison_bar.addWidget(self.zoom_label)
         workspace.addLayout(comparison_bar)
@@ -731,7 +744,7 @@ class DesktopWindow(QMainWindow):
                 self.frame.blockSignals(frame_blocked)
                 self.view.blockSignals(view_blocked)
             self.frame_label.setText('Source frame (zero-based)')
-            self.preview_serial = self.loader.submit(**options)
+            self.preview_serial = self.loader.submit(**{**options, 'native_pixels': self.native_pixels.isChecked()})
             self._diagnostic_preview_context = context
             self.preview_description = f'Diagnostic source · source frame {index} · {options["path"]}'
             self.pixmap = None
@@ -844,6 +857,23 @@ class DesktopWindow(QMainWindow):
                 self.ofx_cache.reject_selection(str(exc))
             self.error(exc)
 
+    def change_native_pixels(self, enabled: bool):
+        self.playback.navigate()
+        self.preview_serial = -1
+        self.pixmap = self.reference = None
+        self.displayed_preview_description = ''
+        self.image.setText('Inspection mode changed; decode the selected still frame again.')
+        self.reference_image.setText('A cleared: inspection mode changed')
+        self.reference_note.setText('Pinned display snapshots are cleared when native/thumbnail mode changes.')
+        self.viewport_state.native_pixels = enabled
+        if enabled:
+            self.viewport_state.set_transform(1.)
+        else:
+            self.viewport_state.fit()
+        self.playback.status.setText('Native image inspection: autoplay refused; select frames explicitly.' if enabled else 'Thumbnail mode; Play remains explicit.')
+        if self.source.text().strip() or self.view.currentText() != 'Source':
+            self.request_preview()
+
     def request_preview(self):
         self.playback.navigate()
         self._diagnostic_preview_context = None
@@ -851,7 +881,7 @@ class DesktopWindow(QMainWindow):
             if self.moving_reference is not None:
                 self.request_comparison()
                 return
-            options: dict[str, Any] = {'index': self.frame.value()}
+            options: dict[str, Any] = {'index': self.frame.value(), 'native_pixels': self.native_pixels.isChecked()}
             mode = self.view.currentText()
             if mode == 'Source':
                 job = self.job(preview_only=True)
@@ -943,6 +973,8 @@ class DesktopWindow(QMainWindow):
                     raise ValueError(f'Choose a common source frame in [{start}, {end}).')
                 b_options = b.options(mode, index, self.background, background_image=self.background_image)
             a_options = a.options(self.reference_mode, index, self.background, background_image=self.background_image)
+            a_options = {**a_options, 'native_pixels': self.native_pixels.isChecked()}
+            b_options = {**b_options, 'native_pixels': self.native_pixels.isChecked()}
             self.preview_serial = self.loader.submit(pair={'a': a_options, 'b': b_options})
             photo_a = f' · photo {self.background_image.identity[:16]}' if self.reference_mode == 'Photo composite' and self.background_image is not None else ''
             photo_b = f' · photo {self.background_image.identity[:16]}' if mode == 'Photo composite' and self.background_image is not None else ''
@@ -1466,6 +1498,7 @@ class DesktopWindow(QMainWindow):
         self.benchmark.status.setText('Benchmark cancellation requested; waiting for owned process cleanup.')
 
     def poll(self):
+        self.shot_profiles.poll()
         if self.ofx_capture is not None:
             self.ofx_capture.poll()
         if self.background_serial is not None and self.background_serial != self.loader.serial:
@@ -1586,6 +1619,10 @@ class DesktopWindow(QMainWindow):
                 self.reference_image.setText('Comparison unavailable')
         elif frame is not None:
             comparison_pair = isinstance(frame, PreviewPair)
+            members = (frame.a, frame.b) if comparison_pair else (frame,)
+            if any(member.native_pixels != self.native_pixels.isChecked() for member in members):
+                self.preview_note.setText('Stale inspection mode result refused; decode the frame again.')
+                return
             if isinstance(frame, PreviewPair):
                 pixels = frame.a.pixels
                 image = QImage(pixels.data, pixels.shape[1], pixels.shape[0], pixels.strides[0], QImage.Format.Format_RGB888).copy()
@@ -1618,6 +1655,7 @@ class DesktopWindow(QMainWindow):
         self.playback.pause()
         self.loader.stopping.set()
         progressive_done = self.progressive.shutdown()
+        shot_profiles_done = self.shot_profiles.shutdown()
         self.pending_calibration = None
         calibration_done = self.calibration is None or self.calibration.shutdown()
         capture_done = self.ofx_capture is None or self.ofx_capture.shutdown()
@@ -1636,7 +1674,7 @@ class DesktopWindow(QMainWindow):
         if portable_done and self.portable_project is not None:
             self.retain_portable_application(self.portable_project)
         editor_done = self.editor is None or self.editor.service.done.is_set()
-        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and calibration_done and capture_done and not self.loader.thread.is_alive():
+        if self.bridge.done.is_set() and not self.readiness.io_busy and not self.diagnostic_ranges.io_busy and not self.benchmark.busy and not self.benchmark.io_busy and not self.queue_panel.io_busy and not self.recovery.io_busy and not self.assets.io_busy and not self.resources.io_busy and not self.ofx_cache.io_busy and not self.cache_panel.io_busy and editor_done and portable_done and progressive_done and shot_profiles_done and calibration_done and capture_done and not self.loader.thread.is_alive():
             self.timer.stop()
             event.accept()
         else:

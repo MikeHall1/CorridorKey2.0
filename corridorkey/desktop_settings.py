@@ -33,6 +33,8 @@ ENGINE: dict[str, str | tuple[str, ...]] = {
     'frame_dir_alpha': ('ignore', 'premultiplied'),
     'cutout_alpha_mode': ('straight', 'premultiplied'), 'cutout_linear': 'bool',
     'despill_strength': 'float', 'despill_screen': ('green', 'blue'),
+    'despill_space': ('legacy', 'linear'), 'despill_preserve_luma': 'bool',
+    'despill_edges_only': 'bool',
     'alpha_expand_radius': 'int', 'alpha_feather_radius': 'int',
     'carry_hint': 'bool', 'hint_quality': 'float', 'carry_hint_quality': 'float',
     'auto_vram': 'bool', 'auto_vram_budget_mb': 'optional_int', 'low_vram': 'bool',
@@ -56,7 +58,10 @@ LABELS = {
     'source_witness': 'Record exact source for bound cache (linear RGB sequence, EXR only)',
     'frame_dir_alpha': 'Source alpha association', 'cutout_alpha_mode': 'Cutout alpha association',
     'cutout_linear': 'Linear cutout RGB', 'despill_strength': 'Despill strength [0,1]',
-    'despill_screen': 'Screen colour', 'carry_hint': 'Carry predicted hints',
+    'despill_screen': 'Screen colour', 'despill_space': 'Despill domain',
+    'despill_preserve_luma': 'Preserve linear luma (linear domain only)',
+    'despill_edges_only': 'Weight despill toward partial-alpha edges',
+    'carry_hint': 'Carry predicted hints',
     'alpha_expand_radius': 'Native alpha expand (+) / contract (-) radius [-32,32] (0: off)',
     'alpha_feather_radius': 'Native alpha feather radius [0,32] (0: off; before artist constraints)',
     'hint_quality': 'Hint trust [0,1]', 'carry_hint_quality': 'Carry trust [0,1]',
@@ -122,6 +127,10 @@ class SettingsPanel(QDialog):
                     form.addRow(scope)
                 if name == 'source_colour_profile':
                     scope = QLabel('legacy preserves existing assumed BT.709 interpretation. Explicit BT.709 D65 or BT.2020 D65 profiles require scene-linear image sequences; BT.2020 RGB is converted to the working/output BT.709 basis. Signed HDR RGB is preserved; coverage is unchanged. No automatic tag detection or full colour management. Model training primaries remain unverified. Explicit profiles do not support source witnesses. Apply affects future jobs only.')
+                    scope.setWordWrap(True)
+                    form.addRow(scope)
+                if name == 'despill_edges_only':
+                    scope = QLabel('Legacy retains historical output-dependent despill; EXR paths already use linear RGB. Linear selects linear processing for display outputs too. Preserve luma requires explicit linear domain and operates before export clipping. Edge weighting multiplies strength by 4×alpha×(1−alpha): zero at opaque/transparent endpoints, strongest at half coverage. It is not a spatial region, neural computation reduction or automatic colour management. Apply affects future jobs only.')
                     scope.setWordWrap(True)
                     form.addRow(scope)
                 if name == 'process_tree_rss_stop_bytes':

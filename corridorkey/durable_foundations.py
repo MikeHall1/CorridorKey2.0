@@ -8,13 +8,21 @@ import torch
 
 from .durable_context import BoundModelCache
 from .identities import file_sha256
-from .recovery_identity import feature_identity
+from .recovery_identity import (
+    ReplayIdentity,
+    UpstreamFinishingContext,
+    feature_identity,
+)
 from .recovery_store import CacheCapacity, CacheInvalid
 from .resources import close_mapping
 
 
 class DurableFeatureFrames(BoundModelCache):
     def __init__(self, store, parent_identity, *, validate_context, check=None):
+        if not isinstance(parent_identity, (ReplayIdentity, UpstreamFinishingContext)):
+            raise TypeError('Parent must be an explicit replay or upstream finishing context instance')
+        if isinstance(parent_identity, UpstreamFinishingContext) and parent_identity.reuse_scope != 'iid_rvm_hann_raw_inputs':
+            raise ValueError('Temporal-only context cannot enter the IID cache')
         super().__init__(store, parent_identity, validate_context=validate_context, check=check)
         self.hits = 0
         self.misses = 0
@@ -115,7 +123,7 @@ class DurableFeatureFrames(BoundModelCache):
         return True
 
     def snapshot(self):
-        return {'enabled': True, 'parent_key': self.parent.key, 'hits': self.hits, 'misses': self.misses,
+        return {'enabled': True, 'parent_key': self.parent.key, 'parent_kind': self.parent.to_dict()['kind'], 'hits': self.hits, 'misses': self.misses,
                 'corrupt_entries': self.corrupt, 'stored_frames': self.stored, 'budget_rejected_frames': self.budget_rejected,
                 'bytes_loaded': self.bytes_loaded, 'last_error': self.last_error, 'dtype': 'normalized float32',
                 'scope': 'IID C-RADIO/MoGe only; no RVM/baton/recurrent resume',

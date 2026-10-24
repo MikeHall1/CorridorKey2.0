@@ -149,6 +149,12 @@ class RecoveryPanel(QDialog):
         for control in (self.foundations, self.rvm, self.hann, self.stage2):
             flags.addWidget(control)
         layout.addLayout(flags)
+        self.finishing_edits = QCheckBox('Reuse Stage 2 across expansion / feather / despill edits')
+        self.finishing_edits.setToolTip('Requires durable Stage 2. Private v5 reuses only whole matching RGB/baton calls across final controls, correction and first/full hint edits. Changed inputs, grouping or execution recompute. Full current assets/source/recipe validation and fresh output remain mandatory. Upstream reuse has a separate conservative policy. Decode, chronology, constraints and writing still run; no GPU speed claim.')
+        layout.addWidget(self.finishing_edits)
+        self.upstream_finishing_edits = QCheckBox('Reuse enabled upstream caches across expansion / feather / despill edits')
+        self.upstream_finishing_edits.setToolTip('Requires an enabled IID/RVM/Hann cache. IID keeps conservative v2-v4 dependencies. RVM/Hann use temporal-only v5 for exact matching input/state events across corrections and first/full hint edits. Current constraints rebuild outgoing aux carry after raw Hann hits; changed next events recompute. Full current source/assets/recipe admission, fresh output and cancellation checks remain mandatory. Stage 2 has a separate opt-in. No GPU speed or producer-batch roundoff claim.')
+        layout.addWidget(self.upstream_finishing_edits)
         self.writer_prefix = QCheckBox('Durable EXR writer prefix')
         self.writer_prefix.setToolTip('Opt in to sealed, contiguous EXR frames across all requested outputs within the shared cache budget. Only explicit Verify / resume copies a verified prefix into a fresh destination. Original partial outputs remain untouched; inference/render chronology still runs. No video continuation or direct seeking.')
         layout.addWidget(self.writer_prefix)
@@ -215,11 +221,18 @@ class RecoveryPanel(QDialog):
                 raise ValueError('Wait for recovery I/O before submission.')
             if not self.batch.text().strip() or not self.workspace.text().strip():
                 raise ValueError('Choose a batch manifest and separate recovery workspace.')
+            if self.finishing_edits.isChecked() and not self.stage2.isChecked():
+                raise ValueError('Finishing-edit reuse requires Durable Stage 2 predictions.')
+            if self.upstream_finishing_edits.isChecked() and not any(control.isChecked() for control in
+                    (self.foundations, self.rvm, self.hann)):
+                raise ValueError('Upstream finishing-edit reuse requires an enabled IID/RVM/Hann cache.')
             payload = {'batch': str(Path(self.batch.text()).resolve()), 'workspace': str(Path(self.workspace.text()).resolve()),
                        'max_cache_bytes': int(self.budget.text()), 'resume': resume,
                        'durable_foundations': self.foundations.isChecked(), 'durable_rvm': self.rvm.isChecked(),
                        'durable_hann': self.hann.isChecked(), 'durable_stage2': self.stage2.isChecked(),
-                       'durable_writer_prefix': self.writer_prefix.isChecked()}
+                       'durable_writer_prefix': self.writer_prefix.isChecked(),
+                       'reuse_stage2_finishing_edits': self.finishing_edits.isChecked(),
+                       'reuse_upstream_finishing_edits': self.upstream_finishing_edits.isChecked()}
             self.run_requested.emit(payload)
         except (ValueError, OSError) as exc:
             self.status.setText(str(exc))
@@ -236,6 +249,8 @@ class RecoveryPanel(QDialog):
         self.hann.setChecked(payload.get('durable_hann', False))
         self.stage2.setChecked(payload.get('durable_stage2', False))
         self.writer_prefix.setChecked(payload.get('durable_writer_prefix', False))
+        self.finishing_edits.setChecked(payload.get('reuse_stage2_finishing_edits', False))
+        self.upstream_finishing_edits.setChecked(payload.get('reuse_upstream_finishing_edits', False))
         self.current_request = None
         self.report.clear()
         self.replay_summary.setText('No Stage 2 recovery report inspected.')

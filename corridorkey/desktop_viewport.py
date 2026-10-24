@@ -1,4 +1,4 @@
-"""Matched A/B viewing of bounded decoded previews; no native-pixel claim."""
+"""Matched A/B viewing of thumbnail or explicitly admitted native image pixels."""
 from __future__ import annotations
 
 import math
@@ -16,13 +16,16 @@ class ViewportState(QObject):
     def __init__(self, parent: QObject | None = None):
         super().__init__(parent)
         self.zoom = 1.0
+        self.native_pixels = False
         self.center = QPointF(.5, .5)
         self.fitting = True
         self._views: weakref.WeakSet[PreviewViewport] = weakref.WeakSet()
 
     @property
     def label(self) -> str:
-        return f'{self.zoom * 100:.1f}% of decoded preview' + (' · Fit' if self.fitting else '')
+        unit = 'native image pixels' if self.native_pixels else 'decoded preview'
+        exact = ' · 1:1 image/logical canvas pixels' if self.native_pixels and self.zoom == 1 else ''
+        return f'{self.zoom * 100:.1f}% of {unit}' + exact + (' · Fit' if self.fitting else '')
 
     def fit(self) -> None:
         self.fitting = True
@@ -61,8 +64,8 @@ class ViewportState(QObject):
 class PreviewViewport(QWidget):
     """QLabel-compatible image/text surface with shared wheel zoom and drag pan.
 
-    Mapping uses the decoded preview dimensions (normally capped at 1280), not
-    native source pixels. A/B share centre and scale even at different widget
+    Mapping uses decoded dimensions: a legacy thumbnail capped at 1280, or
+    explicitly admitted native image pixels. A/B share centre and scale even at different widget
     sizes; neither interaction modifies the pixmap or render settings.
     """
     def __init__(self, state: ViewportState, text: str = '', parent: QWidget | None = None):
@@ -112,7 +115,7 @@ class PreviewViewport(QWidget):
             painter.drawText(self.rect().adjusted(8, 8, -8, -8),
                              Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, self._text)
         else:
-            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, not self.state.native_pixels)
             painter.drawPixmap(self.image_rect(), self._pixmap, QRectF(self._pixmap.rect()))
         painter.setPen('#45515c')
         painter.drawRect(self.rect().adjusted(0, 0, -1, -1))

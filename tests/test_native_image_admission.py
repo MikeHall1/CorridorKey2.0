@@ -31,6 +31,25 @@ class NativeImageAdmissionTests(unittest.TestCase):
     def admit(self, path=None, **kwargs):
         return admit_image(path or self.path, expected_hw=(24, 32), max_pixels=1024, **kwargs)
 
+    def test_explicit_uhd_ceilings_do_not_change_existing_defaults(self):
+        from inspect import signature
+
+        from corridorkey.native_image_admission import (
+            HARD_MAX_ENCODED_BYTES,
+            HARD_MAX_PIXELS,
+            MAX_PIXELS,
+        )
+        self.assertEqual((MAX_PIXELS, MAX_ENCODED_BYTES), (4 * 1024**2, 64 * 1024**2))
+        self.assertEqual(signature(admit_image).parameters['max_bytes'].default, MAX_ENCODED_BYTES)
+        self.assertEqual((HARD_MAX_PIXELS, HARD_MAX_ENCODED_BYTES), (16 * 1024**2, 256 * 1024**2))
+        self.assertEqual(admit_image(self.path, expected_hw=(24, 32), max_pixels=HARD_MAX_PIXELS,
+                                   max_bytes=HARD_MAX_ENCODED_BYTES).shape, (24, 32))
+        for kwargs in ({'max_pixels': HARD_MAX_PIXELS + 1}, {'max_bytes': HARD_MAX_ENCODED_BYTES + 1},
+                       {'max_pixels': True}, {'max_bytes': True}, {'max_pixels': 16.}, {'max_bytes': float('nan')}):
+            with (self.subTest(kwargs=kwargs), patch('cv2.imdecode', side_effect=AssertionError('must not decode')),
+                  self.assertRaisesRegex(ValueError, 'hard cap')):
+                admit_image(self.path, expected_hw=None, **{'max_pixels': MAX_PIXELS, **kwargs})
+
     def test_padded_oversized_file_is_refused_before_any_decoder(self):
         with self.path.open('ab') as stream:
             stream.truncate(MAX_ENCODED_BYTES + 1)

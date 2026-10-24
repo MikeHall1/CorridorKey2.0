@@ -222,6 +222,28 @@ class DesktopTrackingOverlayTests(unittest.TestCase):
         self.assertIn('cancelled', self.dialog.status.text().lower())
         self.assertFalse(self.snapshot()['tracking_preview']['inspected'])
 
+    def test_existing_selector_displays_actual_two_anchor_disagreement(self):
+        mask = np.zeros((48, 64), np.uint8)
+        mask[10:30, 22:42] = 255
+        self.dialog.request('brush', mask=mask, kind='keep', frame=2, strength=.5, direction='both', span=[0, 3])
+        self.until(lambda: self.dialog.pending is None and len(self.dialog.entries) == 2)
+        self.dialog.tracking_anchors = [entry['id'] for entry in self.dialog.entries]
+        self.dialog.capture_tracking_diagnostics.setChecked(True)
+        self.dialog.start.setValue(0)
+        self.dialog.end.setValue(3)
+        self.dialog.direction.setCurrentText('both')
+        self.dialog.preview_tracking()
+        self.until(lambda: self.dialog.pending is None)
+        self.assertIn('disagreement', self.snapshot()['tracking_preview']['diagnostics']['kinds'])
+        index = self.dialog.tracking_diagnostic_kind.findData('disagreement')
+        self.assertGreaterEqual(index, 0)
+        self.dialog.tracking_diagnostic_kind.setCurrentIndex(index)
+        self.inspect(1)
+        self.assertEqual(self.dialog.displayed_role, 'diagnostic')
+        self.assertIn('Warped-anchor', self.dialog.tracking_diagnostic_kind.currentText())
+        self.assertIn('Warped-anchor coverage difference', self.dialog.frame_note.text())
+        self.assertFalse(self.snapshot()['tracking_preview']['inspected'])
+
 
 if __name__ == '__main__':
     unittest.main()

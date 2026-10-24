@@ -20,6 +20,9 @@ from pathlib import Path
 MAX_ENCODED_BYTES = 64 * 1024**2
 MAX_HEADER_BYTES = 1024**2
 MAX_PIXELS = 4 * 1024**2
+# Larger callers must opt in; existing workflow defaults remain unchanged.
+HARD_MAX_PIXELS = 16 * 1024**2
+HARD_MAX_ENCODED_BYTES = 256 * 1024**2
 MAX_EXTENT = 32768
 
 
@@ -167,7 +170,7 @@ def _jpeg(raw, check):
     raise ValueError('Missing/truncated/bounded JPEG frame and end marker.')
 
 
-def _exr(raw, check):
+def _exr(raw, check, max_pixels):
     if len(raw) < 8:
         raise ValueError('Truncated EXR version.')
     version = struct.unpack_from('<I', raw, 4)[0]
@@ -206,7 +209,7 @@ def _exr(raw, check):
     x0, y0, x1, y1 = struct.unpack('<iiii', window[1])
     if x0 or y0 or x1 < 0 or y1 < 0:
         raise ValueError('Only zero-origin EXR windows are admitted.')
-    if max(x1 + 1, y1 + 1) > MAX_EXTENT or (x1 + 1) * (y1 + 1) > MAX_PIXELS:
+    if max(x1 + 1, y1 + 1) > MAX_EXTENT or (x1 + 1) * (y1 + 1) > max_pixels:
         raise ValueError('EXR native pixel/extent bound exceeded.')
     channel_attr = attrs.get(b'channels')
     if channel_attr is None or channel_attr[0] != b'chlist':
@@ -258,9 +261,9 @@ def admit_image(path: str | os.PathLike, *, expected_hw: tuple[int, int] | None,
     """Capture one bounded regular file and admit its native header before decode."""
     check = check or (lambda: None)
     check()
-    if type(max_pixels) is not int or not 1 <= max_pixels <= MAX_PIXELS:
+    if type(max_pixels) is not int or not 1 <= max_pixels <= HARD_MAX_PIXELS:
         raise ValueError('Native pixel bound must be an integer within the hard cap.')
-    if type(max_bytes) is not int or not 1 <= max_bytes <= MAX_ENCODED_BYTES:
+    if type(max_bytes) is not int or not 1 <= max_bytes <= HARD_MAX_ENCODED_BYTES:
         raise ValueError('Encoded byte bound must be an integer within the hard cap.')
     if expected_hw is not None and (type(expected_hw) is not tuple or len(expected_hw) != 2 or any(type(v) is not int or v <= 0 for v in expected_hw) or expected_hw[0] * expected_hw[1] > max_pixels):
         raise ValueError('Expected native geometry is invalid or exceeds pixel bound.')
@@ -271,7 +274,7 @@ def admit_image(path: str | os.PathLike, *, expected_hw: tuple[int, int] | None,
     elif raw.startswith(b'\xff\xd8'):
         layout = _jpeg(raw, check)
     elif raw.startswith(struct.pack('<I', 20000630)):
-        layout = _exr(raw, check)
+        layout = _exr(raw, check, max_pixels)
     else:
         raise ValueError('Only admitted PNG/JPEG/scanline HALF/FLOAT EXR headers are supported.')
     hw, channels, depth, format_name = layout

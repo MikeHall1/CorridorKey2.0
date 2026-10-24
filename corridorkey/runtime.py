@@ -284,6 +284,13 @@ def _split_chunks(chunks, reset_frames):
         chunks.close()
 
 
+def _profile_rvm_rgb_upload(diagnostics: RunDiagnostics | None, display: object, device: torch.device) -> bool:
+    return (diagnostics is not None and diagnostics.profile_stages
+            and isinstance(display, torch.Tensor) and display.device.type == "cpu"
+            and device.type == "cuda" and device.index is not None
+            and diagnostics._matches_cuda_synchronizer(device.index) and torch.cuda.is_available())
+
+
 @torch.no_grad()
 @scoped_resources
 def precompute_rvm_to_memmap(model, source, meta, rvm_path: Path,
@@ -341,7 +348,12 @@ def precompute_rvm_to_memmap(model, source, meta, rvm_path: Path,
                 out[t0:t0 + Tc] = cached["features"].numpy()
                 del cached
             else:
-                rgb = display.unsqueeze(0).to(device, non_blocking=True).float()
+                if _profile_rvm_rgb_upload(diagnostics, display, device):
+                    assert diagnostics is not None
+                    with diagnostics.stage("rvm_rgb_upload_and_float"):
+                        rgb = display.unsqueeze(0).to(device, non_blocking=True).float()
+                else:
+                    rgb = display.unsqueeze(0).to(device, non_blocking=True).float()
                 rgb_rvm = F.interpolate(
                     rgb.reshape(Tc, 3, H, W), size=(H_e, W_e),
                     mode="bilinear", align_corners=False,
@@ -787,12 +799,48 @@ def _despill_average_srgb_torch(fg: torch.Tensor, strength: float = 0.5, *,
     return fg * (1.0 - strength) + full * strength
 
 
-def _despill_configured(fg, alpha, meta):
+def _despill_configured(fg, alpha, meta, *, composite_region=None):
+    strength = float(meta.get("despill_strength", 0.5))
     result = _despill_average_srgb_torch(
-        fg, float(meta.get("despill_strength", 0.5)), screen=meta.get("despill_screen", "green"),
+        fg, strength, screen=meta.get("despill_screen", "green"),
         preserve_luma=meta.get("despill_preserve_luma", False), alpha=alpha,
         edges_only=meta.get("despill_edges_only", False))
+    if composite_region is not None and strength > 0:
+        # Preserve both exact endpoints, including signed zero outside the region.
+        result = torch.where(composite_region == 0, fg, torch.where(composite_region == 1, result,
+                             fg * (1 - composite_region) + result * composite_region))
     return _require_finite(result, "despilled foreground")
+
+
+def _native_composite_region(region, reference):
+    if (tuple(region.shape) != tuple(reference.shape) or region.dtype != torch.float32
+            or region.device != reference.device):
+        raise ValueError('Composite region must be float32 native coverage matching batch, geometry and device.')
+    _require_finite(region, 'composite region')
+    if bool(((region < 0) | (region > 1)).any()):
+        raise ValueError('Composite region must contain coverage in [0,1].')
+    return region
+
+
+def _composite_region_batch(rasters, frames, meta, outputs, device):
+    if rasters is None or not outputs & {'cutout', 'checker'}:
+        return None
+    if float(meta.get('despill_strength', 0.5)) <= 0:
+        return None
+    shape = tuple(meta['output_hw'])
+    batch = None
+    for index, frame in enumerate(frames):
+        region = rasters.composite_region(frame)
+        if region is not None:
+            if (region.shape != shape or region.dtype != np.float32
+                    or not np.isfinite(region).all() or np.any((region < 0) | (region > 1))):
+                raise ValueError('Composite region must be finite float32 native coverage in [0,1].')
+            if batch is None:
+                batch = np.empty((len(frames), 1, *shape), dtype=np.float32)
+                batch[:index] = 1
+        if batch is not None:
+            batch[index, 0] = 1 if region is None else region
+    return None if batch is None else torch.from_numpy(batch).to(device=device)
 
 
 def _require_finite(value, label):
@@ -828,7 +876,7 @@ def _chw_to_bgra_f32_cpu(rgb: torch.Tensor, alpha: torch.Tensor) -> np.ndarray:
 
 def _render_predictions_exr_torch(meta: dict, outputs: set[str],
                                   checker: torch.Tensor | None,
-                                  logits: torch.Tensor, *, native_alpha=None) -> dict[str, np.ndarray]:
+                                  logits: torch.Tensor, *, native_alpha=None, composite_region=None) -> dict[str, np.ndarray]:
     """Render a stage-2 batch as unclamped scene-linear float32 NHWC arrays.
 
     HDR contract: `fg`, `cutout`, and `checker` color stays in decoded linear
@@ -852,6 +900,8 @@ def _render_predictions_exr_torch(meta: dict, outputs: set[str],
     if not (outputs & {"fg", "cutout", "checker"}):
         return rendered
 
+    if composite_region is not None and outputs & {'cutout', 'checker'}:
+        composite_region = _native_composite_region(composite_region, pa)
     fg_model = logits[:, 1:4].float()
     pf_model = _crop_native_torch(fg_model, meta)
     pf_linear = _linear_adjust_inverse_torch(cu.asinh_to_linear(pf_model), meta)
@@ -859,8 +909,9 @@ def _render_predictions_exr_torch(meta: dict, outputs: set[str],
     pf_linear = _resize_output_torch(pf_linear, meta)
     if "fg" in outputs:
         rendered["fg"] = _chw_to_bgr_f32_cpu(pf_linear)
+    pf_linear_despilled = None
     if "cutout" in outputs:
-        pf_linear_despilled = _despill_configured(pf_linear, pa, meta)
+        pf_linear_despilled = _despill_configured(pf_linear, pa, meta, composite_region=composite_region)
         cutout = pf_linear_despilled * pa if meta.get("cutout_alpha_mode") == "premultiplied" else pf_linear_despilled
         rendered["cutout"] = _chw_to_bgra_f32_cpu(cutout, pa)
     if "checker" in outputs:
@@ -868,15 +919,16 @@ def _render_predictions_exr_torch(meta: dict, outputs: set[str],
         checker_b = checker.to(device=pf_linear.device,
                                dtype=pf_linear.dtype).unsqueeze(0)
         bg_lin = cu.srgb_to_linear(checker_b)
-        pf_despill = _despill_configured(pf_linear, pa, meta)
-        comp_lin = pf_despill * pa + bg_lin * (1.0 - pa)
+        if pf_linear_despilled is None:
+            pf_linear_despilled = _despill_configured(pf_linear, pa, meta, composite_region=composite_region)
+        comp_lin = pf_linear_despilled * pa + bg_lin * (1.0 - pa)
         rendered["checker"] = _chw_to_bgr_f32_cpu(comp_lin)
     return rendered
 
 
 def _render_predictions_torch(meta: dict, outputs: set[str],
                               checker: torch.Tensor | None,
-                              logits: torch.Tensor, *, native_alpha=None) -> dict[str, np.ndarray]:
+                              logits: torch.Tensor, *, native_alpha=None, composite_region=None) -> dict[str, np.ndarray]:
     """Render a stage-2 batch on GPU, returning uint16 BGR/BGRA NHWC arrays.
 
     This removes the previous per-frame numpy HDR decode, sRGB encode,
@@ -896,6 +948,8 @@ def _render_predictions_torch(meta: dict, outputs: set[str],
     if not (outputs & {"fg", "cutout", "checker"}):
         return rendered
 
+    if composite_region is not None and outputs & {'cutout', 'checker'}:
+        composite_region = _native_composite_region(composite_region, pa)
     fg_model = logits[:, 1:4].float()
     pf_model = _crop_native_torch(fg_model, meta)
     pf_linear = _linear_adjust_inverse_torch(cu.asinh_to_linear(pf_model), meta)
@@ -906,24 +960,32 @@ def _render_predictions_torch(meta: dict, outputs: set[str],
     pf = _resize_output_torch(cu.linear_to_srgb(pf_linear_pos), meta).clamp(0.0, 1.0)
     if "fg" in outputs:
         rendered["fg"] = _srgb_to_bgr_uint16_cpu(pf)
+    pf_linear_despilled = pf_display_despilled = None
     if "cutout" in outputs:
-        pf_linear_despilled = _despill_configured(pf_linear_pos, pa, meta)
-        if meta.get("cutout_linear", False):
-            pf_linear_despilled_resized = _resize_output_torch(pf_linear_despilled, meta).clamp(0.0, 1.0)
-            rendered["cutout"] = _srgb_to_bgra_uint16_cpu(pf_linear_despilled_resized, pa)
-        elif meta.get("despill_space") == "linear":
-            pf_despill = cu.linear_to_srgb(pf_linear_despilled.clamp(min=0)).clamp(0, 1)
-            rendered["cutout"] = _srgb_to_bgra_uint16_cpu(pf_despill, pa)
+        if meta.get("cutout_linear", False) or meta.get("despill_space") == "linear":
+            pf_linear_despilled = _despill_configured(pf_linear_pos, pa, meta, composite_region=composite_region)
+            if meta.get("cutout_linear", False):
+                pf_linear_despilled_resized = _resize_output_torch(pf_linear_despilled, meta).clamp(0.0, 1.0)
+                rendered["cutout"] = _srgb_to_bgra_uint16_cpu(pf_linear_despilled_resized, pa)
+            else:
+                pf_despill = cu.linear_to_srgb(pf_linear_despilled.clamp(min=0)).clamp(0, 1)
+                rendered["cutout"] = _srgb_to_bgra_uint16_cpu(pf_despill, pa)
         else:
-            pf_despill = _despill_configured(pf, pa, meta)
-            rendered["cutout"] = _srgb_to_bgra_uint16_cpu(pf_despill, pa)
+            pf_display_despilled = _despill_configured(pf, pa, meta, composite_region=composite_region)
+            rendered["cutout"] = _srgb_to_bgra_uint16_cpu(pf_display_despilled, pa)
     if "checker" in outputs:
         assert checker is not None
         checker_b = checker.to(device=pf.device, dtype=pf.dtype).unsqueeze(0)
         bg_lin = cu.srgb_to_linear(checker_b)
         alpha = pa
-        foreground = (_despill_configured(pf_linear_pos, pa, meta) if meta.get("despill_space") == "linear"
-                      else cu.srgb_to_linear(_despill_configured(pf, pa, meta)))
+        if meta.get("despill_space") == "linear":
+            if pf_linear_despilled is None:
+                pf_linear_despilled = _despill_configured(pf_linear_pos, pa, meta, composite_region=composite_region)
+            foreground = pf_linear_despilled
+        else:
+            if pf_display_despilled is None:
+                pf_display_despilled = _despill_configured(pf, pa, meta, composite_region=composite_region)
+            foreground = cu.srgb_to_linear(pf_display_despilled)
         comp_despill_lin = foreground * alpha + bg_lin * (1.0 - alpha)
         comp_despill = cu.linear_to_srgb(
             comp_despill_lin.clamp(min=0.0)).clamp(0.0, 1.0)
@@ -931,12 +993,14 @@ def _render_predictions_torch(meta: dict, outputs: set[str],
     return rendered
 
 
-def _render_source_draft(frame, meta, outputs, checker, *, use_exr):
+def _render_source_draft(frame, meta, outputs, checker, *, use_exr, composite_region=None):
     """Shared colour/export helpers, with current source foreground and draft alpha."""
     linear = torch.from_numpy(frame.rgb.transpose(2, 0, 1).copy()).unsqueeze(0)
     alpha = torch.from_numpy(frame.alpha.copy()).unsqueeze(0).unsqueeze(0)
     _require_finite(linear, "draft source")
     _require_finite(alpha, "draft coverage")
+    if composite_region is not None and outputs & {'cutout', 'checker'}:
+        composite_region = _native_composite_region(composite_region, alpha)
     result = {}
     strength = float(meta.get("despill_strength", 0.5))
     if "alpha" in outputs:
@@ -946,7 +1010,7 @@ def _render_source_draft(frame, meta, outputs, checker, *, use_exr):
         if "fg" in outputs:
             result["fg"] = _chw_to_bgr_f32_cpu(linear)
         if "cutout" in outputs or "checker" in outputs:
-            despilled = _despill_configured(linear, alpha, meta)
+            despilled = _despill_configured(linear, alpha, meta, composite_region=composite_region)
             if "cutout" in outputs:
                 cutout = despilled * alpha if meta.get("cutout_alpha_mode") == "premultiplied" else despilled
                 result["cutout"] = _chw_to_bgra_f32_cpu(cutout, alpha)
@@ -957,31 +1021,75 @@ def _render_source_draft(frame, meta, outputs, checker, *, use_exr):
         display = cu.linear_to_srgb(linear.clamp(min=0)).clamp(0, 1)
         if "fg" in outputs:
             result["fg"] = _srgb_to_bgr_uint16_cpu(display)
+        despilled_linear = despilled_display = None
         if "cutout" in outputs:
             linear_operation = meta.get("cutout_linear") or meta.get("despill_space") == "linear"
-            rgb = _despill_configured(linear.clamp(min=0) if linear_operation else display, alpha, meta)
+            if linear_operation:
+                despilled_linear = _despill_configured(linear.clamp(min=0), alpha, meta, composite_region=composite_region)
+                rgb = despilled_linear
+            else:
+                despilled_display = _despill_configured(display, alpha, meta, composite_region=composite_region)
+                rgb = despilled_display
             if linear_operation and not meta.get("cutout_linear"):
                 rgb = cu.linear_to_srgb(rgb.clamp(min=0)).clamp(0, 1)
             result["cutout"] = _srgb_to_bgra_uint16_cpu(rgb, alpha)
         if "checker" in outputs:
-            foreground = (_despill_configured(linear.clamp(min=0), alpha, meta) if meta.get("despill_space") == "linear"
-                          else cu.srgb_to_linear(_despill_configured(display, alpha, meta)))
+            if meta.get("despill_space") == "linear":
+                if despilled_linear is None:
+                    despilled_linear = _despill_configured(linear.clamp(min=0), alpha, meta, composite_region=composite_region)
+                foreground = despilled_linear
+            else:
+                if despilled_display is None:
+                    despilled_display = _despill_configured(display, alpha, meta, composite_region=composite_region)
+                foreground = cu.srgb_to_linear(despilled_display)
             bg = cu.srgb_to_linear(checker.unsqueeze(0))
             result["checker"] = _srgb_to_bgr_uint16_cpu(cu.linear_to_srgb((foreground * alpha + bg * (1 - alpha)).clamp(min=0)))
     return result
 
 
+def _begin_resource_profile(diagnostics, device_index):
+    diagnostics._configure_cuda_synchronizer(partial(torch.cuda.synchronize, device_index), device_index)
+    torch.cuda.reset_peak_memory_stats(device_index)
+
+
+def _finish_resource_profile(device_index):
+    return {"peak_allocated_vram_bytes": torch.cuda.max_memory_allocated(device_index),
+            "peak_reserved_vram_bytes": torch.cuda.max_memory_reserved(device_index),
+            "gpu": torch.cuda.get_device_name(device_index), "cuda_version": torch.version.cuda,
+            "device_index": device_index, "reset_device_index": device_index,
+            "reset_scope": "reset before current processing, after model load; resident allocations/reservations remain included",
+            "scope": "processing after model load; process allocation peaks, not whole-device usage"}
+
+
 def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                   writer_cfg: WriterConfig, *, initial_hint_path: str | None,
-                  hint_video_path: str | None, diagnostics: RunDiagnostics | None = None):
+                  hint_video_path: str | None, diagnostics: RunDiagnostics | None = None,
+                  preview_frame: int | None = None):
     diagnostics = diagnostics if diagnostics is not None else RunDiagnostics()
     diagnostics.control.checkpoint("probe", 0, 1)
     cfg.validate()
     writer_cfg.validate()
+    if preview_frame is not None and (
+            type(preview_frame) is not int or preview_frame < 0 or cfg.output_format != 'exr'
+            or cfg.quick_key or not Path(input_path).is_dir()
+            or any(store is not None for store in (diagnostics.durable_foundations, diagnostics.durable_rvm,
+                diagnostics.durable_hann, diagnostics.durable_stage2, diagnostics.durable_writer_prefix))):
+        raise ValueError('Selected previews require an absolute frame and full-rate EXR sequence without durable recovery')
     # Automatic memory selection must not mutate a reusable caller's settings.
     cfg = replace(cfg, outputs=set(cfg.outputs), temp_dir=Path(cfg.temp_dir))
     input_path = str(input_path)
     output_dir = str(output_dir)
+    profile_plan = profile_job = None
+    if cfg.shot_profiles is not None and cfg.shot_profiles['enabled']:
+        from .session import JobRequest
+        from .shot_profiles import ProfilePlan, validate_live
+
+        profile_plan = ProfilePlan.parse(cfg.shot_profiles)
+        profile_job = JobRequest.create(input_path, output_dir, cfg, writer_cfg,
+            initial_hint_path=initial_hint_path, hint_video_path=hint_video_path,
+            profile_stages=diagnostics.profile_stages)
+        validate_live(profile_plan, profile_job, check=diagnostics.control.check)
+        diagnostics.warnings.append('Explicit shot profiles: Stage 2 caps and final coverage only; heuristic quality/resource fit and GPU batch parity unverified')
     if not os.path.exists(input_path):
         raise FileNotFoundError(input_path)
     if os.path.isdir(input_path):
@@ -1050,13 +1158,21 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
     T_all = int(meta["num_frames"])
     if T_all <= 0:
         raise ValueError("source contains no readable frames")
+    preview_relative = None if preview_frame is None else preview_frame - int(meta['start_frame'])
+    if preview_relative is not None and not 0 <= preview_relative < T_all:
+        raise ValueError('Selected preview frame lies outside the original source timeline')
+    context_frames_processed = 0
     witness = None
     if cfg.source_witness:
         from .source_witness import SourceWitness
 
         witness = SourceWitness(meta, diagnostics.control)
         meta['_source_witness'] = witness
+    if diagnostics.profile_stages:
+        meta['_host_observer'] = diagnostics
     H, W = meta["shape_hw"]
+    if profile_plan is not None and profile_plan.to_dict()['source_range'] != [meta['start_frame'], meta['start_frame'] + T_all]:
+        raise ValueError('Shot profile selection differs from the actual decoded timeline')
     correction_document = diagnostics.correction_document
     correction_rasters = None
     correction_segments = None
@@ -1087,6 +1203,8 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
         if cfg.low_vram and cfg.foundation_cache_mb:
             diagnostics.warnings.append("automatic selection chose low_vram: existing disk foundation prepass replaces optional RAM overlap cache")
             cfg.foundation_cache_mb = 0
+    if profile_plan is not None and any(row['stage2_batch'] > cfg.stage2_batch for row in profile_plan.to_dict()['rows']):
+        raise ValueError('Shot profile cap exceeds the effective global Stage 2 batch size')
     if cfg.low_vram:
         diagnostics.foundation_cache = {"mode": "low_vram_disk_prepass", "ram_budget_bytes": 0,
                                         "foundation_frames_evaluated": None, "hit_rate": None}
@@ -1156,12 +1274,17 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                 despill_preserve_luma=cfg.despill_preserve_luma, despill_edges_only=cfg.despill_edges_only)
     refine_active = cfg.alpha_refine_radius > 0 and cfg.alpha_refine_strength > 0
     finish_active = cfg.alpha_expand_radius != 0 or cfg.alpha_feather_radius > 0
+    if profile_plan is not None:
+        finish_active = finish_active or any(row['enabled'] and (row['alpha_expand_radius'] or row['alpha_feather_radius'])
+            for row in profile_plan.to_dict()['rows'])
     edge_finishing: dict[str, Any] = {
         'active': finish_active, 'expand_radius': cfg.alpha_expand_radius,
         'feather_radius': cfg.alpha_feather_radius, 'units': 'native output pixels',
         'order': 'spatial refinement, expansion/contraction, feather, trimap/authored constraints, render/despill/association',
         'scope': 'final output only; never propagation anchors or carried hints',
         'frames_evaluated': 0, 'frames_changed': 0, 'seconds': 0.0}
+    if profile_plan is not None:
+        edge_finishing['shot_profiles'] = profile_plan.to_dict()
     diagnostics.alpha_refinement = {"active": refine_active, "radius": cfg.alpha_refine_radius,
                                     "strength": cfg.alpha_refine_strength, "sigma": cfg.alpha_refine_sigma,
                                     "frames_evaluated": 0, "frames_changed": 0, "seconds": 0.0,
@@ -1189,14 +1312,14 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
     }
     if quick_plan is not None:
         diagnostics.execution["temporal_strategy"] = "sparse_native_context_with_full_rate_reset_aware_rvm"
+    device_index = None
     if torch.cuda.is_available():
         device_index = torch.cuda.current_device()
         props = torch.cuda.get_device_properties(device_index)
         diagnostics.execution.update({"gpu": props.name, "device_index": device_index,
                                       "vram_bytes": props.total_memory, "cuda_version": torch.version.cuda})
-    if diagnostics.profile_stages:
-        diagnostics.synchronize = torch.cuda.synchronize
-        torch.cuda.reset_peak_memory_stats()
+    if diagnostics.profile_stages and device_index is not None:
+        _begin_resource_profile(diagnostics, device_index)
     clip_name = raw_clip_name(input_path)
     # Foreground/alpha-only jobs never use a checker image.
     checker_t = torch.from_numpy(make_checker(H_out, W_out)) if "checker" in cfg.outputs else None
@@ -1298,7 +1421,7 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
             confirmed_cursors = dict.fromkeys(layouts, restored_prefix)
         if diagnostics.profile_stages:
             output_telemetry = OutputTelemetry(
-                sorted(cfg.outputs), T_all, native_completion=use_exr,
+                sorted(cfg.outputs), 1 if preview_frame is not None else T_all, native_completion=use_exr,
                 origin=diagnostics.started, clock=diagnostics.clock, restored_prefix_frames=restored_prefix)
             diagnostics.output_telemetry = output_telemetry
         for name in sorted(cfg.outputs):
@@ -1307,7 +1430,7 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
             if use_exr:
                 make_exr = (partial(ExrSequenceWriter,
                                     on_frame_written=partial(output_telemetry.written, name),
-                                    clock=diagnostics.clock)
+                                    clock=diagnostics.clock, host_observer=diagnostics)
                             if output_telemetry is not None else ExrSequenceWriter)
                 writers[name] = make_exr(
                     diagnostics.outputs[name], fps, (W_out, H_out), channels=channels,
@@ -1323,6 +1446,16 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
         def submit_outputs(rendered, frame_ids, frame_count):
             if set(rendered) != cfg.outputs or any(len(frames) != frame_count for frames in rendered.values()):
                 raise RuntimeError('renderer returned an incomplete output batch')
+            if preview_relative is not None:
+                if preview_relative not in frame_ids:
+                    return
+                selected_index = frame_ids.index(preview_relative)
+                rendered = {name: frames[selected_index:selected_index + 1] for name, frames in rendered.items()}
+                frame_ids, frame_count = (0,), 1
+                if diagnostics.frames_submitted:
+                    raise RuntimeError('Selected preview frame was submitted more than once')
+                if output_telemetry is not None:
+                    output_telemetry.render_ready(frame_ids)
             skip = sum(index < restored_prefix for index in frame_ids) if prefix is not None else 0
             if skip == frame_count:
                 return
@@ -1331,6 +1464,8 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                 writers[name].write_many(frames[skip:] if skip else frames)
                 if output_telemetry is not None:
                     output_telemetry.submitted(name, submitted_ids)
+            if preview_relative is not None:
+                diagnostics.frames_submitted += frame_count
             if prefix_runtime is not None:
                 prefix_runtime['newly_submitted_frames'] += frame_count - skip
             if prefix is not None and not prefix.snapshot()['checkpoint_disabled']:
@@ -1435,13 +1570,23 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
         fallback_raw_alpha = {}
         neural_refined_frames = set()
 
-        def finish_native(alpha):
+        def finishing_settings(frame):
+            return (profile_plan.settings(meta['start_frame'] + frame, cfg)[1:] if profile_plan is not None
+                    else (cfg.alpha_expand_radius, cfg.alpha_feather_radius))
+
+        def finishes(frame):
+            expansion, feather = finishing_settings(frame)
+            return expansion != 0 or feather > 0
+
+        def finish_native(alpha, frame):
             from .refinement import finish_alpha
             record = edge_finishing
             started = time.perf_counter()
             try:
-                result = finish_alpha(alpha, expansion=cfg.alpha_expand_radius,
-                                      feather=cfg.alpha_feather_radius, check=diagnostics.control.check)
+                region = correction_rasters.refinement_region(frame) if correction_rasters is not None else None
+                expansion, feather = finishing_settings(frame)
+                result = finish_alpha(alpha, expansion=expansion,
+                                      feather=feather, region=region, check=diagnostics.control.check)
                 record['frames_evaluated'] += 1
                 changed = False
                 for y in range(0, alpha.shape[0], 256):
@@ -1477,13 +1622,16 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
             diagnostics.quick_key["frame_diagnostics_path"] = str(trace_path)
 
         def write_prediction_batches(items, alpha_sink=None):
+            nonlocal context_frames_processed
             assert diagnostics.execution is not None
             device = next(model.stage2.parameters()).device
-            for offset in range(0, len(items), stage2_batch):
-                diagnostics.control.checkpoint("stage2_frames" if quick_plan else "output_frames",
-                                               diagnostics.execution["completed_prediction_frames"] if quick_plan else diagnostics.frames_submitted,
-                                               None if quick_plan else T_all)
-                sub = items[offset:offset + stage2_batch]
+            groups = (profile_plan.batches(items, cfg, meta['start_frame']) if profile_plan is not None else
+                      (items[offset:offset + stage2_batch] for offset in range(0, len(items), stage2_batch)))
+            for sub in groups:
+                completed = (diagnostics.execution["completed_prediction_frames"] if quick_plan else
+                             context_frames_processed if preview_frame is not None else diagnostics.frames_submitted)
+                diagnostics.control.checkpoint("stage2_frames" if quick_plan else "preview_context_frames" if preview_frame is not None else "output_frames",
+                                               completed, None if quick_plan else T_all)
                 rgb_t = torch.stack([item[2] for item in sub], dim=0)
                 rgb_t = rgb_t.unsqueeze(0).to(device, non_blocking=True)
                 baton_np = np.stack([item[1] for item in sub], axis=0)
@@ -1530,8 +1678,8 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                             guide = cu.linear_to_vfm_sdr(guidance_source.read(item[0]))
                             alpha = refine_native(alpha, guide)
                             neural_refined_frames.add(item[0])
-                        if finish_active and quick_plan is None:
-                            alpha = finish_native(alpha)
+                        if finish_active and quick_plan is None and finishes(item[0]):
+                            alpha = finish_native(alpha, item[0])
                         if quick_plan is None and correction_rasters is not None and correction_rasters.has_effect(item[0]):
                             trimap_guide = None
                             if correction_rasters.requires_guidance(item[0]):
@@ -1558,7 +1706,8 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                 if finish_active and not spatial and quick_plan is None:
                     native_alpha = _resize_output_torch(_crop_native_torch(logits[0, :, 0:1].float(), meta), meta).clamp(0, 1)
                     for index in range(len(sub)):
-                        native_alpha[index, 0] = torch.from_numpy(finish_native(native_alpha[index, 0].cpu().numpy())).to(device)
+                        if finishes(sub[index][0]):
+                            native_alpha[index, 0] = torch.from_numpy(finish_native(native_alpha[index, 0].cpu().numpy(), sub[index][0])).to(device)
                 if not spatial and quick_plan is None and correction_rasters is not None and any(correction_rasters.has_effect(item[0]) for item in sub):
                     logits = logits.float().clone()
                     top, left = meta["pad"][2], meta["pad"][0]
@@ -1595,17 +1744,26 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                 render_fn = (_render_predictions_exr_torch if use_exr
                              else _render_predictions_torch)
                 with diagnostics.stage("render"):
-                    rendered = (render_fn(meta, cfg.outputs, checker_t, logits[0], native_alpha=native_alpha)
-                                if native_alpha is not None else render_fn(meta, cfg.outputs, checker_t, logits[0]))
+                    composite_region = _composite_region_batch(
+                        correction_rasters, [item[0] for item in sub], meta, cfg.outputs, device)
+                    if composite_region is not None:
+                        rendered = render_fn(meta, cfg.outputs, checker_t, logits[0],
+                                             native_alpha=native_alpha, composite_region=composite_region)
+                    else:
+                        rendered = (render_fn(meta, cfg.outputs, checker_t, logits[0], native_alpha=native_alpha)
+                                    if native_alpha is not None else render_fn(meta, cfg.outputs, checker_t, logits[0]))
                 diagnostics.frame_ready()
-                frame_ids = tuple(item[0] for item in sub) if output_telemetry is not None or prefix is not None else ()
-                if output_telemetry is not None:
+                frame_ids = tuple(item[0] for item in sub)
+                if output_telemetry is not None and preview_frame is None:
                     output_telemetry.render_ready(frame_ids)
                 with diagnostics.stage("writer_submit"):
                     submit_outputs(rendered, frame_ids, len(sub))
-                diagnostics.frames_submitted += len(sub)
-                diagnostics.control.checkpoint("output_frames", diagnostics.frames_submitted, T_all)
-                del logits, baton_t, rgb_t, baton_np, rendered, native_alpha
+                context_frames_processed += len(sub)
+                if preview_frame is None:
+                    diagnostics.frames_submitted += len(sub)
+                diagnostics.control.checkpoint("preview_context_frames" if preview_frame is not None else "output_frames",
+                                               context_frames_processed if preview_frame is not None else diagnostics.frames_submitted, T_all)
+                del logits, baton_t, rgb_t, baton_np, rendered, native_alpha, composite_region
 
         with diagnostics.stage("stage1_stream" if cfg.low_vram else "stage1_stream_including_stage2_render_submit"):
             hann_stage1_stream(
@@ -1717,7 +1875,8 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                         if refine_active and frame.index not in neural_refined_frames:
                             frame.alpha = refine_native(frame.alpha, cu.linear_to_vfm_sdr(frame.rgb))
                             frame.diagnostics["alpha_refinement"] = True
-                        if finish_active:
+                        frame_finish = finish_active and finishes(frame.index)
+                        if frame_finish:
                             # Match known-frame raw-alpha constraint precedence without
                             # feeding artist finishing into propagation or fallback state.
                             if correction_rasters is not None and correction_rasters.has_effect(frame.index):
@@ -1726,7 +1885,7 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                                     raw = anchor_alpha[anchor_rows[frame.index]]
                                 if raw is not None:
                                     frame.alpha = raw
-                            frame.alpha = finish_native(frame.alpha)
+                            frame.alpha = finish_native(frame.alpha, frame.index)
                             frame.diagnostics['edge_finishing'] = True
                         if correction_rasters is not None and correction_rasters.has_effect(frame.index):
                             # Known neural frames get their complete ordered
@@ -1736,13 +1895,18 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                                 assert anchor_alpha is not None
                                 raw = anchor_alpha[anchor_rows[frame.index]]
                             frame.alpha = correction_rasters.apply(
-                                raw if raw is not None and not finish_active else frame.alpha, frame.index,
+                                raw if raw is not None and not frame_finish else frame.alpha, frame.index,
                                 guidance=(cu.linear_to_vfm_sdr(frame.rgb)
                                           if correction_rasters.requires_guidance(frame.index) else None))
                             assert diagnostics.corrections is not None
                             diagnostics.corrections["output_frames_refined"] += 1
                             frame.diagnostics["authored_constraints"] = True
-                        rendered = _render_source_draft(frame, meta, cfg.outputs, checker_t, use_exr=use_exr)
+                        composite_region = _composite_region_batch(
+                            correction_rasters, [frame.index], meta, cfg.outputs, 'cpu')
+                        rendered = (_render_source_draft(frame, meta, cfg.outputs, checker_t, use_exr=use_exr,
+                                                        composite_region=composite_region) if composite_region is not None else
+                                    _render_source_draft(frame, meta, cfg.outputs, checker_t, use_exr=use_exr))
+                        del composite_region
                         if set(rendered) != cfg.outputs or any(len(batch) != 1 for batch in rendered.values()):
                             raise RuntimeError("draft renderer returned an incomplete output frame")
                         diagnostics.frame_ready()
@@ -1759,8 +1923,11 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
             diagnostics.foundation_cache = original_foundation_cache
         if prefix_runtime is not None and prefix_runtime['newly_submitted_frames'] + restored_prefix != T_all:
             raise RuntimeError('Writer-prefix restored/new coverage differs from the selected timeline')
-        if diagnostics.frames_submitted != T_all:
-            raise RuntimeError(f"Incomplete render: submitted {diagnostics.frames_submitted}/{T_all} frames")
+        expected_submitted = 1 if preview_frame is not None else T_all
+        if diagnostics.frames_submitted != expected_submitted:
+            raise RuntimeError(f"Incomplete render: submitted {diagnostics.frames_submitted}/{expected_submitted} frames")
+        if preview_frame is not None and context_frames_processed != T_all:
+            raise RuntimeError('Incomplete selected-preview context processing')
     finally:
         if diagnostics.source is not None and "decoded_source_dtypes_observed" in meta:
             diagnostics.source["decoded_source_dtypes_observed"] = sorted(set(meta["decoded_source_dtypes_observed"]))
@@ -1777,17 +1944,24 @@ def run_inference(model, input_path: str, output_dir: str, cfg: InferenceConfig,
                         if observation_error is not None:
                             output_telemetry.observation_failed(f"{name}: {observation_error}")
                     output_telemetry.finish()
+    if profile_plan is not None:
+        assert profile_job is not None
+        from .shot_profiles import validate_live
+        validate_live(profile_plan, profile_job, check=diagnostics.control.check)
     if prefix is not None:
         prefix.verify_restored_prefix()
     if witness is not None:
         diagnostics.source_witness = witness.finish(Path(output_dir))
-    diagnostics.control.checkpoint("complete", T_all, T_all)
+    if preview_frame is not None:
+        diagnostics.preview_selection = {'source_frame': preview_frame, 'relative_frame': preview_relative,
+            'context_frames_processed': context_frames_processed, 'captured_frames': diagnostics.frames_submitted,
+            'full_context_processed': True}
+    diagnostics.control.checkpoint("preview_complete" if preview_frame is not None else "complete", T_all, T_all)
     diagnostics.outputs = {name: writer.path for name, writer in writers.items()}
-    if diagnostics.profile_stages:
-        diagnostics.resources = {
-            "peak_allocated_vram_bytes": torch.cuda.max_memory_allocated(),
-            "peak_reserved_vram_bytes": torch.cuda.max_memory_reserved(),
-            "gpu": torch.cuda.get_device_name(), "cuda_version": torch.version.cuda,
-            "scope": "processing after model load; process allocation peaks, not whole-device usage"}
-    print(f"  wrote {len(writers)} output(s) for {clip_name} "
-          f"({T_all} frames @ {W_out}x{H_out})")
+    if diagnostics.profile_stages and device_index is not None:
+        diagnostics.resources = _finish_resource_profile(device_index)
+    if preview_frame is not None:
+        print(f"  captured source frame {preview_frame} after processing all {T_all} context frames ({W_out}x{H_out})")
+    else:
+        print(f"  wrote {len(writers)} output(s) for {clip_name} "
+              f"({T_all} frames @ {W_out}x{H_out})")

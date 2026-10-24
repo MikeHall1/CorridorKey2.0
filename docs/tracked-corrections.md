@@ -73,3 +73,40 @@ Actual CPU flow on a synthetic moving texture, native PNG/EXR publication,
 transaction/cancellation faults, Qt ownership and shared toy-model runtime paths
 are covered. Real moving/occluded footage quality, long ranges, pretrained CUDA,
 Windows/native interaction and video timing acceptance remain NOT VERIFIED.
+
+
+## Refinement-region coverage tracking
+
+The same tracker now accepts schema5 authored `region` coverage, restricted to
+`purpose: refinement`, `target: edge_finishing`. This is an extension of existing
+kind admission and routing, not a new tracking algorithm or wire format. Complete
+anchor fields remain in provenance; all anchors must share purpose/target/strength.
+Regions stay both-direction when authored; **Region track direction** separately
+selects forward/backward/both without changing ordinary brush Direction.
+
+Inspect/Accept/save/history/resource/failure rules above apply unchanged. Accepted
+region masks are read only by final expansion/feather weighting, with participating
+anchors consumed once inside the accepted span and static behavior outside. They
+never become final artist matte constraints, hints, carried alpha, forced neural
+anchors or foreground operations. The editor shows accepted derived region
+coverage at the inspected frame. Maximum overlap and strength-once semantics
+are described in [refinement regions](refinement-regions.md).
+
+Earlier schemas1–5 keep their existing behavior. Old static-region schema5 readers
+fail closed on tracked-region anchors; retain the pre-tracking snapshot for rollback.
+Portable CPU tests exercise soft forward/backward/both coverage, publication,
+relocation/collection, native output math, failure fences and Qt selection. Their
+synthetic motion/structural neural substitutes do not establish pretrained/real-
+footage/GPU quality, Windows or Resolve acceptance.
+
+### Region purpose isolation
+
+Tracked regions retain their explicit schema5 pair: refinement/edge_finishing,
+composite/despill, or diagnostic/tracking_overlay. Anchor binding includes the
+same purpose, target and strength across all selected anchors. Isolation reads
+that pair's coverage, never reinterprets regions as matte, and acceptance keeps
+original immutable assets, derived masks, source/decode bindings and existing
+cuts/resource/cancellation/invalidation/history/portable behavior. Inspection
+labels the actual pair. Diagnostic coverage gates captured overlay display only,
+not measurements or propagation. Neural ROI remains unsupported. Composite
+runtime acceptance additionally requires its despill consumer tests.
