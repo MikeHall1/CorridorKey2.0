@@ -2,8 +2,10 @@
 import hashlib
 import os
 import struct
+import sys
 import tempfile
 import unittest
+from collections import Counter
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 from typing import Any
@@ -85,11 +87,13 @@ class NativeImageAdmissionTests(unittest.TestCase):
 
     def test_pinned_read_fences_growth_truncation_and_replacement(self):
         original = self.path.read_bytes()
-        for mutation in ('grow', 'truncate', 'replace'):
+        for mutation in ('grow', 'truncate', 'replace', 'replace-refused'):
             self.path.write_bytes(original)
             calls = [0]
+            refused = [False]
+            before = self.path.stat()
 
-            def check(calls=calls, mutation=mutation):
+            def check(calls=calls, mutation=mutation, refused=refused, before=before):
                 calls[0] += 1
                 if calls[0] == 2:
                     if mutation == 'grow':
@@ -100,26 +104,56 @@ class NativeImageAdmissionTests(unittest.TestCase):
                     else:
                         replacement = self.root / 'replacement.png'
                         replacement.write_bytes(original)
-                        replacement.replace(self.path)
+                        try:
+                            if mutation == 'replace-refused':
+                                raise PermissionError('controlled open-file sharing refusal')
+                            replacement.replace(self.path)
+                        except PermissionError:
+                            refused[0] = True
+                            self.assertEqual(self.path.read_bytes(), original)
+                            current = self.path.stat()
+                            self.assertEqual((current.st_dev, current.st_ino), (before.st_dev, before.st_ino))
+                            replacement.unlink()
 
-            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, 'changed|replaced|truncated'):
-                self.admit(check=check)
+            with self.subTest(mutation=mutation):
+                try:
+                    admitted = self.admit(check=check)
+                except ValueError as exc:
+                    self.assertFalse(refused[0], 'Unchanged input must remain admissible after OS refusal')
+                    self.assertRegex(str(exc), 'changed|replaced|truncated')
+                else:
+                    self.assertIn(mutation, ('replace', 'replace-refused'))
+                    self.assertTrue(refused[0], 'Successful replacement must invalidate admission')
+                    self.assertEqual(admitted.encoded_bytes, original)
 
     def test_cancelled_pinned_read_closes_fd_and_retains_original(self):
-        token = CancellationToken()
         before = self.path.read_bytes()
-        calls = [0]
+        original_open = os.open
+        for platform in dict.fromkeys((sys.platform, 'win32')):
+            token = CancellationToken()
+            calls = [0]
+            opened = []
 
-        def check():
-            calls[0] += 1
-            if calls[0] == 2:
-                token.cancel('fixture cancel')
-            token.check()
+            def check(calls=calls, token=token):
+                calls[0] += 1
+                if calls[0] == 2:
+                    token.cancel('fixture cancel')
+                token.check()
 
-        with patch('corridorkey.native_image_admission.os.close', wraps=os.close) as closed:
-            with self.assertRaises(CancelledError):
-                self.admit(check=check)
-            self.assertEqual(closed.call_count, 1)
+            def opening(*args, opened=opened, **kwargs):
+                descriptor = original_open(*args, **kwargs)
+                opened.append(descriptor)
+                return descriptor
+
+            with (self.subTest(platform=platform), patch.object(sys, 'platform', platform),
+                  patch('corridorkey.native_image_admission.os.open', side_effect=opening),
+                  patch('corridorkey.native_image_admission.os.close', wraps=os.close) as closed):
+                with self.assertRaises(CancelledError):
+                    self.admit(check=check)
+                self.assertTrue(opened)
+                closed_descriptors = [call.args[0] for call in closed.call_args_list]
+                self.assertEqual(Counter(opened), Counter(closed_descriptors))
+                self.assertEqual(closed_descriptors.count(opened[0]), 1)
         self.assertEqual(before, self.path.read_bytes())
 
     def test_png_truncation_crc_palette_and_trailing_data_refuse(self):
