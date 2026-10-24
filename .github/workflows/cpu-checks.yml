@@ -69,3 +69,16 @@ jobs:
       - name: Full static regression gate (known debt remains visible)
         if: always()
         run: python scripts/code_health.py --output-dir benchmark-results/ci-health
+      - name: Preserve raw static reports in job logs even when the gate fails
+        if: always()
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          root = Path('benchmark-results/ci-health')
+          for name in ('health.json', 'ruff.json', 'pyright.json', 'ruff-stderr.txt', 'pyright-stderr.txt', 'imports.txt'):
+              path = root / name
+              content = path.read_text() if path.is_file() else None
+              # Escaped, bounded records avoid workflow commands and oversized log lines.
+              for offset in range(0, max(len(content or ''), 1), 4096):
+                  print(json.dumps({'report': name, 'offset': offset, 'content': content[offset:offset + 4096] if content is not None else None}, ensure_ascii=True))

@@ -4,7 +4,7 @@
     3,
     12
   ],
-  "classification_ledger": ".ralph/issues.json",
+  "classification_ledger": "docs/code-health.md",
   "policy": "Retain and report all findings; fail new diagnostic fingerprints. Not a clean-static claim. Never refreshed automatically.",
   "tools": {
     "ruff": {

@@ -65,7 +65,7 @@ provenance and are never probed as native paths. Partial/reference-only foreign
 packages refuse; general foreign missing-reference relinking remains unsupported.
 Direct foreign publication refuses: Apply to an explicit native draft and create
 a fresh verified native plan. This is a reader extension, with no changed writer
-layout or implicit manifest migration. [Detailed scope/review](portable-foreign-review.md).
+layout or implicit manifest migration. [verification policy](code-health.md).
 Model roots/weights remain external references; selecting/relinking a compatible
 model environment is deliberate through Local assets. The initial dialog admits
 0–65536MiB verification/copy budgets (defaults256MiB read/0copy); the core accepts
@@ -79,7 +79,7 @@ This connected increment is locally verified:1273CPU tests PASS83.370s/no skips,
 379Python files and full compile/import/dependency/static-regression/whitespace
 gate PASS,0new diagnostics. Existing519Ruff/684Pyright errors17warnings remain.
 Evidence: `benchmark-results/ext09-connected-final/`; independent and main
-[review](portable-projects-review.md). Reproduction commands in the existing
+[verification policy](code-health.md). Reproduction commands in the existing
 compatible environment are:
 
 ```sh

@@ -84,7 +84,7 @@ def build(parent: Path) -> Path:
     if not parent.is_dir():
         raise ValueError('Choose an existing build output parent.')
     # Source gate must pass before build artifacts are created. No install/download.
-    subprocess.run([sys.executable, str(ROOT / 'scripts/ralph_loop.py'), 'verify', '--python', sys.executable],
+    subprocess.run([sys.executable, str(ROOT / 'scripts/verify.py'), '--python', sys.executable],
                    cwd=ROOT, check=True)
     from .benchmark import repository_identity
 

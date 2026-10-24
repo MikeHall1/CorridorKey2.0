@@ -34,7 +34,7 @@ on the wrong device are rejected rather than resized or silently converted.
 
 ```sh
 QT_QPA_PLATFORM=offscreen HF_HUB_OFFLINE=1 \
-/private/tmp/corridorkey-compatible-venv/bin/python -m unittest \
+python -m unittest \
   tests.test_composite_region_rendering -v
 ```
 

@@ -66,10 +66,10 @@ product acceptance.
 ## Verification
 
 ```sh
-/private/tmp/corridorkey-compatible-venv/bin/python -m unittest discover -s tests -p test_feasibility.py -v
-/private/tmp/corridorkey-compatible-venv/bin/python -m unittest discover -s tests -p test_desktop_benchmark.py -v
-/private/tmp/corridorkey-compatible-venv/bin/ruff check corridorkey/feasibility.py corridorkey/desktop_benchmark.py tests/test_feasibility.py tests/test_desktop_benchmark.py
-/private/tmp/corridorkey-compatible-venv/bin/pyright --pythonpath /private/tmp/corridorkey-compatible-venv/bin/python corridorkey/feasibility.py corridorkey/desktop_benchmark.py tests/test_feasibility.py tests/test_desktop_benchmark.py
+python -m unittest discover -s tests -p test_feasibility.py -v
+python -m unittest discover -s tests -p test_desktop_benchmark.py -v
+/path/to/verification-environment/bin/ruff check corridorkey/feasibility.py corridorkey/desktop_benchmark.py tests/test_feasibility.py tests/test_desktop_benchmark.py
+/path/to/verification-environment/bin/pyright --pythonpath python corridorkey/feasibility.py corridorkey/desktop_benchmark.py tests/test_feasibility.py tests/test_desktop_benchmark.py
 ```
 
 Portable fixtures exercise the existing inference/pair report schema, overlap,
@@ -110,7 +110,7 @@ all on records were `complete`/`host_wall`. Objects were released between cases.
 CPU-brand and physical-RAM readouts were unavailable under sandbox permissions;
 no escalation or alternate measurement was attempted.
 
-Command: `/private/tmp/corridorkey-compatible-venv/bin/python benchmark-results/product-next/profiling-overhead-experiment.py`.
+Command: `python benchmark-results/product-next/profiling-overhead-experiment.py`.
 Exit0; measured experiment wall duration0.287s. Predeclared policy, raw pairs,
 source/environment evidence and output are retained locally as
 `benchmark-results/product-next/profiling-overhead-{policy,results}.json`,

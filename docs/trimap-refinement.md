@@ -1,7 +1,7 @@
 # Trimap-assisted native refinement
 
-CK-Q10-04, development brief §10 item4, is locally verified on generated CPU
-fixtures and an actual Qt/shared-worker workflow. This does not establish
+The trimap operation has portable generated-fixture and Qt/shared-worker regression
+coverage. This does not establish
 pretrained quality improvement or GPU/Windows/Resolve acceptance.
 
 An explicitly imported trimap adds an ordered native correction operation.
@@ -105,5 +105,5 @@ then the sole outdated close-test assertion was corrected and passed separately.
 All production sources are unchanged between those runs. Full325file static
 checks add no findings vs M45; retained519Ruff/684Pyright errors17warnings remain.
 The full invocation's failure is retained, not labelled a passing full gate.
-See [fresh review](review-2026-10-23.md) and local
+See [verification policy](code-health.md) and local
 `benchmark-results/fresh-review-checkpoint-verification.json`.

@@ -1,45 +1,20 @@
 # CorridorKey 2.0
 
-The current [repository review](docs/review-2026-10-23.md) records verified fixes,
-open issues and external acceptance limits.
+Foreground extraction with one shared Python/PyTorch engine, command-line tools,
+an optional Qt desktop workspace, and a prepared-cache OpenFX plugin.
 
-Fork engineering work is tracked in [implementation status](docs/status.md) and the
-[latest run checkpoint](docs/checkpoint.md), with
-the [baseline audit](docs/baseline.md), [option inventory](docs/options.md),
-[persistent sessions](docs/sessions.md), [benchmark protocol](docs/benchmark.md),
-and the [bounded Ralph loop](docs/ralph-loop.md).
-The updated [code-health baseline](docs/code-health.md) records static-tool gaps,
-interpreter compatibility and classified serializer issues.
-Run CPU correctness checks using `python3 -m unittest discover -s tests -v`, or
-export a local three-repetition report with `python3 -m corridorkey.benchmark`.
-The launcher now reuses models between clips; single-job diagnostics, a headless
-batch command and explicit cold/warm inference benchmark modes are available.
-GPU performance and visual quality improvements remain unmeasured.
-Opt-in [offline Quick Key drafts](docs/quick-key.md) are available through
-`--quick_key`; interval 1 retains the full-rate path. Optional cut analysis,
-adaptive/max-gap anchors, hold and past-only causal propagation are CPU-tested;
-all approaches still use offline whole-clip precompute.
-Optional [authored correction documents](docs/corrections.md) support matte,
-keep/remove regions and temporal resets through `--corrections`, with explicit
-strength/range semantics and content validation.
-[Colour/precision contracts](docs/colour.md) cover native uint16 image decode,
-explicit linear alpha association and optional spatial alpha/screen-aware despill.
-Model conversion remains bfloat16; visual/GPU benefits are unvalidated. The optional [Qt desktop workspace](docs/desktop.md) launches with
-`python -m corridorkey.desktop` after installing `requirements-desktop.txt`.
-It previews sources/exports and controls the shared worker; CUDA remains required
-for inference. Its optional [developer benchmark window](docs/developer-benchmark.md)
-runs the real benchmark CLI and inspects local reports. Richer desktop controls,
-packaging and Resolve work remain staged. The [native correction editor](docs/correction-editor.md)
-paints/imports authored masks and saves immutable versions for future queued jobs;
-its overlays are authoring aids, not neural key-quality results. Optional
-[durable queue and recovery controls](docs/durable-queue.md) preserve observed
-requests and explicitly verify/resume existing recoverable batches; opening
-history never automatically resubmits work.
+- [Setup and model downloads](#setup); [CLI options](docs/options.md)
+- [Desktop workspace](docs/desktop.md), [correction editor](docs/correction-editor.md),
+  [progressive previews](docs/progressive-previews.md), [recovery](docs/recovery.md)
+- [OpenFX cache/plugin](docs/ofx-cache.md), [Resolve integration](docs/resolve.md),
+  [Windows packaging](docs/packaging.md)
+- [Shared-engine architecture](docs/architecture.md), [verification](docs/code-health.md),
+  [repository contents and local-only files](docs/repository-layout.md)
 
-Optional [bounded foundation-feature reuse](docs/feature-cache.md) is available
-with `--foundation_cache_mb`; it defaults off pending GPU parity/performance
-validation. `--auto_vram_budget_mb` caps automatic profile selection's estimated
-budget, rather than enforcing a hard GPU allocation limit.
+Full neural inference requires the documented NVIDIA/CUDA stack. The OpenFX path
+plays prepared EXR caches; it is not live neural inference. Portable CPU/offscreen
+checks do not establish GPU quality, clean-machine Windows packaging or Resolve
+host acceptance. Unsupported timing/colour/backend conditions fail explicitly.
 
 Welcome to CorridorKey 2.0! You may rest easy, weary artist. The green beast has been slain. The CorridorKey 2.0 model was designed and trained by Zachary Harris, in direct collaboration with Niko and Corridor Digital.
 
@@ -715,7 +690,7 @@ A local Windows desktop bundle recipe and explicit launch/worker smoke tool are 
 An experimental native cached-frame OpenFX path now reads completed shared-engine EXR exports; see [OFX cache/adapter](docs/ofx-cache.md). Local native ABI and sanitizer checks are not Windows Resolve, neural-quality or GPU-performance acceptance.
 
 
-The local desktop workflow now includes [deliberate model downloads](docs/asset-downloads.md), [managed scratch admission](docs/scratch-budget.md), [sampled worker memory stopping](docs/memory-stop.md), and [exact Stage2 recovery](docs/stage2-recovery.md). These local checks do not establish pretrained compatibility, real-time GPU performance or Resolve acceptance; the [acceptance matrix](docs/acceptance.md) records remaining work.
+The local desktop workflow now includes [deliberate model downloads](docs/asset-downloads.md), [managed scratch admission](docs/scratch-budget.md), [sampled worker memory stopping](docs/memory-stop.md), and [exact Stage2 recovery](docs/stage2-recovery.md). These local checks do not establish pretrained compatibility, real-time GPU performance or Resolve acceptance; the [verification limits](docs/code-health.md) records remaining work.
 
 Developer evaluation dossiers: [compare existing paired quality reports and prepare assignment-blinded review packets](docs/evaluation-dossiers.md). Local mechanics are verified; actual human review and professional-quality acceptance remain pending.
 

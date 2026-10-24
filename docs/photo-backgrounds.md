@@ -53,11 +53,11 @@ the newest submitted frame's caption.
 Focused verification in the existing compatible CPU environment:
 
 ```sh
-PYTHONPATH=tests QT_QPA_PLATFORM=offscreen /private/tmp/corridorkey-compatible-venv/bin/python -W error -m unittest test_preview_background test_photo_preview_pipeline test_desktop_photo_background -v
+PYTHONPATH=tests QT_QPA_PLATFORM=offscreen python -W error -m unittest test_preview_background test_photo_preview_pipeline test_desktop_photo_background -v
 ```
 
 Core13actual-image/analytic cases,25new/existing pipeline cases and7actualQt cases
 pass. They prove bounded local mechanics and small-fixture colour arithmetic,
 not display calibration, representative quality, GPU speed or native Windows.
 Final frozen **1434CPU tests PASS103.846s/no skips**;406Python files/full compilation/import/dependency/static regression/whitespace gate PASS,0new vsbaseline AND actual03577e0. Independent review passes; see
-[review](photo-backgrounds-review.md). All ten feature workflows remain incomplete.
+[verification policy](code-health.md). All ten feature workflows remain incomplete.

@@ -10,13 +10,14 @@ import ast
 import hashlib
 import importlib.metadata
 import json
+import platform
 import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BASELINE = ROOT / '.ralph/static-baseline.json'
+BASELINE = ROOT / 'tests/static-baseline.json'
 TOOLS = ('ruff', 'pyright')
 IMPORTS = ('numpy', 'cv2', 'torch', 'torchvision', 'transformers', 'timm',
            'safetensors', 'huggingface_hub', 'einops', 'scipy', 'PIL', 'tqdm',
@@ -106,7 +107,8 @@ def run(output_dir, baseline_path=BASELINE):
     imports = subprocess.run([sys.executable, '-c', imports_code], check=False, cwd=ROOT,
                              capture_output=True, text=True, timeout=180)
     (output_dir / 'imports.txt').write_text(imports.stdout + imports.stderr)
-    baseline = json.loads(Path(baseline_path).read_text()) if Path(baseline_path).is_file() else {}
+    baseline_bytes = Path(baseline_path).read_bytes() if Path(baseline_path).is_file() else None
+    baseline = json.loads(baseline_bytes) if baseline_bytes is not None else {}
     checks = {}
     for tool in TOOLS:
         try:
@@ -138,7 +140,15 @@ def run(output_dir, baseline_path=BASELINE):
                                           completed.returncode in (0, 1),
                         'fingerprints': current, **delta}
     dependency_check = dependencies()
-    report = {'python': sys.version, 'executable': sys.executable, 'source_files': len(files),
+    report = {'python': sys.version, 'platform': platform.platform(),
+              'executable': sys.executable, 'source_files': len(files),
+              'baseline': {'path': str(baseline_path),
+                           'sha256': hashlib.sha256(baseline_bytes).hexdigest()
+                                     if baseline_bytes is not None else None,
+                           'python_minor': baseline.get('python_minor'),
+                           'tools': {name: {'version': value.get('version'),
+                                            'diagnostic_count': value.get('diagnostic_count')}
+                                     for name, value in baseline.get('tools', {}).items()}},
               'syntax_errors': syntax_errors, 'imports_returncode': imports.returncode,
               'dependencies': dependency_check, 'static': checks,
               'static_clean': all(c.get('static_clean', False) for c in checks.values()),

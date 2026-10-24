@@ -80,7 +80,7 @@ relevant conditions change without fresh calibration.
 Focused validation in the compatible CPU environment:
 
 ```sh
-PYTHONPATH=tests QT_QPA_PLATFORM=offscreen /private/tmp/corridorkey-compatible-venv/bin/python -W error -m unittest test_calibration test_calibration_task test_desktop_calibration test_desktop_window_calibration -v
+PYTHONPATH=tests QT_QPA_PLATFORM=offscreen python -W error -m unittest test_calibration test_calibration_task test_desktop_calibration test_desktop_window_calibration -v
 ```
 
 These tests use explicit CPU subprocess and UI fixtures plus synthetic metadata
@@ -167,7 +167,7 @@ partial trials or missing evidence never produce a quality-constrained winner.
 Focused validation:
 
 ```sh
-/private/tmp/corridorkey-compatible-venv/bin/python -m unittest tests.test_calibration tests.test_calibration_task tests.test_calibration_quality tests.test_desktop_calibration -v
+python -m unittest tests.test_calibration tests.test_calibration_task tests.test_calibration_quality tests.test_desktop_calibration -v
 ```
 
 Analytic PNG/NumPy/EXR fixtures exercise actual export evaluation, threshold

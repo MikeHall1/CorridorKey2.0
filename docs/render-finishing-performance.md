@@ -32,7 +32,7 @@ and storage references, **not** RSS, CUDA allocator peaks or a memory cap.
 
 ```sh
 QT_QPA_PLATFORM=offscreen HF_HUB_OFFLINE=1 \
-/private/tmp/corridorkey-compatible-venv/bin/python -m unittest \
+python -m unittest \
   tests.test_render_despill_reuse tests.test_composite_region_rendering -v
 ```
 
