@@ -6,7 +6,7 @@ import json
 import re
 from dataclasses import dataclass
 
-from .recovery_identity import ReplayIdentity, canonical
+from .recovery_identity import ReplayIdentity, UpstreamFinishingContext, canonical
 
 
 def _sha(value):
@@ -52,8 +52,10 @@ class RvmChunkIdentity:
         return json.loads(self.payload)
 
 
-def rvm_chunk_identity(parent: ReplayIdentity, *, shot_start, start, stop, proxy_sha256,
+def rvm_chunk_identity(parent: ReplayIdentity | UpstreamFinishingContext, *, shot_start, start, stop, proxy_sha256,
                        input_shape, input_dtype, incoming_state_sha256, channels, grid_hw):
+    if not isinstance(parent, (ReplayIdentity, UpstreamFinishingContext)):
+        raise TypeError('Parent must be an explicit replay or upstream finishing context instance')
     return RvmChunkIdentity(canonical({
         'schema_version': 1, 'kind': 'rvm_chronological_chunk', 'parent_key': parent.key,
         'shot_start': shot_start, 'start': start, 'stop': stop, 'proxy_sha256': proxy_sha256,

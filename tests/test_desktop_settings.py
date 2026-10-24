@@ -110,6 +110,84 @@ class SettingsTests(unittest.TestCase):
         self.assertTrue(json.loads(config)['source_witness'])
         self.assertFalse(json.loads(self.config)['source_witness'])
 
+    def test_despill_controls_default_values_match_shared_config(self):
+        from PySide6.QtWidgets import QCheckBox, QComboBox
+
+        from corridorkey.config import InferenceConfig
+        defaults = InferenceConfig()
+        space = self.panel.controls['engine', 'despill_space']
+        luma = self.panel.controls['engine', 'despill_preserve_luma']
+        edges = self.panel.controls['engine', 'despill_edges_only']
+        assert isinstance(space, QComboBox) and isinstance(luma, QCheckBox) and isinstance(edges, QCheckBox)
+        self.assertEqual([space.itemText(i) for i in range(space.count())], ['legacy', 'linear'])
+        self.assertEqual(space.currentText(), defaults.despill_space)
+        self.assertEqual(luma.isChecked(), defaults.despill_preserve_luma)
+        self.assertEqual(edges.isChecked(), defaults.despill_edges_only)
+        parsed = json.loads(self.panel.values()[0])
+        self.assertEqual(parsed['despill_strength'], .5)
+        self.assertEqual(parsed['despill_screen'], 'green')
+
+    def test_despill_roundtrip_and_future_apply_keep_advanced_options_and_queued_job(self):
+        from PySide6.QtWidgets import QCheckBox, QComboBox
+
+        from corridorkey.session import JobRequest
+        from corridorkey.worker_protocol import job_from_wire, job_to_wire
+        queued = JobRequest.create('.', '.')
+        original = json.loads(self.config)
+        original.update(seed=913, alpha_refine_sigma=.123456789012345)
+        self.panel.load(json.dumps(original), self.writer)
+        space = self.panel.controls['engine', 'despill_space']
+        screen = self.panel.controls['engine', 'despill_screen']
+        luma = self.panel.controls['engine', 'despill_preserve_luma']
+        edges = self.panel.controls['engine', 'despill_edges_only']
+        assert isinstance(space, QComboBox) and isinstance(screen, QComboBox)
+        assert isinstance(luma, QCheckBox) and isinstance(edges, QCheckBox)
+        space.setCurrentText('linear'); screen.setCurrentText('blue')
+        luma.setChecked(True); edges.setChecked(True)
+        received = []
+        self.panel.apply_requested.connect(lambda *args: received.append(args))
+        self.panel.apply()
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0][:2], (json.dumps(original), self.writer))
+        wire = job_to_wire(queued)
+        wire.update(config_json=received[0][2], writer_json=received[0][3])
+        future = job_from_wire(wire)
+        config, _ = future.configurations()
+        self.assertEqual((config.despill_space, config.despill_screen), ('linear', 'blue'))
+        self.assertTrue(config.despill_preserve_luma and config.despill_edges_only)
+        self.assertEqual(config.seed, 913)
+        self.assertEqual(config.alpha_refine_sigma, .123456789012345)
+        self.assertEqual(queued.configurations()[0].despill_space, 'legacy')
+        self.assertFalse(queued.configurations()[0].despill_edges_only)
+        self.assertEqual(json.loads(received[0][0])['despill_preserve_luma'], False)
+        self.panel.load(received[0][2], received[0][3])
+        self.assertEqual(json.loads(self.panel.values()[0]), json.loads(received[0][2]))
+
+    def test_despill_luma_requires_linear_without_silent_switch_or_apply(self):
+        from PySide6.QtWidgets import QCheckBox, QComboBox
+
+        from corridorkey.config import InferenceConfig
+        space = self.panel.controls['engine', 'despill_space']
+        luma = self.panel.controls['engine', 'despill_preserve_luma']
+        assert isinstance(space, QComboBox) and isinstance(luma, QCheckBox)
+        luma.setChecked(True)
+        with self.assertRaisesRegex(ValueError, 'requires explicit linear'):
+            self.panel.values()
+        received = []
+        self.panel.apply_requested.connect(lambda *args: received.append(args))
+        self.panel.apply()
+        self.assertEqual(received, [])
+        self.assertIn('requires explicit linear', self.panel.status.text())
+        self.assertEqual(space.currentText(), 'legacy', 'No silent domain conversion')
+        space.setCurrentText('linear')
+        self.assertTrue(json.loads(self.panel.values()[0])['despill_preserve_luma'])
+        with self.assertRaises(ValueError):
+            InferenceConfig(despill_space='unsupported').validate()
+        invalid = json.loads(self.config)
+        invalid['despill_preserve_luma'] = True
+        with self.assertRaisesRegex(ValueError, 'requires explicit linear'):
+            self.panel.load(json.dumps(invalid), self.writer)
+
     def test_window_rejects_stale_edits_and_applies_without_enqueue(self):
         from corridorkey.desktop_window import DesktopWindow
         window = DesktopWindow()

@@ -126,6 +126,9 @@ class GuidanceProvenanceTests(unittest.TestCase):
 
     def test_strict_schema_origin_bijection_and_versions(self):
         good = self.attach().to_dict()
+        expanded = copy.deepcopy(good)
+        expanded['schema_version'] = 5
+        self.assertEqual(CorrectionDocument.parse(expanded, self.root).to_dict(), expanded)
         mutations = [lambda d: d.pop('tracks'), lambda d: d.pop('guidance'),
                      lambda d: d['guidance'][0].update(extra=True),
                      lambda d: d['entries'][0].pop('guidance_id'),
@@ -135,7 +138,7 @@ class GuidanceProvenanceTests(unittest.TestCase):
                      lambda d: d['guidance'].append(copy.deepcopy(d['guidance'][0])),
                      lambda d: d['guidance'][0].update(binding_sha256='f' * 64),
                      lambda d: d.update(schema_version=3),
-                     lambda d: d.update(schema_version=5)]
+                     lambda d: d.update(schema_version=6)]
         for index, mutate in enumerate(mutations):
             data = copy.deepcopy(good)
             mutate(data)

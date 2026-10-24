@@ -60,12 +60,14 @@ def prepare_quality_templates(paths, jobs, *, manifest_dir):
     return templates
 
 
-def _export_files(directory, output_dir, count, prefix):
+def _export_files(directory, output_dir, count, prefix, *, check=None):
     directory = Path(directory).resolve()
     if not directory.is_dir() or not directory.is_relative_to(output_dir):
         raise ValueError('export must be inside the completed job output directory')
     files = {}
     for path in directory.iterdir():
+        if check is not None:
+            check()
         match = re.fullmatch(re.escape(prefix) + r'(?:_source_rgb_draft)?(?:_spatial_draft)?_(\d{6,})\.exr', path.name)
         if not path.is_file() or match is None:
             raise ValueError('unexpected file in export directory')
@@ -92,7 +94,7 @@ def _working_primaries_match(contract):
     return declared == describe_source_colour(declared['profile'], scene_linear=True)
 
 
-def _bind_rgb(data, diagnostics, output_dir, count):
+def _bind_rgb(data, diagnostics, output_dir, count, *, check=None):
     output = data.get('candidate_output', 'fg')
     contract = diagnostics['output_contracts'][output]
     association = contract.get('alpha_association') if output == 'cutout' else 'straight'
@@ -102,7 +104,7 @@ def _bind_rgb(data, diagnostics, output_dir, count):
             association != data['associations']['candidate']):
         raise ValueError('colour export contract/association/primaries does not match reference declaration')
     prefix = output + ('_premultiplied' if output == 'cutout' and association == 'premultiplied' else '')
-    files = _export_files(diagnostics['outputs'][output], output_dir, count, prefix)
+    files = _export_files(diagnostics['outputs'][output], output_dir, count, prefix, check=check)
     for frame in data['frames']:
         frame['candidate_rgb'] = str(files[frame['frame']])
 
@@ -123,8 +125,10 @@ def _check_temporal_boundaries(data, record):
     return sorted(boundaries)
 
 
-def evaluate_job_quality(template, record):
+def evaluate_job_quality(template, record, *, check=None):
     """Only completed native coverage exports with known geometry/timing can bind frames."""
+    if check is not None:
+        check()
     if record.get('status') != 'complete':
         raise ValueError('quality requires a completed inference job')
     data = copy.deepcopy(template['data'])
@@ -143,7 +147,7 @@ def evaluate_job_quality(template, record):
     # Full-rate, Quick Key and spatial draft names all have contiguous
     # output-relative indices. Bind suffix IDs, never lexical ordering or source offsets.
     count = diagnostics['frames_submitted']
-    files = _export_files(diagnostics['outputs']['alpha'], output_dir, count, 'alpha')
+    files = _export_files(diagnostics['outputs']['alpha'], output_dir, count, 'alpha', check=check)
     colour = data['kind'] == 'colour_sequence_evaluation'
     temporal = data['kind'] == 'temporal_sequence_evaluation'
     for entry in data['frames']:
@@ -151,16 +155,16 @@ def evaluate_job_quality(template, record):
             raise ValueError('reference frame ID is outside the completed output timeline')
         entry['candidate_alpha' if colour else 'candidate'] = str(files[entry['frame']])
     if colour:
-        _bind_rgb(data, diagnostics, output_dir, count)
+        _bind_rgb(data, diagnostics, output_dir, count, check=check)
     boundaries = _check_temporal_boundaries(data, record) if temporal else None
-    before = source_identity(data['source'])
+    before = source_identity(data['source'], check=check)
     if before['sha256'] != template['source']['sha256']:
         raise ValueError('source changed since quality preflight')
     for path, expected in template['asset_hashes'].items():
-        if file_sha256(path) != expected:
+        if file_sha256(path, check=check) != expected:
             raise ValueError('reference/baseline/mask changed since quality preflight')
     evaluate = evaluate_colour_spec if colour else evaluate_temporal_spec if temporal else evaluate_sequence_spec
-    report = evaluate(data, manifest_path=template['path'], manifest_sha256=template['sha256'])
+    report = evaluate(data, manifest_path=template['path'], manifest_sha256=template['sha256'], check=check)
     for asset in report['assets']:
         if not asset['role'].startswith('candidate') and asset['sha256'] != template['asset_hashes'][asset['path']]:
             raise ValueError('reference/baseline/mask changed during quality evaluation')

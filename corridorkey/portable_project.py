@@ -190,6 +190,8 @@ def _inventory(job: JobRequest, preview_frame: int, asset_root, weights, check):
     job = job_from_wire(asdict(job))
     wire = job_to_wire(job)
     config, _ = job.configurations()
+    from .shot_profiles import reject_derived_profiles
+    reject_derived_profiles(config, 'Portable source/scratch relocation')
     deps: list[dict[str, Any]] = []
     pins: dict[str, tuple[FilePin, ...]] = {}
     total_files = total_paths = 0
@@ -760,6 +762,8 @@ def _apply(inspection, *, output_dir, temp_dir, check):
         raise ValueError('Inspection manifest differs from the pinned package manifest')
     effective = dict(data, dependencies=deps)
     archive = archive_job(data['original_job'])
+    from .shot_profiles import reject_derived_profiles
+    reject_derived_profiles(archive.config, 'Portable source/scratch relocation')
     foreign = archive.flavour != ('windows' if os.name == 'nt' else 'posix')
     if (foreign and archive.config.output_format == 'video' and archive.writer_executable_absolute
             and archive.writer_executable_flavour != ('windows' if os.name == 'nt' else 'posix')):

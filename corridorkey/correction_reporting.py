@@ -56,6 +56,7 @@ def correction_report(document: CorrectionDocument, document_path, *, runtime_fi
                     'authored_frames_count': len(document.frames), 'reset_frames_count': len(document.resets),
                     'tracks_count': len(data.get('tracks', [])),
                     'guidance_count': len(data.get('guidance', [])),
+                    'refinement_region_count': sum(entry['kind'] == 'region' for entry in data['entries']),
                     'guidance_counts_by_kind': {kind: sum(origin['kind'] == kind for origin in data.get('guidance', []))
                                                 for kind in ('clean_plate', 'subject_clicks')},
                     'guidance_scope': 'Generation observations, resource hashes and bindings remain in the manifest; final guidance is not proof of provider execution or improved matting quality.',

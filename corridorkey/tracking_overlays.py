@@ -41,7 +41,7 @@ MAX_PIXELS = 4 * 1024 * 1024
 MAX_MAP_BYTES = 64 * 1024 * 1024
 MAX_RECEIPT_BYTES = 64 * 1024
 MAX_PROVENANCE_BYTES = 32 * 1024
-KINDS = ('reliability', 'uncertainty')
+KINDS = ('reliability', 'uncertainty', 'disagreement')
 
 
 def _primitive(value, depth=0):
@@ -142,7 +142,7 @@ class OverlayMap:
 
     def __post_init__(self):
         if self.kind not in KINDS:
-            raise ValueError('Only reliability and uncertainty tracking layers are available')
+            raise ValueError('Only reliability, uncertainty and captured disagreement layers are available')
         _integer(self.width, 1, MAX_SIDE, 'proxy width')
         _integer(self.height, 1, MAX_SIDE, 'proxy height')
         if not isinstance(self.payload, bytes):
@@ -151,7 +151,7 @@ class OverlayMap:
             raise ValueError('Overlay u8 payload size differs from its proxy geometry')
 
 
-def _provenance(data, binding, width, height):
+def _provenance(data, binding, width, height, kinds):
     fields = {'contract', 'candidate_identity', 'status', 'reliability_calibrated', 'sample_contract',
               'max_side', 'estimator', 'motion', 'diagnostics', 'anchor_frames', 'cuts', 'resets', 'limitation'}
     if (set(data) != fields or data['contract'] != 'tracking-overlays-v1' or data['reliability_calibrated'] is not False
@@ -159,6 +159,14 @@ def _provenance(data, binding, width, height):
             or data['status'] not in ('authored_anchor', 'anchor_required', 'stopped', 'approximation', 'preview')
             or data['sample_contract'] != 'u8_0_255_area_average_display_proxy'):
         raise ValueError('Overlay provenance contract/binding differs')
+    if 'disagreement' in kinds:
+        anchors = data['anchor_frames']
+        diagnostics = data['diagnostics']
+        if (not isinstance(anchors, list) or len(anchors) != 2 or any(type(frame) is not int for frame in anchors)
+                or not 0 <= anchors[0] < binding.local_frame < anchors[1]
+                or not isinstance(diagnostics, dict) or diagnostics.get('flow_evaluations') != 4
+                or data['status'] == 'authored_anchor'):
+            raise ValueError('Disagreement requires an actually evaluated two-anchor interior target')
     _integer(data['max_side'], 1, MAX_SIDE, 'provenance max_side')
     scale = min(1., data['max_side'] / max(binding.native_width, binding.native_height))
     if (width, height) != (max(1, round(binding.native_width * scale)), max(1, round(binding.native_height * scale))):
@@ -174,14 +182,14 @@ class OverlayBundle:
     def __post_init__(self):
         if not isinstance(self.binding, OverlayBinding):
             raise TypeError('Overlay binding requires a dataclass instance')
-        if not isinstance(self.maps, tuple) or len(self.maps) != 2 or any(not isinstance(layer, OverlayMap) for layer in self.maps):
-            raise TypeError('Overlay bundle requires an immutable pair of map instances')
-        if tuple(layer.kind for layer in self.maps) != KINDS or len({(layer.width, layer.height) for layer in self.maps}) != 1:
+        if not isinstance(self.maps, tuple) or len(self.maps) not in (2, 3) or any(not isinstance(layer, OverlayMap) for layer in self.maps):
+            raise TypeError('Overlay bundle requires two maps and an optional third disagreement map')
+        if tuple(layer.kind for layer in self.maps) != KINDS[:len(self.maps)] or len({(layer.width, layer.height) for layer in self.maps}) != 1:
             raise ValueError('Overlay maps require ordered matching reliability/uncertainty geometry')
         if self.maps[0].width > self.binding.native_width or self.maps[0].height > self.binding.native_height:
             raise ValueError('Diagnostic display proxies cannot enlarge the native canvas')
         data = _parse(self.provenance_json, MAX_PROVENANCE_BYTES)
-        _provenance(data, self.binding, self.maps[0].width, self.maps[0].height)
+        _provenance(data, self.binding, self.maps[0].width, self.maps[0].height, tuple(layer.kind for layer in self.maps))
         object.__setattr__(self, 'provenance_json', _canonical(data, MAX_PROVENANCE_BYTES))
 
     @property
@@ -242,6 +250,9 @@ def build_tracking_overlays(candidate: TrackingCandidate, *, document_identity: 
     _hash(decode_identity, 'decode_identity')
     _integer(max_side, 1, MAX_SIDE, 'max_side')
     check_now(check)
+    if candidate.disagreement_bytes is not None and (candidate.status == 'authored_anchor'
+            or candidate.reliability_bytes is None or candidate.uncertain_bytes is None):
+        raise ValueError('Disagreement requires actual complete propagation measurements')
     if candidate.status == 'authored_anchor':
         return None  # Initialized ones/zeros are declared-anchor metadata, not spatial flow measurements.
     if candidate.reliability_bytes is None and candidate.uncertain_bytes is None:
@@ -284,7 +295,22 @@ def build_tracking_overlays(candidate: TrackingCandidate, *, document_identity: 
     scale = min(1., max_side / max(candidate.width, candidate.height))
     width, height = max(1, round(candidate.width * scale)), max(1, round(candidate.height * scale))
     layers = []
-    for kind, values in zip(KINDS, (reliability, uncertain), strict=True):
+    values_by_kind = [('reliability', reliability), ('uncertainty', uncertain)]
+    if candidate.disagreement_bytes is not None:
+        if not isinstance(candidate.disagreement_bytes, bytes) or len(candidate.disagreement_bytes) != pixels * 4:
+            raise ValueError('Disagreement bytes must match immutable native float32 geometry')
+        disagreement = np.frombuffer(candidate.disagreement_bytes, dtype='<f4').reshape(candidate.height, candidate.width)
+        if not np.isfinite(disagreement).all() or np.any((disagreement < 0) | (disagreement > 1)):
+            raise ValueError('Disagreement must be finite unit warped-anchor coverage difference')
+        anchors = provenance.get('anchor_frames', [])
+        if (not isinstance(anchors, list) or len(anchors) != 2
+                or any(type(frame) is not int for frame in anchors)
+                or not 0 <= anchors[0] < candidate.local_frame < anchors[1]):
+            raise ValueError('Disagreement requires two surrounding actual anchor dependencies')
+        for frame in anchors:
+            _hash(provenance['source_proxy_sha256'].get(str(frame)), 'anchor source proxy')
+        values_by_kind.append(('disagreement', disagreement))
+    for kind, values in values_by_kind:
         check_now(check)
         proxy = cv2.resize(values.astype(np.float32), (width, height), interpolation=cv2.INTER_AREA)
         payload = np.rint(np.clip(proxy, 0, 1) * 255).astype(np.uint8).tobytes()
@@ -295,7 +321,9 @@ def build_tracking_overlays(candidate: TrackingCandidate, *, document_identity: 
                 'estimator': provenance['track'].get('estimator'), 'motion': request.get('motion'),
                 'diagnostics': diagnostics, 'anchor_frames': provenance.get('anchor_frames', []),
                 'cuts': request.get('cuts', []), 'resets': request.get('resets', []),
-                'limitation': 'Flow/photometric heuristic, not confidence or proof of occlusion; no spatial disagreement measurement available.'}
+                'limitation': ('Warped-anchor coverage difference, not confidence, occlusion or final matte error.'
+                               if candidate.disagreement_bytes is not None else
+                               'Flow/photometric heuristic, not confidence or proof of occlusion; no spatial disagreement measurement available.')}
     check_now(check)
     return OverlayBundle(binding, tuple(layers), _canonical(metadata, MAX_PROVENANCE_BYTES))
 
@@ -315,14 +343,14 @@ def _validate_receipt(data):
     binding = OverlayBinding(**data['binding'])
     _hash(data['bundle_identity'], 'bundle_identity')
     rows = data['maps']
-    if not isinstance(rows, list) or len(rows) != 2:
-        raise ValueError('Overlay receipt requires exactly two map leaves')
+    if not isinstance(rows, list) or len(rows) not in (2, 3):
+        raise ValueError('Overlay receipt requires two maps and an optional third disagreement leaf')
     seen = set()
-    for kind, row in zip(KINDS, rows, strict=True):
+    for kind, row in zip(KINDS[:len(rows)], rows, strict=True):
         if not isinstance(row, dict) or set(row) != {'kind', 'width', 'height', 'name', 'bytes', 'sha256'} or row['kind'] != kind:
             raise ValueError('Overlay receipt map fields/order differ')
         name = safe_name(row['name'])
-        if name in seen or re.fullmatch(r'overlay-[0-9a-f]{32}-(reliability|uncertainty)\.u8', name) is None or not name.endswith('-' + kind + '.u8'):
+        if name in seen or re.fullmatch(r'overlay-[0-9a-f]{32}-(reliability|uncertainty|disagreement)\.u8', name) is None or not name.endswith('-' + kind + '.u8'):
             raise ValueError('Overlay receipt leaf name is unsafe or duplicated')
         seen.add(name)
         _integer(row['width'], 1, MAX_SIDE, 'map width')
@@ -336,7 +364,7 @@ def _validate_receipt(data):
     if not isinstance(provenance, dict):
         raise TypeError('Overlay receipt provenance must be an object')
     _canonical(provenance, MAX_PROVENANCE_BYTES)
-    _provenance(provenance, binding, rows[0]['width'], rows[0]['height'])
+    _provenance(provenance, binding, rows[0]['width'], rows[0]['height'], tuple(row['kind'] for row in rows))
 
 
 def write_bundle(bundle: OverlayBundle, owned_preview_dir: Path, *, remaining_budget: int, check=None) -> OverlayReceipt:
@@ -424,24 +452,43 @@ def read_bundle(receipt: OverlayReceipt | dict, owned_preview_dir: Path, *, expe
     return bundle
 
 
-def render_layer(bundle: OverlayBundle, kind: str, *, opacity: float = .55) -> OverlayRGBA:
+def render_layer(bundle: OverlayBundle, kind: str, *, opacity: float = .55, region=None, check=None) -> OverlayRGBA:
     if not isinstance(bundle, OverlayBundle):
         raise TypeError('Expected OverlayBundle instance')
     if kind not in KINDS:
-        raise ValueError('Spatial disagreement/occlusion ground truth is unavailable; choose reliability or uncertainty')
+        raise ValueError('Unknown diagnostic kind; occlusion ground truth is unavailable')
     if type(opacity) not in (int, float) or not math.isfinite(opacity) or not 0 <= opacity <= 1:
         raise ValueError('Overlay opacity must be finite in [0,1]')
     import numpy as np
-    layer = next(layer for layer in bundle.maps if layer.kind == kind)
+    layer = next((layer for layer in bundle.maps if layer.kind == kind), None)
+    if layer is None:
+        raise ValueError('Spatial disagreement is unavailable; this target had no captured two-anchor measurement')
     values = np.frombuffer(layer.payload, np.uint8).reshape(layer.height, layer.width)
     rgba = np.zeros((layer.height, layer.width, 4), np.uint8)
     rgba[:, :, :3] = (255, 70, 30)
     intensity = 255 - values if kind == 'reliability' else values
     rgba[:, :, 3] = np.rint(intensity.astype(np.float32) * opacity).astype(np.uint8)
+    check_now(check)
+    if region is not None:
+        import cv2
+        if (not isinstance(region, np.ndarray) or region.dtype != np.float32
+                or region.shape != (bundle.binding.native_height, bundle.binding.native_width)
+                or not np.isfinite(region).all() or np.any((region < 0) | (region > 1))):
+            raise ValueError('Diagnostic region must be finite native float32 coverage in [0,1]')
+        coverage = cv2.resize(region, (layer.width, layer.height), interpolation=cv2.INTER_AREA)
+        check_now(check)
+        rgba[:, :, 3] = np.rint(rgba[:, :, 3].astype(np.float32) * coverage).astype(np.uint8)
     status = _parse(bundle.provenance_json)['status']
-    legend = {'kind': kind, 'display': 'Red opacity: low heuristic reliability' if kind == 'reliability' else 'Red opacity: fraction flagged uncertain within each proxy cell',
+    legend = {'kind': kind, 'display': {'reliability': 'Red opacity: low heuristic reliability',
+                         'uncertainty': 'Red opacity: fraction flagged uncertain within each proxy cell',
+                         'disagreement': 'Red opacity: absolute warped-anchor coverage difference'}[kind],
               'range': [0, 1], 'encoding': 'u8 quantized area-average display proxy; not native pixel coverage',
               'calibrated': False, 'status': status,
-              'limitation': 'Not quality confidence, defect proof or verified occlusion. No disagreement map available.',
+              'limitation': ('Warped-anchor coverage difference is not confidence, occlusion or final matte error.'
+                             if kind == 'disagreement' else
+                             'Not quality confidence, defect proof or verified occlusion.'),
               'anchor_note': 'Authored-anchor reliability=1 and uncertainty=0 are initialized conventions, not measured flow success.'}
+    if region is not None:
+        legend['scope'] = 'Opacity clipped by authored/accepted diagnostic region, area-resampled to map proxy; measurements and scalar statistics unchanged.'
+    check_now(check)
     return OverlayRGBA(layer.width, layer.height, rgba.tobytes(), _canonical(legend))

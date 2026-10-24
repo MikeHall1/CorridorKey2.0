@@ -376,6 +376,8 @@ def prepare_range(snapshot: DiagnosticSnapshot, start_frame, end_frame, existing
         raise ValueError('Standalone range must lie within observed original source selection.')
     job = JobRequest(**data['job'])
     cfg, writer = job.configurations()
+    from .shot_profiles import reject_derived_profiles
+    reject_derived_profiles(cfg, 'Standalone diagnostic range')
     changed = (lo, hi) != (source['start_frame'], source['start_frame'] + source['num_frames'])
     if changed and cfg.corrections_path and correction_policy != 'drop':
         raise ValueError('Correction document is bound to original range; explicitly drop or cancel.')

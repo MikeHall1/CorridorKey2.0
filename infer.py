@@ -106,6 +106,7 @@ def main(argv=None, *, session=None):
     ap.add_argument("--alpha_refine_radius", type=int, default=0, help="Opt-in native spatial alpha filter radius [0,4]; 0 is off. Not a quality guarantee.")
     ap.add_argument("--alpha_refine_strength", type=float, default=1.0)
     ap.add_argument("--alpha_refine_sigma", type=float, default=0.1)
+    ap.add_argument("--shot_profiles", type=Path, default=None, help="Apply a saved source/base-recipe-bound shot profile document; explicit settings must match.")
     ap.add_argument("--alpha_expand_radius", type=int, default=0, help="Native coverage square expansion (+) / contraction (-) pixels [-32,32]; before authored constraints, 0 off.")
     ap.add_argument("--alpha_feather_radius", type=int, default=0, help="Native coverage Gaussian feather support radius [0,32] pixels; after expansion, before authored constraints, 0 off.")
     ap.add_argument("--linear_brightness", type=float, default=1.0)
@@ -240,23 +241,39 @@ def main(argv=None, *, session=None):
                                 hint_video_path=args.hint_video, profile_stages=args.profile_stages)
     except ValueError as exc:
         ap.error(str(exc))
+    if args.shot_profiles is not None:
+        from corridorkey.shot_profiles import apply_profiles, load_profiles
+        try:
+            _, profile_plan = load_profiles(args.shot_profiles)
+            job = apply_profiles(job, profile_plan)
+        except (ValueError, OSError) as exc:
+            ap.error(str(exc))
     if session is not None:
         if args.weights is not None and str(args.weights) != session.weights:
             ap.error("a persistent session cannot change weights; create a new session")
-        return _run_job(session, job, args.diagnostics)
+        return _run_job(session, job, args.diagnostics,
+                        protected_paths=() if args.shot_profiles is None else (args.shot_profiles,))
     with InferenceSession(Path(__file__).resolve().parent, args.weights) as owned_session:
-        return _run_job(owned_session, job, args.diagnostics)
+        return _run_job(owned_session, job, args.diagnostics,
+                        protected_paths=() if args.shot_profiles is None else (args.shot_profiles,))
 
 
-def _run_job(session, job, diagnostics_path):
-    from corridorkey.output_paths import validate_report_destination
+def _run_job(session, job, diagnostics_path, *, protected_paths=()):
+    from corridorkey.output_paths import (
+        validate_batch_output_paths,
+        validate_report_destination,
+    )
+    protected_paths = tuple(protected_paths)
+    if protected_paths:
+        validate_batch_output_paths((job,), weights=session.weights,
+            package_root=session.package_root, asset_root=session.asset_root, protected_paths=protected_paths)
     def persist():
         validate_report_destination(diagnostics_path, (job,), weights=session.weights,
-                                    package_root=session.package_root, asset_root=session.asset_root)
+                                    package_root=session.package_root, asset_root=session.asset_root, protected_paths=protected_paths)
         write_json_atomic(diagnostics_path, session.last_result.to_dict())
     if diagnostics_path is not None:
         validate_report_destination(diagnostics_path, (job,), weights=session.weights,
-                                    package_root=session.package_root, asset_root=session.asset_root)
+                                    package_root=session.package_root, asset_root=session.asset_root, protected_paths=protected_paths)
     previous = session.last_result
     try:
         return session.run(job)

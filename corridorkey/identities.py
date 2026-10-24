@@ -18,11 +18,17 @@ def file_sha256(path, *, check=None):
     return digest.hexdigest()
 
 
+def sequence_identity(path, files):
+    """Serialize already verified ordered frame hashes using the existing wire identity."""
+    files = [dict(item) for item in files]
+    return {"path": str(Path(path)), "files": files,
+            "sha256": hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()}
+
+
 def source_identity(path, *, check=None):
     path = Path(path)
     if path.is_file():
         return {"path": str(path), "sha256": file_sha256(path, check=check)}
     files = [{"name": Path(file).name, "sha256": file_sha256(file, check=check)}
              for file in frame_paths(path)]
-    return {"path": str(path), "files": files,
-            "sha256": hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()}
+    return sequence_identity(path, files)

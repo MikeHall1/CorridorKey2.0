@@ -85,6 +85,50 @@ class DesktopCleanPlateTests(unittest.TestCase):
         self.dialog.inspect_plate()
         self.until(lambda: self.dialog.pending is None)
 
+    def test_source_screen_samples_use_owned_preview_inspect_accept_and_save(self):
+        from corridorkey.corrections import load_corrections
+
+        self.dialog.screen_samples_mode.setChecked(True)
+        self.assertFalse(self.dialog.plate_reference_path.isEnabled())
+        self.assertFalse(self.dialog.plate_profile.isEnabled())
+        self.dialog.screen_points.setPlainText('8,8\n56,40')
+        self.dialog.screen_sample_radius.setValue(2)
+        self.dialog.screen_influence_radius.setValue(100)
+        self.dialog.screen_guidance_strength.setValue(.4)
+        self.preview()
+        assert self.dialog.snapshot is not None
+        captured = self.dialog.snapshot['plate_preview']
+        self.assertEqual(captured['request']['screen_sampling']['points'], [[8, 8], [56, 40]])
+        self.assertEqual(captured['request']['guidance_strength'], .4)
+        self.assertIn('SYNTHETIC', self.dialog.plate_note.text())
+        self.assertFalse(self.dialog.plate_accept.isEnabled())
+        self.inspect('screen_field')
+        self.assertFalse(self.dialog.plate_accept.isEnabled())
+        self.inspect('guidance')
+        self.assertTrue(self.dialog.plate_accept.isEnabled())
+        self.dialog.request('plate_accept')
+        self.until(lambda: self.dialog.pending is None and bool(self.dialog.entries))
+        entry = self.dialog.entries[0]
+        self.assertEqual((entry['kind'], entry['strength']), ('trimap', .4))
+        self.dialog.request('save')
+        self.until(lambda: self.dialog.pending is None and self.dialog.snapshot is not None
+                   and self.dialog.snapshot.get('saved_path') is not None)
+        assert self.dialog.snapshot is not None
+        document = load_corrections(self.dialog.snapshot['saved_path'], source=self.source).to_dict()
+        self.assertEqual(document['guidance'][0]['parameters']['settings']['screen_sampling']['points'], [[8, 8], [56, 40]])
+        self.assertEqual(self.before, {path: path.read_bytes() for path in self.before})
+        self.dialog.screen_points.setPlainText('not a coordinate')
+        serial = self.dialog.service.serial
+        self.dialog.preview_plate()
+        self.assertEqual(self.dialog.service.serial, serial)
+        self.assertIn('X,Y', self.dialog.status.text())
+        self.dialog.screen_points.setPlainText('0,0\n' * 33)
+        self.dialog.preview_plate()
+        self.assertEqual(self.dialog.service.serial, serial)
+        self.dialog.screen_points.setPlainText('0' * 2049)
+        self.dialog.preview_plate()
+        self.assertEqual(self.dialog.service.serial, serial)
+
     def test_explicit_preview_guidance_inspection_acceptance_and_immutable_inputs(self):
         self.preview()
         assert self.dialog.snapshot is not None

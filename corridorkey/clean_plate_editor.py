@@ -14,10 +14,13 @@ import numpy as np
 from .clean_plate import (
     INPUT_CONTRACT,
     KERNEL_VERSION,
+    MAX_PIXELS,
     CleanPlateProvenance,
     CleanPlateSettings,
     PlateMapping,
     assist_clean_plate,
+    restrict_screen_candidate,
+    screen_sample_reference,
 )
 from .correction_tracking_context import tracking_decode
 from .correction_tracking_editor import MAX_CLEANUP_PENDING, _cleanup, _source_hash
@@ -58,10 +61,11 @@ def plate_summary(editor):
     return json.loads(canonical(result))
 
 
-def prepare_plate(editor, *, frame, reference_path, reference_frame=0, reference_mode: Literal['single', 'sequence']='single',
+def prepare_plate(editor, *, frame, reference_path=None, reference_frame=0, reference_mode: Literal['single', 'sequence']='single',
                   reference_profile='srgb', alignment: Literal['declared', 'estimate_translation']='declared', translation_xy=(0., 0.),
                   compensate_exposure=False, samples_path=None, whole_frame_samples=False,
-                  background_threshold=.04, foreground_threshold=.35):
+                  background_threshold=.04, foreground_threshold=.35, screen_points=None,
+                  sample_radius=3, influence_radius=256, guidance_strength=1.):
     from .trimap_refinement import load_trimap_asset
     from .video_io import _read_frame_dir_views
     config, _ = editor.job.configurations()
@@ -69,9 +73,18 @@ def prepare_plate(editor, *, frame, reference_path, reference_frame=0, reference
         raise ValueError('Clean-plate assistance currently requires a source image sequence; video timing/decode acceptance is unavailable.')
     if type(frame) is not int or not 0 <= frame < editor.binding['frame_count']:
         raise ValueError('Choose a source frame inside the selected correction timeline.')
+    from .clean_plate import _number
+    _number(guidance_strength, 'guidance_strength', 0., 1.)
+    synthetic = screen_points is not None
+    if synthetic and (reference_path is not None or reference_frame != 0 or reference_mode != 'single'
+                      or reference_profile != 'srgb' or alignment != 'declared' or translation_xy != (0., 0.)
+                      or compensate_exposure is not False or samples_path is not None or whole_frame_samples is not False):
+        raise ValueError('Source screen samples cannot combine an empty plate, sample mask, alignment or exposure fitting.')
+    if not synthetic and reference_path is None:
+        raise ValueError('Select an empty plate or explicit source screen sample points.')
     if type(whole_frame_samples) is not bool or (samples_path is not None and whole_frame_samples):
         raise ValueError('Choose a binary background sample mask or explicitly declare the whole image as samples.')
-    if samples_path is None and not whole_frame_samples:
+    if not synthetic and samples_path is None and not whole_frame_samples:
         raise ValueError('Select native binary background samples, or explicitly choose the whole-image background assumption.')
     for directory in list(editor.tracking_cleanup_pending):
         _cleanup(editor, directory)
@@ -80,6 +93,8 @@ def prepare_plate(editor, *, frame, reference_path, reference_frame=0, reference
     settings = CleanPlateSettings(alignment=alignment, translation_xy=translation_xy,
                                   compensate_exposure=compensate_exposure,
                                   background_threshold=background_threshold, foreground_threshold=foreground_threshold)
+    if synthetic:
+        settings = replace(settings, screen_radius=0)
     settings.validate()
     height, width = editor.meta['native_hw']
     if height * width > settings.max_pixels or height * width * 320 + min(height, settings.proxy_max_side) * min(width, settings.proxy_max_side) * 24 > settings.max_working_bytes:
@@ -96,54 +111,77 @@ def prepare_plate(editor, *, frame, reference_path, reference_frame=0, reference
     source_index.check_path(source_frame)
     if tuple(source_rgb.shape[:2]) != (height, width):
         raise ValueError('Source frame geometry changed after editor binding.')
-    reference = Path(reference_path).absolute()
-    reference = reference.parent.resolve() / reference.name
-    if reference_profile not in {'srgb', 'linear_bt709_d65', 'linear_bt2020_d65'}:
-        raise ValueError('Choose explicit sRGB or scene-linear reference primaries.')
-    reference_config = replace(config, frame_dir_linear=reference_profile != 'srgb', frame_dir_alpha='ignore',
-                               source_colour_profile='legacy' if reference_profile == 'srgb' else reference_profile,
-                               linear_brightness=1., linear_contrast=1., linear_contrast_pivot=.18)
-    reference_decode = tracking_decode(reference_config, reference)
-    reference_decode['source_kind'] = 'frames'  # A selected still uses the native image decoder too.
-    if reference.is_dir():
-        reference_index = scan_sequence(reference, check=editor.check)
-        reference_count = len(reference_index.paths)
+    sampling = support = generated_raw = None
+    if synthetic:
+        reference_rgb, samples, support, sampling = screen_sample_reference(
+            source_rgb, screen_points, sample_radius=sample_radius, influence_radius=influence_radius,
+            max_pixels=settings.max_pixels, check=editor.check)
+        ok, encoded = cv2.imencode('.exr', np.ascontiguousarray(reference_rgb[..., ::-1]),
+                                   [cv2.IMWRITE_EXR_TYPE, cv2.IMWRITE_EXR_TYPE_FLOAT])
+        if not ok or encoded.nbytes > 64 * 1024 * 1024:
+            raise ValueError('Synthetic screen reference exceeds its encoded byte limit or could not be encoded.')
+        generated_raw = encoded.tobytes()
+        reference_hash = hashlib.sha256(generated_raw).hexdigest()
+        reference_profile, actual_reference_frame, reference_count = 'linear_bt709_d65', 0, 1
+        reference_decode = tracking_decode(replace(config, frame_dir_linear=True, frame_dir_alpha='ignore',
+                                                   source_colour_profile=reference_profile, linear_brightness=1.,
+                                                   linear_contrast=1., linear_contrast_pivot=.18), 'synthetic-screen.exr')
+        reference_decode['source_kind'] = 'frames'
+        mapping = PlateMapping('single', source_frame, 1, 0, 1)
+        resources = []
+        selected_reference = None
     else:
-        if reference.suffix.lower() not in {'.png', '.jpg', '.jpeg', '.exr'} or not reference.is_file():
-            raise ValueError('Select a local PNG/JPEG/EXR plate or an image-sequence directory.')
-        reference_index, reference_count = None, 1
-    mapping = PlateMapping(reference_mode, source_frame, 1, reference_frame, reference_count)
-    mapping.validate()
-    actual_reference_frame = mapping.reference_frame(source_frame)
-    selected_reference = reference_index.path_at(actual_reference_frame) if reference_index is not None else str(reference)
-    reference_admitted = admit_image(selected_reference, expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check)
-    reference_hash = reference_admitted.sha256
-    _, reference_rgb = _read_frame_dir_views(selected_reference, exr_linear=reference_config.frame_dir_linear,
-                                            alpha_mode='ignore', source_colour_profile=reference_config.source_colour_profile,
-                                            encoded_bytes=reference_admitted.encoded_bytes)
-    if admit_image(selected_reference, expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check).sha256 != reference_hash:
-        raise ValueError('Selected clean plate changed during decoding.')
-    if reference_index is not None:
-        reference_index.check_path(actual_reference_frame)
-    resources = [{'id': 'plate', 'role': 'reference', 'asset': {'path': selected_reference, 'sha256': reference_hash}}]
-    if samples_path is not None:
-        sample_path = Path(samples_path).absolute()
-        sample_path = sample_path.parent.resolve() / sample_path.name
-        sample_admitted = admit_image(sample_path, expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check)
-        if sample_admitted.channels != 1:
-            raise ValueError('Background sample masks must be native grayscale binary images: white selected, black excluded.')
-        sample_hash = sample_admitted.sha256
-        samples = load_trimap_asset(sample_path, expected_hw=(height, width), expected_sha256=sample_hash, check=editor.check).labels
-        if np.any(samples == 128):
-            raise ValueError('Background samples must be binary: white selected, black excluded; unknown trimap classes are not sampling weights.')
-        samples = (samples == 255).astype(np.uint8)
-        resources.append({'id': 'samples', 'role': 'source_sample', 'asset': {'path': str(sample_path), 'sha256': sample_hash}})
-    else:
-        samples = np.ones((height, width), np.uint8)
+        assert reference_path is not None  # Admitted above; synthetic and physical modes are exclusive.
+        reference = Path(reference_path).absolute()
+        reference = reference.parent.resolve() / reference.name
+        if reference_profile not in {'srgb', 'linear_bt709_d65', 'linear_bt2020_d65'}:
+            raise ValueError('Choose explicit sRGB or scene-linear reference primaries.')
+        reference_config = replace(config, frame_dir_linear=reference_profile != 'srgb', frame_dir_alpha='ignore',
+                                   source_colour_profile='legacy' if reference_profile == 'srgb' else reference_profile,
+                                   linear_brightness=1., linear_contrast=1., linear_contrast_pivot=.18)
+        reference_decode = tracking_decode(reference_config, reference)
+        reference_decode['source_kind'] = 'frames'  # A selected still uses the native image decoder too.
+        if reference.is_dir():
+            reference_index = scan_sequence(reference, check=editor.check)
+            reference_count = len(reference_index.paths)
+        else:
+            if reference.suffix.lower() not in {'.png', '.jpg', '.jpeg', '.exr'} or not reference.is_file():
+                raise ValueError('Select a local PNG/JPEG/EXR plate or an image-sequence directory.')
+            reference_index, reference_count = None, 1
+        mapping = PlateMapping(reference_mode, source_frame, 1, reference_frame, reference_count)
+        mapping.validate()
+        actual_reference_frame = mapping.reference_frame(source_frame)
+        selected_reference = reference_index.path_at(actual_reference_frame) if reference_index is not None else str(reference)
+        reference_admitted = admit_image(selected_reference, expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check)
+        reference_hash = reference_admitted.sha256
+        _, reference_rgb = _read_frame_dir_views(selected_reference, exr_linear=reference_config.frame_dir_linear,
+                                                alpha_mode='ignore', source_colour_profile=reference_config.source_colour_profile,
+                                                encoded_bytes=reference_admitted.encoded_bytes)
+        if admit_image(selected_reference, expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check).sha256 != reference_hash:
+            raise ValueError('Selected clean plate changed during decoding.')
+        if reference_index is not None:
+            reference_index.check_path(actual_reference_frame)
+        resources = [{'id': 'plate', 'role': 'reference', 'asset': {'path': selected_reference, 'sha256': reference_hash}}]
+        if samples_path is not None:
+            sample_path = Path(samples_path).absolute()
+            sample_path = sample_path.parent.resolve() / sample_path.name
+            sample_admitted = admit_image(sample_path, expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check)
+            if sample_admitted.channels != 1:
+                raise ValueError('Background sample masks must be native grayscale binary images: white selected, black excluded.')
+            sample_hash = sample_admitted.sha256
+            samples = load_trimap_asset(sample_path, expected_hw=(height, width), expected_sha256=sample_hash, check=editor.check).labels
+            if np.any(samples == 128):
+                raise ValueError('Background samples must be binary: white selected, black excluded; unknown trimap classes are not sampling weights.')
+            samples = (samples == 255).astype(np.uint8)
+            resources.append({'id': 'samples', 'role': 'source_sample', 'asset': {'path': str(sample_path), 'sha256': sample_hash}})
+        else:
+            samples = np.ones((height, width), np.uint8)
     decode = {'source': tracking_decode(config, editor.job.input_path), 'reference': reference_decode}
     provenance = CleanPlateProvenance(editor.binding['sha256'], reference_hash, _hash(decode['source']),
                                       _hash(reference_decode), source_frame, actual_reference_frame, mapping, INPUT_CONTRACT)
     candidate = assist_clean_plate(source_rgb, reference_rgb, samples, settings=settings, provenance=provenance, check=editor.check)
+    if synthetic:
+        candidate = restrict_screen_candidate(candidate, support, sampling)
     if (_source_hash(source_index, editor.check) != editor.binding['sha256']
             or scan_sequence(editor.job.input_path, check=editor.check).identity != source_index.identity):
         raise ValueError('Source changed during clean-plate analysis; candidate discarded.')
@@ -151,17 +189,34 @@ def prepare_plate(editor, *, frame, reference_path, reference_frame=0, reference
         if admit_image(resource['asset']['path'], expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check).sha256 != resource['asset']['sha256']:
             raise ValueError('Plate or sample reference changed during analysis; candidate discarded.')
     reference_display = _display(reference_rgb, count=reference_count,
-                                 note=f'Clean plate reference frame {actual_reference_frame}; explicit {reference_profile}')
+                                 note=('Synthetic screen reference from native source samples; not an empty plate' if synthetic else
+                                       f'Clean plate reference frame {actual_reference_frame}; explicit {reference_profile}'))
     directory = editor.workspace / ('plate-preview-' + uuid.uuid4().hex)
     directory.mkdir(exist_ok=False)
+    if generated_raw is not None:
+        generated_path = directory / 'synthetic-screen.exr'
+        try:
+            with generated_path.open('xb') as stream:
+                stream.write(generated_raw)
+            if admit_image(generated_path, expected_hw=(height, width), max_pixels=settings.max_pixels, check=editor.check).sha256 != reference_hash:
+                raise ValueError('Generated screen reference changed before preview publication.')
+        except BaseException:
+            _cleanup(editor, directory)
+            raise
+        selected_reference = str(generated_path)
+        resources = [{'id': 'plate', 'role': 'reference',
+                      'asset': {'path': selected_reference, 'sha256': reference_hash}}]
     old = getattr(editor, 'plate_preview', None)
     editor.plate_preview = {'frame': frame, 'source_frame': source_frame, 'reference_frame': actual_reference_frame,
                             'reference_path': selected_reference, 'directory': directory, 'candidate': candidate,
                             'document_identity': editor.document.identity, 'resources': resources, 'decode': decode,
                             'reference_display': reference_display, 'inspected': False,
+                            'generated_reference': synthetic,
                             'request': json.loads(canonical({'settings': asdict(settings), 'mapping': asdict(mapping),
                                         'reference_profile': reference_profile, 'whole_frame_samples': whole_frame_samples,
-                                        'sample_mask_path': str(samples_path) if samples_path is not None else None}))}
+                                        'sample_mask_path': str(samples_path) if samples_path is not None else None,
+                                        **({'screen_sampling': sampling} if synthetic else {}),
+                                        **({'guidance_strength': guidance_strength} if synthetic or guidance_strength != 1. else {})}))}
     if old is not None:
         _cleanup(editor, old['directory'])
 
@@ -204,6 +259,11 @@ def accept_plate(editor):
     source_index = scan_sequence(editor.job.input_path, check=editor.check)
     if _source_hash(source_index, editor.check) != editor.binding['sha256']:
         raise ValueError('Source changed after clean-plate preview; acceptance refused.')
+    if preview.get('generated_reference'):
+        for pending in list(editor.tracking_cleanup_pending):
+            _cleanup(editor, pending)
+        if len(editor.tracking_cleanup_pending) > MAX_CLEANUP_PENDING - 3:
+            raise OSError('Private synthetic-reference cleanup is blocked; retry cleanup before acceptance.')
     report = candidate.report()
     hashes = report['provenance']['input_hashes']
     ok, encoded = cv2.imencode('.png', candidate.labels())
@@ -223,13 +283,30 @@ def accept_plate(editor):
                                                      'rgb_sha256': hashes['reference_rgb_f32le']}],
                               'result_asset_sha256': result_hash, 'diagnostics': report['diagnostics']}}
     created = False
+    retained_reference = None
+    retained_created = False
+    previous_checkpoint = editor.checkpoint_path
     try:
+        if preview.get('generated_reference'):
+            resource = preview['resources'][0]
+            admitted = admit_image(resource['asset']['path'], expected_hw=(candidate.height, candidate.width), max_pixels=MAX_PIXELS, check=editor.check)
+            if admitted.sha256 != resource['asset']['sha256']:
+                raise ValueError('Synthetic screen reference changed after preview; acceptance refused.')
+            retained_reference = editor.workspace / 'assets' / (uuid.uuid4().hex + '.exr')
+            with retained_reference.open('xb') as stream:
+                retained_created = True
+                stream.write(admitted.encoded_bytes)
+            origin['resources'] = [{**resource, 'asset': {**resource['asset'], 'path': str(retained_reference)}}]
         with path.open('xb') as stream:
             created = True
             stream.write(raw)
-        editor._import_raster(path, kind='trimap', frame=preview['frame'], strength=1., direction='both',
+        editor._import_raster(path, kind='trimap', frame=preview['frame'],
+                              strength=preview['request'].get('guidance_strength', 1.), direction='both',
                               span=[preview['frame'], preview['frame'] + 1], origin=origin)
     finally:
+        if (retained_created and editor.checkpoint_path == previous_checkpoint
+                and retained_reference is not None and retained_reference not in editor.document.asset_paths()):
+            _cleanup(editor, retained_reference)
         try:
             if created:
                 path.unlink(missing_ok=True)  # Only the file this call created.

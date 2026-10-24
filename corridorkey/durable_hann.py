@@ -17,7 +17,7 @@ from .durable_rvm import (
     validate_tensor_header,
 )
 from .hann_identity import HannWindowIdentity, hann_window_identity
-from .recovery_identity import canonical
+from .recovery_identity import ReplayIdentity, UpstreamFinishingContext, canonical
 from .recovery_store import CacheCapacity, CacheInvalid, read_payload_bounded
 
 DTYPES = (torch.float32, torch.bfloat16, torch.float16)
@@ -49,6 +49,8 @@ def replay_state_digest(*, carry, accumulators, weights, pending_frames, previou
 
 class DurableHannWindows(BoundModelCache):
     def __init__(self, store, parent_identity, *, validate_context, check=None):
+        if not isinstance(parent_identity, (ReplayIdentity, UpstreamFinishingContext)):
+            raise TypeError('Parent must be an explicit replay or upstream finishing context instance')
         super().__init__(store, parent_identity, validate_context=validate_context, check=check)
         self.hits = 0
         self.misses = 0
@@ -209,7 +211,7 @@ class DurableHannWindows(BoundModelCache):
         return True
 
     def snapshot(self):
-        return {'enabled': True, 'parent_key': self.parent.key, 'window_hits': self.hits, 'window_misses': self.misses,
+        return {'enabled': True, 'parent_key': self.parent.key, 'parent_kind': self.parent.to_dict()['kind'], 'window_hits': self.hits, 'window_misses': self.misses,
                 'stage1_frame_instances_reused': self.frames_reused, 'stored_windows': self.stored,
                 'corrupt_entries': self.corrupt, 'budget_rejected_windows': self.budget_rejected,
                 'bytes_loaded': self.bytes_loaded, 'last_error': self.last_error,

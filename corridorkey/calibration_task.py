@@ -199,6 +199,33 @@ def _metrics(record,job,frame_count,state,native_hw):
     return result
 
 
+def evaluate_trial_quality(quality, record, *, check=None):
+    """Posthoc native-export reference agreement; never included in inference timing."""
+    from .benchmark_quality import evaluate_job_quality
+    from .evaluation_dossier import _compatibility
+    from .project_collection import check_now
+
+    check_now(check)
+    if not isinstance(record, dict):
+        raise TypeError('Quality evaluation requires the actual measured job record')
+    report = evaluate_job_quality(quality['template'], record)
+    check_now(check)
+    rows = []
+    for constraint in quality['policy']['limits']:
+        row = {**constraint, 'status': 'not_verified'}
+        try:
+            metric, _ = _compatibility(report, report, constraint['metric'])
+            row.update(value=metric['value'], population=metric['population'],
+                       status='pass' if metric['value'] <= constraint['maximum'] else 'fail')
+        except (ValueError, TypeError, KeyError, AttributeError) as exc:
+            row['reason'] = f'{type(exc).__name__}: {exc}'
+        rows.append(row)
+    statuses = {r['status'] for r in rows}
+    return {'status': 'fail' if 'fail' in statuses else 'not_verified' if 'not_verified' in statuses else 'pass', 'metrics': rows,
+            'scope': 'Absolute error against declared references, not pixel parity or absolute/visual ground-truth quality.'}, report
+
+
+
 def run_calibration(plan:CalibrationPlan,*,worker_factory=None,cancellation:CancellationToken|None=None,
                     progress=None,clock=time.perf_counter,_owner=None)->CalibrationReport:
     if not isinstance(plan,CalibrationPlan):
@@ -234,7 +261,9 @@ def run_calibration(plan:CalibrationPlan,*,worker_factory=None,cancellation:Canc
         token.check()
         if clock()-started > limits['max_wall_seconds']:
             raise TimeoutError('Calibration declared wall-time budget exceeded')
-        _size(scratch_root,limits['max_output_bytes'])
+        retained = _size(scratch_root,limits['max_output_bytes'])
+        if 'quality' in data:
+            _size(report_root, limits['max_output_bytes'] - retained)
 
     def run_job(client,wire,profile,state,repetition,phase):
         nonlocal completed,record_number
@@ -294,6 +323,7 @@ def run_calibration(plan:CalibrationPlan,*,worker_factory=None,cancellation:Canc
                     current = None
                     trial_start = clock()
                     primary = None
+                    record = None
                     try:
                         try:
                             # WorkerClient retires failed startup before raising,
@@ -344,6 +374,23 @@ def run_calibration(plan:CalibrationPlan,*,worker_factory=None,cancellation:Canc
                         raise ProcessCleanupError(report['cleanup_error']) from primary
                     if state=='cold_process':
                         trial['elapsed_seconds'] = clock()-trial_start
+                    if trial['status'] == 'complete' and 'quality' in data:
+                        quality_start = clock()
+                        trial['quality'] = {'status': 'not_verified', 'reason': 'Evaluation not completed'}
+                        try:
+                            revalidate_plan(plan, check=check)
+                            outcome, quality_report = evaluate_trial_quality(data['quality'], record, check=check)
+                            trial['quality'] = outcome
+                            trial['quality']['report'] = _write(report_root, f'quality-{record_number:04d}.json', quality_report)
+                            revalidate_plan(plan, check=check)
+                        except (CancelledError, KeyboardInterrupt):
+                            trial['quality'].update(status='not_verified', reason='Quality evaluation cancelled')
+                            raise
+                        except (ValueError, TypeError, KeyError) as exc:
+                            trial['quality'].update(status='not_verified', reason=f'{type(exc).__name__}: {exc}')
+                        finally:
+                            trial['quality_evaluation_seconds'] = clock() - quality_start
+                            trial['quality_timing_scope'] = 'Posthoc evaluation after inference timer and process retirement; excluded from cold/warm trial throughput.'
                     elapsed = trial.get('elapsed_seconds')
                     if trial['status']=='complete':
                         if not isinstance(elapsed,(int,float)) or isinstance(elapsed,bool) or not math.isfinite(elapsed) or elapsed<=0:
@@ -359,8 +406,12 @@ def run_calibration(plan:CalibrationPlan,*,worker_factory=None,cancellation:Canc
                         if execution_identity is not None and binding != execution_identity:
                             raise ValueError('Actual hardware/backend/precision changed between calibration trials')
                         execution_identity = binding
-                        trial['eligible'] = measured['neural_gpu_verified']
-                        trial['eligibility_note'] = 'Actual production CUDA execution observations' if trial['eligible'] else 'Fixture/unknown execution is not a GPU inference recommendation'
+                        trial['eligible'] = measured['neural_gpu_verified'] and ('quality' not in data or trial['quality']['status'] == 'pass')
+                        trial['eligibility_note'] = ('Actual production CUDA execution observations' if trial['eligible'] else
+                            'Declared reference-agreement constraints failed or are unavailable' if 'quality' in data and trial['quality']['status'] != 'pass' else
+                            'Fixture/unknown execution is not a GPU inference recommendation')
+                        if not trial['eligible']:
+                            trial['exclusion_reason'] = trial['eligibility_note']
                     revalidate_plan(plan,check=check)
                     notify(profile=profile['id'],state=state,repetition=repetition,phase='retired')
                     if isinstance(primary,(CancelledError,KeyboardInterrupt,TimeoutError,ArtifactBudgetError,OSError,GlobalPrerequisiteUnavailable)):

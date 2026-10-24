@@ -117,6 +117,9 @@ class PlaybackControls(QWidget):
     def play(self):
         owner = self.workspace
         try:
+            if owner.native_pixels.isChecked():
+                self.pause()
+                raise ValueError('Native image inspection is still-only; disable Native pixels before autoplay.')
             if owner.closing:
                 raise ValueError('Workspace is closing.')
             if owner.view.currentText() == 'Source' and owner.moving_reference is None:

@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,29 @@ from scripts import code_health
 
 
 class HealthTests(unittest.TestCase):
+    def test_source_inventory_needs_only_git_and_keeps_hidden_untracked_sources(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            subprocess.run(['git', 'init', '-q', str(root)], check=True)
+            (root / '.gitignore').write_text('ignored.py\nignored/\n')
+            for name in ('tracked.py', 'deleted.py', '.hidden.py', 'untracked space.py', 'ignored.py'):
+                (root / name).write_text('pass\n')
+            (root / 'ignored').mkdir()
+            (root / 'ignored' / 'hidden.py').write_text('pass\n')
+            subprocess.run(['git', 'add', 'tracked.py', 'deleted.py'], cwd=root, check=True)
+            (root / 'deleted.py').unlink()
+            original = subprocess.check_output
+
+            def without_ripgrep(command, **kwargs):
+                if command[0] == 'rg':
+                    raise FileNotFoundError('rg is not installed')
+                return original(command, **kwargs)
+
+            with patch.object(code_health, 'ROOT', root), \
+                    patch.object(subprocess, 'check_output', side_effect=without_ripgrep):
+                self.assertEqual(code_health.source_files(),
+                                 ['.hidden.py', 'tracked.py', 'untracked space.py'])
+
     def diagnostic(self, **changes):
         return {'filename': str(code_health.ROOT / 'corridorkey/runtime.py'),
                 'code': 'F821', 'message': 'Undefined name x',

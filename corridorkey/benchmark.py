@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 import hashlib
 import importlib.metadata
 import json
+import os
+import stat
 from pathlib import Path
 import platform
 import shutil
@@ -32,7 +34,42 @@ def command(*args):
     return result.stdout
 
 
-def repository_identity():
+def _repository_file(path, check, remaining):
+    """Optional bounded streaming path; legacy callers retain their prior hashing."""
+    flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
+    descriptor = os.open(path, flags)
+    with os.fdopen(descriptor, 'rb', buffering=0) as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode) or (remaining is not None and before.st_size > remaining):
+            raise ValueError('Repository verification byte limit exceeded or input is not regular')
+        digest, read_bytes = hashlib.sha256(), 0
+        while read_bytes < before.st_size:
+            if check is not None:
+                check()
+            amount = min(1024**2, before.st_size - read_bytes)
+            if remaining is not None:
+                amount = min(amount, remaining - read_bytes)
+            if amount <= 0:
+                raise ValueError('Repository verification byte limit exceeded')
+            block = stream.read(amount)
+            if not block:
+                raise ValueError('Repository input shrank during verification')
+            read_bytes += len(block)
+            digest.update(block)
+        identity = lambda info: (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        if identity(before) != identity(os.fstat(stream.fileno())) or identity(before) != identity(path.stat()):
+            raise ValueError('Repository input grew or changed during verification')
+        if check is not None:
+            check()
+        return digest.hexdigest(), read_bytes
+
+
+def repository_identity(*, check=None, max_bytes=None):
+    if max_bytes is not None and (type(max_bytes) is not int or max_bytes < 0):
+        raise ValueError('Repository verification byte limit requires a nonnegative exact integer')
+    if check is not None:
+        check()
+    used = 0
     status = command("git", "status", "--porcelain=v1", "-z")
     tracked = command("git", "ls-files", "-z").split(b"\0")
     untracked = command("git", "ls-files", "--others", "--exclude-standard", "-z").split(b"\0")
@@ -41,7 +78,16 @@ def repository_identity():
     for raw in sorted(set(tracked + untracked) - {b""}):
         path = ROOT / raw.decode()
         digest.update(raw + b"\0")
-        digest.update((sha256(path) if path.is_file() else "missing").encode())
+        if check is not None:
+            check()
+        value = 'missing'
+        if path.is_file():
+            if check is None and max_bytes is None:
+                value = sha256(path)
+            else:
+                value, streamed = _repository_file(path, check, None if max_bytes is None else max_bytes - used)
+                used += streamed
+        digest.update(value.encode())
     return {"commit": command("git", "rev-parse", "HEAD").decode().strip(),
             "dirty": bool(status), "status": status.decode().replace("\0", "\n"),
             "working_tree_sha256": digest.hexdigest()}

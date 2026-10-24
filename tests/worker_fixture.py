@@ -19,6 +19,7 @@ class FixtureEngine(SharedEngine):
     def __init__(self):
         super().__init__()
         self.loads = 0
+        self.selected_frame: int | None = None
 
     def load(self):
         self.loads += 1
@@ -60,6 +61,7 @@ while True:
         directory = Path(job.output_dir) / 'alpha'
         rasters = None
         count, width, height, fps = 2, 2, 1, 24.
+        source_start = 0
         if source.is_dir():
             from corridorkey.correction_rasters import CorrectionRasters
             from corridorkey.video_io import probe_frame_dir_meta
@@ -68,6 +70,7 @@ while True:
                        alpha_mode=config.frame_dir_alpha)
             height, width = meta['native_hw']
             count, fps = meta['num_frames'], meta['native_fps']
+            source_start = meta['start_frame']
             diagnostics.source = {k: v for k, v in meta.items() if k != 'frame_paths'}
             if diagnostics.correction_document is not None:
                 rasters = CorrectionRasters(diagnostics.correction_document, meta)
@@ -79,7 +82,8 @@ while True:
                          else np.array([0., .5], dtype=np.float32).reshape(height, width))
                 if rasters is not None:
                     alpha = rasters.apply(alpha, frame)
-                stream.write(alpha[..., None])
+                if self.selected_frame is None or frame + source_start == self.selected_frame:
+                    stream.write(alpha[..., None])
         finally:
             stream.release()
             if rasters is not None:
@@ -92,23 +96,35 @@ while True:
             try:
                 for frame in range(count):
                     diagnostics.control.checkpoint('fixture_foreground', frame, count)
-                    stream.write(np.full((height, width, 3), .25, np.float32))
+                    if self.selected_frame is None or frame + source_start == self.selected_frame:
+                        stream.write(np.full((height, width, 3), .25, np.float32))
             finally:
                 stream.release()
             diagnostics.outputs['fg'] = str(foreground)
             diagnostics.output_contracts['fg'] = {'format': 'exr', 'channels': 3, 'rgb_representation': 'scene_linear',
                                                  'foreground_mode': 'test_fixture'}
-        diagnostics.frames_submitted = count
+        if self.selected_frame is not None:
+            relative = self.selected_frame - source_start
+            if not 0 <= relative < count:
+                raise ValueError('Fixture selected frame outside timeline')
+            diagnostics.preview_selection = {'source_frame': self.selected_frame, 'relative_frame': relative,
+                'context_frames_processed': count, 'captured_frames': 1, 'full_context_processed': True}
+        diagnostics.frames_submitted = count if self.selected_frame is None else 1
         diagnostics.execution = {'neural_inference': False, 'fixture_loads': self.loads}
 
     def run(self, request, cancellation, progress):
         self.record = None
+        self.selected_frame = request.payload().get('selected_frame')
         if request.action == 'recover':
             return self.recover(request, cancellation, progress)
         if self.session is None:
             self.session = InferenceSession(loader=self.load, runner=self.render, disposer=lambda _: None)
         try:
-            return self.session.run(job_from_wire(request.payload()['job']), cancellation=cancellation, progress=progress).to_dict()
+            record = self.session.run(job_from_wire(request.payload()['job']), cancellation=cancellation, progress=progress).to_dict()
+            if self.selected_frame is not None:
+                # Explicit non-neural test engine contract, never a production custom-runner opt-in.
+                record['status'], record['end_to_end_fps'] = 'preview_complete', None
+            return record
         except BaseException:
             if self.session.last_result is not None:
                 self.record = self.session.last_result.to_dict()
@@ -150,7 +166,9 @@ while True:
             implementation_root=root, weights=weights, session_factory=factory, cancellation=cancellation,
             progress=progress, resume=payload['resume'], durable_foundations=payload['durable_foundations'],
             durable_rvm=payload['durable_rvm'], durable_hann=payload['durable_hann'],
-            durable_stage2=payload['durable_stage2'], durable_writer_prefix=payload['durable_writer_prefix'])
+            durable_stage2=payload['durable_stage2'], durable_writer_prefix=payload['durable_writer_prefix'],
+            reuse_upstream_finishing_edits=payload['reuse_upstream_finishing_edits'],
+            reuse_stage2_finishing_edits=payload['reuse_stage2_finishing_edits'])
         return {'status': report['status'], 'report_path': report['report_path'], 'job_count': len(report['jobs']),
                 'session_scope': 'fresh_recovery_batch', 'fixture_loads': self.loads}
 

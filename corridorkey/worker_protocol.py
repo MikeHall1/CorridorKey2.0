@@ -13,7 +13,8 @@ from .session import JobRequest
 MAX_FRAME_BYTES = 4 * 1024 * 1024
 EVENTS = {'ready', 'accepted', 'started', 'progress', 'result', 'failed', 'cancelled',
           'rejected', 'status', 'stopping', 'stopped'}
-RECOVERY_FLAGS = ('resume', 'durable_foundations', 'durable_rvm', 'durable_hann', 'durable_stage2', 'durable_writer_prefix')
+RECOVERY_FLAGS = ('resume', 'durable_foundations', 'durable_rvm', 'durable_hann', 'durable_stage2', 'durable_writer_prefix',
+                  'reuse_stage2_finishing_edits', 'reuse_upstream_finishing_edits')
 
 
 def identifier(value):
@@ -114,9 +115,14 @@ def parse_request(value):
     if not isinstance(action, str) or not isinstance(payload, dict):
         raise TypeError('worker action/payload types differ')
     if action in ('render', 'preview'):
-        if set(payload) != {'job'}:
-            raise ValueError(f'{action} requires one shared job')
-        payload = {'job': job_to_wire(job_from_wire(payload['job']))}
+        allowed = {'job', 'selected_frame'} if action == 'preview' else {'job'}
+        if 'job' not in payload or set(payload) - allowed:
+            raise ValueError(f'{action} requires one shared job and only supported execution controls')
+        selected = payload.get('selected_frame')
+        if 'selected_frame' in payload and (type(selected) is not int or selected < 0):
+            raise ValueError('Selected preview frame must be an absolute nonnegative integer')
+        payload = {'job': job_to_wire(job_from_wire(payload['job'])),
+                   **({'selected_frame': selected} if 'selected_frame' in payload else {})}
     elif action == 'recover':
         if set(payload) - {'batch', 'workspace', 'max_cache_bytes', *RECOVERY_FLAGS}:
             raise ValueError('unknown recovery field')
@@ -129,6 +135,11 @@ def parse_request(value):
             if type(payload.get(flag, False)) is not bool:
                 raise ValueError('recovery switches must be boolean')
             payload.setdefault(flag, False)
+        if payload['reuse_stage2_finishing_edits'] and not payload['durable_stage2']:
+            raise ValueError('finishing-edit reuse requires durable_stage2')
+        if payload['reuse_upstream_finishing_edits'] and not any(payload[name] for name in
+                ('durable_foundations', 'durable_rvm', 'durable_hann')):
+            raise ValueError('upstream finishing-edit reuse requires an explicit upstream durable cache')
     elif action == 'cancel':
         if set(payload) - {'target', 'reason'} or not isinstance(payload.get('reason', ''), str):
             raise ValueError('cancel requires target and optional reason string')

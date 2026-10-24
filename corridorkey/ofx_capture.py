@@ -271,6 +271,8 @@ def capture_job_config(plan: CapturePlan, config: InferenceConfig) -> InferenceC
         raise TypeError('Expected capture plan and config instances')
     plan.__post_init__()
     config.validate()
+    from .shot_profiles import reject_derived_profiles
+    reject_derived_profiles(config, 'OFX capture rebinding')
     if (config.corrections_path is not None or config.source_colour_profile != 'legacy' or config.start_mode != 'begin'
             or config.quick_cut_frames or config.quick_reset_frames or config.frame_dir_alpha != 'ignore'
             or (config.linear_brightness, config.linear_contrast, config.linear_contrast_pivot) != (1., 1., .18)):

@@ -127,7 +127,10 @@ class ColourProfileWorkflowTests(unittest.TestCase):
             request = client.submit(job)
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline:
-                event = client.next_event(timeout=1)
+                try:
+                    event = client.next_event(timeout=min(1, max(0, deadline - time.monotonic())))
+                except TimeoutError:
+                    continue
                 if event['request_id'] == request and event['kind'] in ('result', 'failed', 'cancelled', 'lost', 'rejected'):
                     self.assertEqual(event['kind'], 'result', event)
                     diagnostics = event['payload']['record']['diagnostics']

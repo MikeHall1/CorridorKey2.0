@@ -90,6 +90,35 @@ class DesktopCorrectionTests(unittest.TestCase):
         assert path is not None
         return Path(path)
 
+    def test_refinement_region_uses_existing_brush_save_and_history_ownership(self):
+        from corridorkey.corrections import load_corrections
+
+        old = self.window.job()
+        label = 'Refinement region — expansion/feather only'
+        self.assertGreaterEqual(self.editor.kind.findData('region'), 0)
+        self.assertIn('Inactive', self.editor.region_note.text())
+        self.paint_and_commit(label)
+        assert self.editor.snapshot is not None
+        entry = self.editor.snapshot['document']['entries'][0]
+        self.assertEqual((entry['kind'], entry['purpose'], entry['target']), ('region', 'refinement', 'edge_finishing'))
+        self.assertFalse(self.editor.kind.isEnabled())
+        self.assertFalse(self.editor.direction.isEnabled())
+        self.assertEqual(self.editor.direction.currentText(), 'both')
+        saved = self.save()
+        self.assertEqual(load_corrections(saved).to_dict()['schema_version'], 5)
+        self.assertIsNone(old.configurations()[0].corrections_path)
+        self.editor.request('undo')
+        self.until(lambda: self.editor.pending is None and self.editor.snapshot is not None
+                   and not self.editor.snapshot['document']['entries'])
+        self.editor.request('redo')
+        self.until(lambda: self.editor.pending is None and self.editor.snapshot is not None
+                   and len(self.editor.snapshot['document']['entries']) == 1)
+        assert self.editor.snapshot is not None
+        self.assertEqual(self.editor.snapshot['document']['entries'][0]['id'], entry['id'])
+        self.editor.new_mask()
+        self.assertEqual(self.editor.parameters()['kind'], 'region')
+        self.assertFalse(self.editor.direction.isEnabled())
+
     def test_real_queued_jobs_keep_old_manifest_and_native_corrected_outputs(self):
         import cv2
         self.window.enqueue()

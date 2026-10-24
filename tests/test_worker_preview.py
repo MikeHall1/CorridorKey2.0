@@ -2,6 +2,7 @@
 import copy
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import threading
@@ -220,6 +221,14 @@ class WorkerPreviewTests(unittest.TestCase):
         self.source.write_text(json.dumps({'exit': True}))
         client = WorkerClient(command=[sys.executable, str(FIXTURE)])
         try:
+            if os.name != 'nt':
+                # Prove discovery while the idle leader is alive, before requesting a hard exit.
+                with client.kill_lock:
+                    client._capture_descendants()
+                self.assertIsNotNone(client.containment)
+                assert client.containment is not None
+                self.assertGreater(client.containment.complete_samples, 0)
+                self.assertIsNone(client.containment.failure)
             identifier = client.submit_preview(self.job)
             event = self.terminal(client, identifier)
             self.assertEqual(event['kind'], 'lost')

@@ -29,6 +29,14 @@ class TrimapAsset:
     format: str
 
 
+@dataclass(frozen=True)
+class CoverageAsset:
+    coverage: Any
+    encoded_bytes: bytes
+    sha256: str
+    format: str
+
+
 def refinement_contract():
     return {"version": "native-trimap-joint-v1", "radius": 1, "sigma": .1, "spatial_sigma": .5,
             "classes": {"background": 0, "unknown": 128, "foreground": 255},
@@ -137,8 +145,8 @@ def _admit_header(raw, hw):
     return 'exr'
 
 
-def load_trimap_asset(path, *, expected_hw, expected_sha256=None, check=None):
-    """Read once, admit encoded geometry before decoding, retain exact class bits."""
+def _load_native_raster(path, *, expected_hw, expected_sha256=None, check=None):
+    """Shared bounded single-channel PNG/EXR admission before native decoding."""
     import cv2
     import numpy as np
 
@@ -156,6 +164,38 @@ def load_trimap_asset(path, *, expected_hw, expected_sha256=None, check=None):
     image = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_UNCHANGED)
     if image is None or image.shape != hw:
         raise ValueError('trimap decoder must return exactly native single-channel pixels')
+    return image, raw, digest, format_name
+
+
+def load_coverage_asset(path, *, expected_hw, expected_sha256=None, check=None):
+    """Native finite region coverage; same encoded/header bounds as trimaps."""
+    import numpy as np
+
+    image, raw, digest, format_name = _load_native_raster(
+        path, expected_hw=expected_hw, expected_sha256=expected_sha256, check=check)
+    if image.dtype == np.uint8:
+        coverage = image.astype(np.float32) / 255
+    elif image.dtype == np.uint16:
+        coverage = image.astype(np.float32) / 65535
+    elif np.issubdtype(image.dtype, np.floating):
+        coverage = image.astype(np.float32)
+    else:
+        raise ValueError('unsupported region coverage precision')
+    if not np.isfinite(coverage).all() or np.any((coverage < 0) | (coverage > 1)):
+        raise ValueError('region requires finite coverage in [0,1]')
+    coverage.setflags(write=False)
+    if check is not None:
+        check()
+    return CoverageAsset(coverage, raw, digest, format_name)
+
+
+def load_trimap_asset(path, *, expected_hw, expected_sha256=None, check=None):
+    """Read once, admit encoded geometry before decoding, retain exact class bits."""
+    import numpy as np
+
+    image, raw, digest, format_name = _load_native_raster(
+        path, expected_hw=expected_hw, expected_sha256=expected_sha256, check=check)
+    hw = tuple(expected_hw)
     if image.dtype == np.uint8:
         values = (0, 128, 255)
     elif image.dtype == np.uint16:
@@ -171,7 +211,8 @@ def load_trimap_asset(path, *, expected_hw, expected_sha256=None, check=None):
     labels[image == values[1]] = 128
     labels[image == values[2]] = 255
     labels.setflags(write=False)
-    check()
+    if check is not None:
+        check()
     return TrimapAsset(labels, raw, digest, format_name)
 
 

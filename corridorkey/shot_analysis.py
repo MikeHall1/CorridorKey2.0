@@ -76,7 +76,9 @@ def analyze_shots(frame_count, read_source, *, settings=None, control=None, emit
             cut = score >= settings.cut_threshold and delta >= settings.min_pixel_change
             if cut:
                 cuts.append(frame)
-        record = {"frame": frame, "cut": cut, "score": score,
+        detail = float((np.abs(np.diff(current, axis=0)).mean()
+                        + np.abs(np.diff(current, axis=1)).mean()) / 2)
+        record = {"edge_detail": detail, "frame": frame, "cut": cut, "score": score,
                   "mean_rgb_change": delta, "histogram_distance": distance,
                   "calibrated": False}
         if emit is not None:

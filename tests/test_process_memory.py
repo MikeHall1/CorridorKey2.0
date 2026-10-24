@@ -53,6 +53,24 @@ class ProcessMemoryTests(unittest.TestCase):
         self.assertLess(second['current_rss_bytes'], first['current_rss_bytes'])
         json.dumps(second, allow_nan=False)
 
+    def test_new_child_rss_is_included_when_root_rss_shrinks(self):
+        mib = 1024 * 1024
+        provider = Provider([info(1, rss=128 * mib)])
+        observer = ProcessTreeMemory(1, provider=provider)
+        baseline = observer.sample()
+        self.assertEqual(baseline['current_rss_bytes'], 128 * mib)
+        provider.records[1] = info(1, rss=32 * mib)
+        provider.records[2] = info(2, 1, rss=32 * mib)
+        result = observer.sample()
+        self.assertEqual(result['status'], 'available', result)
+        self.assertEqual(result['process_count'], 2)
+        owned = next(item for item in result['processes'] if item['pid'] == 2)
+        self.assertEqual(owned['rss_bytes'], 32 * mib)
+        self.assertEqual(owned['birth_identity'], observer.known[2])
+        self.assertEqual(result['current_rss_bytes'], 64 * mib)
+        self.assertEqual(result['current_rss_bytes'], sum(item['rss_bytes'] for item in result['processes']))
+        self.assertLess(result['current_rss_bytes'], baseline['current_rss_bytes'])
+
     def test_confirmed_exit_and_pid_reuse_exclude_unrelated_process(self):
         provider = Provider([info(1), info(2, 1)])
         observer = ProcessTreeMemory(1, provider=provider)
@@ -171,7 +189,8 @@ class ProcessMemoryTests(unittest.TestCase):
             self.assertEqual(result['status'], 'available', result)
             owned = next(item for item in result['processes'] if item['pid'] == child.pid)
             self.assertGreater(owned['rss_bytes'], 24 * 1024 * 1024)
-            self.assertGreater(result['current_rss_bytes'], baseline['current_rss_bytes'] + 24 * 1024 * 1024)
+            # Root/other RSS can shrink between samples; check inclusion in this sample.
+            self.assertEqual(result['current_rss_bytes'], sum(item['rss_bytes'] for item in result['processes']))
             timings = []
             for _ in range(20):
                 started = time.perf_counter()

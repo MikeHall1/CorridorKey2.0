@@ -70,6 +70,28 @@ class TerminalRaceTests(unittest.TestCase):
         self.assertIsNone(result['current_rss_bytes'])
         self.verify_no_group(owner)
 
+    def test_native_exit_waits_boundedly_for_delayed_popen_confirmation(self):
+        provider, _, owner = self.make_owner()
+        owner.sample(force=True)
+        polls = []
+
+        def delayed_owner():
+            if not provider.terminal:
+                return False
+            polls.append(True)
+            return len(polls) >= 3
+
+        owner.root_exited = delayed_owner
+        owner.clock = lambda: 0.0  # Retry bound must not depend on an advancing injected clock.
+        provider.mode = 'exit'
+        with patch('corridorkey.stress_containment.time.sleep') as sleep:
+            owner.sample(force=True)
+        self.assertIsNone(owner.failure)
+        self.assertEqual(len(polls), 3)
+        self.assertEqual(sleep.call_count, 2)
+        self.assertEqual(owner.terminal_exit_races, 1)
+        self.verify_no_group(owner)
+
     def test_exit_during_final_identity_check_has_distinct_structured_reason(self):
         provider, _, owner = self.make_owner()
         owner.sample(force=True)
@@ -93,7 +115,10 @@ class TerminalRaceTests(unittest.TestCase):
         owner.sample(force=True)
         owner.root_exited = lambda: False
         provider.mode = 'exit'
-        owner.sample(force=True)
+        owner.clock = lambda: 0.0
+        with patch('corridorkey.stress_containment.time.sleep') as sleep:
+            owner.sample(force=True)
+        self.assertEqual(sleep.call_count, 9)
         self.assertIsNotNone(owner.failure)
         self.assertEqual(owner.terminal_exit_races, 0)
 

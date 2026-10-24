@@ -10,7 +10,7 @@ from safetensors import SafetensorError
 from safetensors.torch import load, save
 
 from .durable_context import BoundModelCache
-from .recovery_identity import canonical
+from .recovery_identity import ReplayIdentity, UpstreamFinishingContext, canonical
 from .recovery_store import CacheCapacity, CacheInvalid, read_payload_bounded
 from .recurrent_identity import RvmChunkIdentity, rvm_chunk_identity
 
@@ -72,6 +72,8 @@ def tensor_digest(value):
 
 class DurableRvmChunks(BoundModelCache):
     def __init__(self, store, parent_identity, *, validate_context, check=None):
+        if not isinstance(parent_identity, (ReplayIdentity, UpstreamFinishingContext)):
+            raise TypeError('Parent must be an explicit replay or upstream finishing context instance')
         super().__init__(store, parent_identity, validate_context=validate_context, check=check)
         self.hits = 0
         self.misses = 0
@@ -218,7 +220,7 @@ class DurableRvmChunks(BoundModelCache):
         return True
 
     def snapshot(self):
-        return {'enabled': True, 'parent_key': self.parent.key, 'chunk_hits': self.hits, 'chunk_misses': self.misses,
+        return {'enabled': True, 'parent_key': self.parent.key, 'parent_kind': self.parent.to_dict()['kind'], 'chunk_hits': self.hits, 'chunk_misses': self.misses,
                 'frames_reused': self.frames_reused, 'stored_chunks': self.stored, 'corrupt_entries': self.corrupt,
                 'budget_rejected_chunks': self.budget_rejected, 'bytes_loaded': self.bytes_loaded,
                 'last_error': self.last_error, 'feature_dtype': 'normalized float16 (existing prepass precision)',

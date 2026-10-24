@@ -8,19 +8,28 @@ from pathlib import Path
 from typing import TypeGuard
 
 from .benchmark_report import MAX_VIEW_CHARS, read_report
+from .diagnostics import (
+    MAX_STAGE_GROUPS,
+    MAX_STAGE_NAME_CHARS,
+    STAGE_AGGREGATION_SCOPE,
+    STAGE_OVERFLOW_NAME,
+)
 
 MAX_SAMPLES = 256
 MAX_JOBS = 4096
 MAX_STAGES = 4096
 NOT_VERIFIED = 'NOT VERIFIED'
 LANES = {
-    'decode': {'decode'}, 'transfer': {'transfer'},
+    'decode': {'decode', 'source_decode'},
+    'preprocessing': {'source_preprocess', 'source_normalize', 'source_colour', 'source_model_prepare'},
+    'transfer': {'transfer', 'rvm_rgb_upload_and_float'},
     'foundations': {'iid_foundations', 'foundation_prepass'},
     'temporal': {'rvm_prepass', 'stage1_stream', 'stage1_stream_including_stage2_render_submit'},
     'neural_refinement': {'stage2_inference'}, 'postprocess': {'render'},
-    'encoding': {'encoding'}, 'write_submission': {'writer_submit'},
+    'encoding': {'encoding', 'native_image_encode_and_write'}, 'write_submission': {'writer_submit'},
     'writer_finalize_cleanup': {'writer_finalize_and_cleanup'},
-    'delivery': set(), 'queue': set(), 'synchronization': set(),
+    'delivery': set(), 'queue': set(),
+    'synchronization': {'cuda_sync_before_scope', 'cuda_sync_after_scope'},
 }
 
 
@@ -67,6 +76,26 @@ def _observation(value, scope, kind=None):
     return {'status': 'recorded', 'scope': scope, 'value': value}
 
 
+def _stage_moments_consistent(stage):
+    count, total = stage['count'], stage['seconds']
+    minimum, maximum = stage['min_seconds'], stage['max_seconds']
+    if count == 1:
+        return minimum == maximum == total
+    try:
+        # Both extrema occurred at least once. Allow only positive-sum floating
+        # accumulation/derived-bound roundoff; no absolute tolerance near zero.
+        lower = (count - 1) * minimum + maximum
+        upper = minimum + (count - 1) * maximum
+        error = (count + 2) * math.ulp(1.0)
+        if not math.isfinite(lower) or not math.isfinite(upper) or not 0 < error < .5:
+            return False
+        tolerance = error / (1 - error)
+        return ((total >= lower or math.isclose(total, lower, rel_tol=tolerance, abs_tol=0))
+                and (total <= upper or math.isclose(total, upper, rel_tol=tolerance, abs_tol=0)))
+    except OverflowError:
+        return False
+
+
 def _job(job, index, frame_budget):
     if not isinstance(job, dict):
         raise TypeError('Inference jobs must be records')
@@ -76,14 +105,44 @@ def _job(job, index, frame_budget):
     stages = diagnostics.get('stages') or []
     if not isinstance(stages, list) or len(stages) > MAX_STAGES:
         raise ValueError('Stage observation count exceeds projection limit')
+    aggregation = diagnostics.get('stage_observations')
+    if aggregation is not None and (not isinstance(aggregation, dict) or set(aggregation) != {'schema_version', 'format', 'group_limit',
+                'name_limit', 'observations', 'overflow_observations', 'scope'}
+                or type(aggregation['schema_version']) is not int or aggregation['schema_version'] != 1
+                or aggregation['format'] != 'aggregated_scopes_v1' or aggregation['scope'] != STAGE_AGGREGATION_SCOPE
+                or type(aggregation['group_limit']) is not int or aggregation['group_limit'] != MAX_STAGE_GROUPS
+                or type(aggregation['name_limit']) is not int or aggregation['name_limit'] != MAX_STAGE_NAME_CHARS
+                or any(type(aggregation[k]) is not int or aggregation[k] < 0 for k in
+                       ('observations', 'overflow_observations')) or len(stages) > MAX_STAGE_GROUPS):
+        raise ValueError('Invalid bounded stage aggregation metadata')
     valid = []
+    seen_groups = set()
+    named_groups = 0
     for stage in stages:
         if (not isinstance(stage, dict) or not isinstance(stage.get('name'), str)
                 or len(stage['name']) > 256 or not _number(stage.get('seconds'))
                 or stage.get('method') not in ('host_wall', 'synchronized_wall')
                 or stage.get('status') not in ('complete', 'failed')):
             raise ValueError('Invalid recorded stage observation')
-        valid.append({k: stage[k] for k in ('name', 'seconds', 'method', 'status')})
+        row = {k: stage[k] for k in ('name', 'seconds', 'method', 'status')}
+        if aggregation is not None:
+            if (type(stage.get('count')) is not int or stage['count'] < 1
+                    or not _number(stage.get('min_seconds')) or not _number(stage.get('max_seconds'))
+                    or not stage['min_seconds'] <= stage['max_seconds'] <= stage['seconds']
+                    or type(stage.get('overflow')) is not bool or len(stage['name']) > MAX_STAGE_NAME_CHARS
+                    or stage['overflow'] != (stage['name'] == STAGE_OVERFLOW_NAME)):
+                raise ValueError('Invalid aggregated stage observation')
+            key = (stage['name'], stage['method'], stage['status'])
+            named_groups += int(not stage['overflow'])
+            if (key in seen_groups or named_groups > MAX_STAGE_GROUPS - 4
+                    or not _stage_moments_consistent(stage)):
+                raise ValueError('Duplicate/excessive stage groups or inconsistent aggregate moments')
+            seen_groups.add(key)
+            row.update({k: stage[k] for k in ('count', 'min_seconds', 'max_seconds', 'overflow')})
+        valid.append(row)
+    if aggregation is not None and (sum(s['count'] for s in valid) != aggregation['observations']
+            or sum(s['count'] for s in valid if s['overflow']) != aggregation['overflow_observations']):
+        raise ValueError('Stage aggregation observation/overflow counts differ')
     first = diagnostics.get('first_rendered_batch_seconds')
     elapsed = job.get('processing_seconds')
     frames = diagnostics.get('frames_submitted')
@@ -97,7 +156,9 @@ def _job(job, index, frame_budget):
             'model_initialization_seconds': job.get('model_initialization_seconds') if _number(job.get('model_initialization_seconds')) else None,
             'profiling_enabled': diagnostics.get('profiling_enabled'),
             'stages': valid,
+            **({'stage_observations': aggregation} if aggregation is not None else {}),
             'stage_lanes': {lane: [s for s in valid if s['name'] in names] or NOT_VERIFIED for lane, names in LANES.items()},
+            'encoding_scope': 'native_image_encode_and_write is combined native image encoding and filesystem service; not pure encoding, CPU time, fsync, queue backlog or playback. Async scopes may overlap other work and are not additive throughput.',
             'target_budget_seconds': frame_budget,
             'output_telemetry': _observation(diagnostics.get('output_telemetry'),
                 'Recorded render-ready/queue/native-write milestones only; native write is not fsync or playback. Partial populations retain their recorded status.', 'output_telemetry'),

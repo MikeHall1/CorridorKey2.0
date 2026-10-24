@@ -12,6 +12,8 @@ from .diagnostics import finite_json_float, write_json_atomic
 from .identities import file_sha256, source_identity
 from . import guidance_provenance
 
+REGION_TARGETS = {'refinement': 'edge_finishing', 'composite': 'despill', 'diagnostic': 'tracking_overlay'}
+
 MAX_CORRECTION_BYTES = 4 * 1024 * 1024
 MAX_TRACK_FRAMES = 300
 MAX_TRACK_ANCHORS = 32
@@ -107,8 +109,14 @@ def track_binding(document_data, anchor_ids, *, cuts, decode, tracking):
     if positions != list(range(positions[0], positions[0] + len(positions))):
         raise ValueError('tracking anchors must occupy contiguous composition positions')
     first = selected[0]
-    if first['kind'] not in ('matte', 'keep', 'remove') or any(entry['kind'] != first['kind'] or entry['strength'] != first['strength'] for entry in selected):
-        raise ValueError('tracking anchors require the same coverage operation and strength')
+    if first['kind'] not in ('matte', 'keep', 'remove', 'region') or any(
+            (entry['kind'], entry['strength'], entry.get('purpose'), entry.get('target')) !=
+            (first['kind'], first['strength'], first.get('purpose'), first.get('target')) for entry in selected):
+        raise ValueError('tracking anchors require the same coverage operation, strength, purpose and target')
+    if first['kind'] == 'region' and (data.get('schema_version') != 5 or not isinstance(first.get('purpose'), str)
+                                    or first['purpose'] not in REGION_TARGETS
+                                    or REGION_TARGETS[first['purpose']] != first.get('target')):
+        raise ValueError('tracked regions require version5 supported purpose/target anchors')
     if len({entry['frame'] for entry in selected}) != len(selected):
         raise ValueError('tracking anchors must have distinct frames')
     count = data['source']['frame_count']
@@ -348,13 +356,13 @@ class CorrectionDocument:
     @classmethod
     def parse(cls, data, base_dir: str | Path = "."):
         keys = {"schema_version", "revision", "source", "shots", "entries"}
-        if isinstance(data, dict) and data.get('schema_version') in (3, 4):
+        if isinstance(data, dict) and data.get('schema_version') in (3, 4, 5):
             keys.add('tracks')
-        if isinstance(data, dict) and data.get('schema_version') == 4:
+        if isinstance(data, dict) and data.get('schema_version') in (4, 5):
             keys.add('guidance')
         if not isinstance(data, dict) or set(data) != keys:
             raise ValueError("corrections require schema_version, revision, source, shots and entries only")
-        if type(data["schema_version"]) is not int or data["schema_version"] not in (1, 2, 3, 4):
+        if type(data["schema_version"]) is not int or data["schema_version"] not in (1, 2, 3, 4, 5):
             raise ValueError("unsupported correction schema version")
         _integer(data["revision"], "revision")
         source = data["source"]
@@ -382,8 +390,11 @@ class CorrectionDocument:
         for entry in data["entries"]:
             common = {"id", "revision", "frame", "kind"}
             reset = isinstance(entry, dict) and entry.get("kind") == "reset"
-            if data['schema_version'] == 4 and isinstance(entry, dict) and 'guidance_id' in entry and not reset:
+            if data['schema_version'] >= 4 and isinstance(entry, dict) and 'guidance_id' in entry and not reset:
                 common.add('guidance_id')
+            region = isinstance(entry, dict) and entry.get('kind') == 'region'
+            if region:
+                common.update(('purpose', 'target'))
             if not isinstance(entry, dict) or set(entry) != (common if reset else common | {"asset", "strength", "direction", "range"}):
                 raise ValueError("unknown or missing correction fields")
             if not isinstance(entry["id"], str) or not entry["id"] or entry["id"] in seen:
@@ -394,10 +405,16 @@ class CorrectionDocument:
             kinds = {"matte", "keep", "remove", "reset"}
             if data["schema_version"] >= 2:
                 kinds.add("trimap")
+            if data['schema_version'] >= 5:
+                kinds.add('region')
             if entry["frame"] >= source["frame_count"] or entry["kind"] not in kinds:
                 raise ValueError("unsupported correction kind or frame outside selected timeline")
             if reset:
                 continue
+            if region and (not isinstance(entry['purpose'], str) or entry['purpose'] not in REGION_TARGETS
+                           or REGION_TARGETS[entry['purpose']] != entry['target']
+                           or entry['direction'] != 'both' or 'guidance_id' in entry):
+                raise ValueError('regions require authored both-direction supported purpose/target coverage')
             _asset(entry['asset'])
             strength = entry["strength"]
             if type(strength) not in (int, float) or not math.isfinite(strength) or not 0 <= strength <= 1:
@@ -415,7 +432,7 @@ class CorrectionDocument:
                 raise ValueError("correction direction and range disagree")
         if data['schema_version'] >= 3:
             _parse_tracks(data)
-        if data['schema_version'] == 4:
+        if data['schema_version'] >= 4:
             from .guidance_provenance import parse_guidance
 
             parse_guidance(data)
@@ -456,7 +473,7 @@ class CorrectionDocument:
     @property
     def frames(self):
         return tuple(sorted({entry["frame"] for entry in self.to_dict()["entries"]
-                             if entry["kind"] == "reset" or entry["strength"] > 0}))
+                             if entry["kind"] == "reset" or (entry['kind'] != 'region' and entry["strength"] > 0)}))
 
     @property
     def resets(self):
@@ -487,6 +504,12 @@ class CorrectionDocument:
         self.admit_track_assets(check=check)
         verify_guidance_resources(data, self.base_dir, check=check)
         for entry in data["entries"]:
+            if entry['kind'] == 'region':
+                from .trimap_refinement import load_coverage_asset
+
+                load_coverage_asset(self.base_dir / entry['asset']['path'], expected_hw=shape,
+                                    expected_sha256=entry['asset']['sha256'], check=check)
+                continue
             if entry["kind"] == "trimap":
                 from .trimap_refinement import load_trimap_asset
 

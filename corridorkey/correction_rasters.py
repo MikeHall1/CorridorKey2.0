@@ -39,7 +39,7 @@ class CorrectionRasters:
         self.check()
         tracked = entry.get('_tracked', False)
         path = ((self.document.base_dir / entry["asset"]["path"])
-                if entry["kind"] == "trimap" or tracked else self.document.asset_path(entry))
+                if entry["kind"] in ('trimap', 'region') or tracked else self.document.asset_path(entry))
         key = (str(path), entry["asset"]["sha256"], entry["kind"],
                'tracked-float32-v1' if tracked else ("strict-trimap-v1" if entry["kind"] == "trimap" else "coverage-v1"),
                entry.get('_mask_sha256'))
@@ -60,6 +60,12 @@ class CorrectionRasters:
             from .trimap_refinement import load_trimap_asset
             mask = load_trimap_asset(path, expected_hw=self.shape,
                                      expected_sha256=entry["asset"]["sha256"], check=self.check).labels
+            self._cache[key] = mask
+            return mask
+        if entry['kind'] == 'region':
+            from .trimap_refinement import load_coverage_asset
+            mask = load_coverage_asset(path, expected_hw=self.shape,
+                                       expected_sha256=entry['asset']['sha256'], check=self.check).coverage
             self._cache[key] = mask
             return mask
         payload = path.read_bytes()
@@ -89,15 +95,17 @@ class CorrectionRasters:
         self.check()
         return mask
 
-    def _active(self, frame, *, temporal=False):
+    def _active(self, frame, *, temporal=False, regions=False):
         if temporal:
-            return [entry for entry in self._entries if entry['kind'] not in ('reset', 'trimap') and entry['strength'] > 0
+            return [entry for entry in self._entries if entry['kind'] not in ('reset', 'trimap', 'region') and entry['strength'] > 0
                     and entry['range'][0] <= frame < entry['range'][1] and entry['direction'] == 'both']
         tracks = [track for track in self._tracks if track['range'][0] <= frame < track['range'][1]]
         consumed = {identifier for track in tracks for identifier in track['anchor_ids']}
         owners = {track['owner_id']: track for track in tracks}
         active = []
         for entry in self._entries:
+            if (entry['kind'] == 'region') != regions:
+                continue
             if entry['id'] in consumed:
                 track = owners.get(entry['id'])
                 if track is not None and entry['strength'] > 0:
@@ -113,7 +121,7 @@ class CorrectionRasters:
         return bool(self._active(frame, temporal=temporal))
 
     def has_condition(self, frame):
-        return any(e["kind"] not in ("reset", "trimap") and e["strength"] > 0 and e["direction"] == "both"
+        return any(e["kind"] not in ("reset", "trimap", 'region') and e["strength"] > 0 and e["direction"] == "both"
                    and e["frame"] == frame for e in self._entries)
 
     @property
@@ -124,6 +132,8 @@ class CorrectionRasters:
         return any(e["kind"] == "trimap" for e in self._active(frame))
 
     def _operation(self, alpha, entry, *, guidance=None):
+        if entry['kind'] not in ('trimap', 'matte', 'keep', 'remove'):
+            raise ValueError('Unsupported correction operation')
         mask, strength = self._mask(entry), entry["strength"]
         if entry["kind"] == "trimap":
             if guidance is None:
@@ -135,6 +145,35 @@ class CorrectionRasters:
         if entry["kind"] == "keep":
             return alpha + (1 - alpha) * mask * strength
         return alpha * (1 - mask * strength)
+
+    def refinement_region(self, frame):
+        """Maximum refinement weights; None retains full-frame finishing."""
+        return self.region(frame, 'refinement', 'edge_finishing')
+
+    def composite_region(self, frame):
+        """Native despill coverage, or None for the existing full-frame operation."""
+        return self.region(frame, 'composite', 'despill')
+
+    def diagnostic_region(self, frame):
+        """Native captured-overlay display coverage, or None for the whole map."""
+        return self.region(frame, 'diagnostic', 'tracking_overlay')
+
+    def region(self, frame, purpose, target):
+        """Maximum active coverage × strength, isolated by explicit purpose/target."""
+        active = [entry for entry in self._active(frame, regions=True)
+                  if (entry['purpose'], entry['target']) == (purpose, target)]
+        if not active:
+            return None
+        weight = np.zeros(self.shape, dtype=np.float32)
+        for entry in active:
+            self.check()
+            mask = self._mask(entry)
+            for top in range(0, self.shape[0], 256):
+                for left in range(0, self.shape[1], 256):
+                    self.check()
+                    tile = (slice(top, top + 256), slice(left, left + 256))
+                    np.maximum(weight[tile], mask[tile] * entry['strength'], out=weight[tile])
+        return weight
 
     def apply(self, alpha, frame, *, temporal=False, guidance=None):
         alpha = np.asarray(alpha, dtype=np.float32)
@@ -156,7 +195,7 @@ class CorrectionRasters:
             raise ValueError("base hint must be finite native coverage")
         quality = None
         for entry in self._entries:
-            if (entry["kind"] in ("reset", "trimap") or entry["direction"] != "both"
+            if (entry["kind"] in ("reset", "trimap", 'region') or entry["direction"] != "both"
                     or entry["frame"] != frame or entry["strength"] == 0):
                 continue
             if entry["kind"] == "matte":

@@ -47,6 +47,27 @@ class DesktopRecoveryTests(unittest.TestCase):
         self.assertTrue(self.received[1]['resume'])
         self.assertFalse(self.received[1]['durable_stage2'])
 
+    def test_finishing_reuse_is_explicit_and_requires_stage2(self):
+        self.assertFalse(self.panel.finishing_edits.isChecked())
+        self.panel.finishing_edits.setChecked(True)
+        self.panel.request(False)
+        self.assertEqual(self.received, [])
+        self.assertIn('requires', self.panel.status.text())
+        self.panel.stage2.setChecked(True)
+        self.panel.request(False)
+        payload = self.received[0]
+        self.assertTrue(payload['reuse_stage2_finishing_edits'])
+        self.panel.finishing_edits.setChecked(False)
+        self.panel.load_payload(payload)
+        self.assertTrue(self.panel.finishing_edits.isChecked())
+        self.panel.load_payload({**payload, 'reuse_stage2_finishing_edits': False})
+        self.assertFalse(self.panel.finishing_edits.isChecked())
+        legacy = dict(payload)
+        del legacy['reuse_stage2_finishing_edits']
+        self.panel.load_payload(legacy)
+        self.assertFalse(self.panel.finishing_edits.isChecked())
+        self.assertEqual(len(self.received), 1)
+
     def test_loading_legacy_and_new_saved_settings_never_submits(self):
         payload = {'batch': self.panel.batch.text(), 'workspace': self.panel.workspace.text(),
                    'max_cache_bytes': 0, 'durable_stage2': True}

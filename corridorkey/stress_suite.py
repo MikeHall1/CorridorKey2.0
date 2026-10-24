@@ -88,11 +88,17 @@ def load_stress_manifest(path):
         if scenario != 'interruption_recovery' and 'recovery' in case:
             raise ValueError('recovery policy applies only to interruption_recovery')
         recovery = case.get('recovery', {})
-        flags = ('durable_foundations', 'durable_rvm', 'durable_hann', 'durable_stage2', 'durable_writer_prefix')
+        flags = ('durable_foundations', 'durable_rvm', 'durable_hann', 'durable_stage2', 'durable_writer_prefix',
+                       'reuse_stage2_finishing_edits', 'reuse_upstream_finishing_edits')
         if not isinstance(recovery, dict) or set(recovery) - {'max_cache_bytes', *flags}:
             raise ValueError('Unknown recovery policy field')
         if any(type(recovery.get(flag, False)) is not bool for flag in flags):
             raise ValueError('Recovery switches must be booleans')
+        if recovery.get('reuse_stage2_finishing_edits', False) and not recovery.get('durable_stage2', False):
+            raise ValueError('Finishing-edit reuse requires durable_stage2')
+        if recovery.get('reuse_upstream_finishing_edits', False) and not any(recovery.get(name, False) for name in
+                ('durable_foundations', 'durable_rvm', 'durable_hann')):
+            raise ValueError('Upstream finishing-edit reuse requires an explicit upstream durable cache')
         normalized.append({**case, 'required': case.get('required', True),
             'batch_manifest': _path(case.get('batch_manifest'), path.parent),
             'repetitions': _integer(case.get('repetitions', 10 if memory else 3 if repeated else 1),

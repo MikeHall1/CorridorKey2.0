@@ -148,6 +148,30 @@ class DesktopCalibrationTests(unittest.TestCase):
         self.assertEqual(list(self.scratch.iterdir()), [])
         self.assertEqual(list(self.reports.iterdir()), [])
 
+    def test_optional_quality_policy_is_captured_verified_visible_and_invalidates(self):
+        reference = self.root / 'quality-reference.npy'
+        np.save(reference, np.full((24, 32), 0.5, np.float32))
+        manifest = self.root / 'quality-reference.json'
+        manifest.write_text(json.dumps({'schema_version': 1, 'kind': 'alpha_sequence_evaluation',
+            'fps': 24, 'source': str(self.source), 'frames': [
+                {'frame': i, 'candidate': 'replaced.exr', 'reference': str(reference)} for i in range(2)],
+            'reference_provenance': {'origin': 'analytic fixture', 'author': 'test', 'permitted_use': 'local', 'split': 'synthetic'}}))
+        policy = self.root / 'quality-policy.json'
+        policy.write_text(json.dumps({'schema_version': 1, 'kind': 'calibration_quality_policy',
+            'objective': 'fastest_warm_reference_agreement', 'manifest': manifest.name,
+            'limits': [{'metric': 'alpha.mae', 'units': 'alpha/pixel', 'maximum': 0.01}], 'accepted_tradeoffs': []}))
+        with patch('corridorkey.desktop_calibration.QFileDialog.getOpenFileName', return_value=(str(policy), 'JSON')):
+            self.dialog._choose_quality_policy()
+        self.assertEqual(self.dialog.quality_policy.text(), str(policy))
+        plan = self.verify()
+        self.assertIn('alpha.mae', self.dialog.details.toPlainText())
+        self.assertIn('fastest_warm_reference_agreement', self.dialog.details.toPlainText())
+        assert plan is not None
+        self.assertEqual(plan.to_dict()['quality']['policy_path'], str(policy))
+        self.dialog.quality_policy.clear()
+        self.assertIsNone(self.dialog.prepared_plan)
+        self.assertFalse(self.dialog.start_button.isEnabled())
+
     def test_actual_verified_plan_signal_wait_begin_cancel_no_recursive_request_or_settings_change(self):
         plan = self.verify()
         before = self.job.config_json

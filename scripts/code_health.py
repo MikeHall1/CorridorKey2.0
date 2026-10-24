@@ -25,9 +25,11 @@ IMPORTS = ('numpy', 'cv2', 'torch', 'torchvision', 'transformers', 'timm',
 
 
 def source_files():
-    return sorted(subprocess.check_output(
-        ['rg', '--files', '--hidden', '-g', '*.py', '-g', '!.git/**'],
-        cwd=ROOT, text=True).splitlines())
+    names = subprocess.check_output(
+        ['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+        cwd=ROOT, encoding='utf-8').split('\0')
+    return sorted({name for name in names
+                   if name.endswith('.py') and (ROOT / name).is_file()})
 
 
 def fingerprints(tool, diagnostics):

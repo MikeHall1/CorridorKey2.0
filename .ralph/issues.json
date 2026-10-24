@@ -8899,11 +8899,20 @@
       "severity": "medium",
       "classification": "Independent reviewer exact failed-runner/malformed-observation probes",
       "problem": "Optional projection discarded valid raw/baseline report inspection",
-      "resolution": "Separate admitted raw inspection and optional feasibility failure boundary; preserve explicit NOT VERIFIED rows.",
+      "resolution": "Bounded60named+4method/statusoverflow aggregate rows with128char names and explicitcount/total/min/max/format; rawlegacyprojection retained, impossibleaggregate metadata rejected. Controlledprojection/wire limits fixed; memory/serializedsize objective independentlyaccepted with explicitly slowerCPUcollection.",
       "verification": [
         "benchmark-results/product-next/batch1-summary.json",
-        "review_gate repair-only APPROVE"
-      ]
+        "review_gate repair-only APPROVE",
+        "Pre-production baseline b0419d92a99aa3496e94a3375e945422bcc305c7e4ad0230608a869808cc2280; controlled10Kprojection and60Kactual encode_frame RED; legacy sync/nested/failure/off controlPASS. No longvideo failure claim.",
+        "Firstcandidate33focusedPASS0.110s/scoped0, but independent review REQUESTCHANGES: newaggregateprojection accepts impossiblecount/extrema/total moments, duplicategroupkeys,61namedgroups despite60+4 contract. Exactpuretemp controls reproduced beforeacceptance; no producer-memoryescape claimed. Repairreleased feasibility/newtests only; legacyrawpathunchanged.",
+        "Reviewernegatives reproduced2tests4FAIL beforefix; final35focusedPASS0.123s/scoped0vsactualbatch7. Newaggregate uniqueness/capacity and finite count/extrema/positive-sum rounding invariants repaired, producer/policy/baseline unchanged. Scope4f8cfc4e3073a7faa247155f3bcdf65e547b8d00ed4b18e3ac5a6bfe13cba5fb; independentrepaircheck+affectedconsumers/measurements pending.",
+        "IndependentrepairSOURCEAPPROVE0findings; coordinator94affected consumer testsPASS11.011s/exit0, fullrepository+457sourceguardunchanged. Controlledwire/projection, actualCPUprofile/export/cancel, resource andvisualconsumer compatibility verified; component experiment stillUNRUN.",
+        "Singlepredeclared experiment exit0/all3memory+sizepairs<=.25; retained1.93MBto5.4\u20135.7KB,720742to1142compactbytes/10Kscopes, exactcount/controltotals.5timingpairsSLOWER:5.239to7.517ms median,1.338\u20131.508xpaired. FullHEAD/diff/457sourceunchanged. Rawstage-retention/measurements.json; independentartifactreview and finalbroad/staticpending. No inference/RSS/VRAMclaim.",
+        "IndependentartifactACCEPT0issues; doc-only20lineactualresults/tradeoffappend preservesoriginalmeasuredscope/policy/results/harness,3Pythonhashes unchanged; separateaccepted-scope.jsonfea3d37f29663a458749028414df7adabb0a897fd59e07f7642b018cebaf6e8b. Globalbatch8failureunrelatednativecontainment, REL001nowindependentlyapproved; finalcoherentgatepending.",
+        "benchmark-results/product-next/batch8-summary.json:1762authorisedPASS208.138s/457sourcesstable/0newfullstaticversusactualbatch7; no GPU/RSS/VRAM/inferenceclaim."
+      ],
+      "predeclared_policy": "benchmark-results/product-next/stage-retention/policy.json",
+      "cleanup_plan": "benchmark-results/product-next/stage-retention/cleanup-plan.md"
     },
     {
       "id": "PERF-I-002",
@@ -8913,11 +8922,855 @@
       "severity": "medium",
       "classification": "Independent reviewer exact failed-runner/malformed-observation probes",
       "problem": "Malformed resource/telemetry values were displayed as recorded",
-      "resolution": "Admit structured observation shapes or show NOT VERIFIED with reason.",
+      "resolution": "Source-reader nativeattempt/siblingCPUprep observations plus profile-only consistentcollectorlock; two extraction-induced lifetime regressions fixed by originalbodyownership; downstreamreturntypes corrected accurately. Composite1773broad/84fresh/77AST89code/fullstatic0new andindependentcode+artifactreviews. Defaultoffcapmet/ONOFFdescriptivecohort only, noRSS/GPU/speedclaim.",
       "verification": [
         "benchmark-results/product-next/batch1-summary.json",
-        "review_gate repair-only APPROVE"
+        "review_gate repair-only APPROVE",
+        "Sixfilecandidate7da887e172303ba9a1dc15d3d59dd37decba319e5dc79cb6e63e41cb73ce635a independentlySOURCEAPPROVE0findings.75focusedPASS2.855s incl9new, actualPNG/HDR/RGBA/BT2020/nativevideo/offset/cache/capturedbytes/prepasses/Quick/low/spatial/error/cancel/retirement and8Kconcurrentcounts; scoped0newvsactualbatch8/2oldPyrightresolved. MatchedmeasurementsUNRUN, sourcefrozen foraffectedintegration.",
+        "Coordinator86affectedtestsPASS26.032s/exit0/fullrepository+458sourceguardunchanged. Reader/cache/colour/witness/activeupstreamrecovery/nativeCPUexport/resource/retention consumers covered; SOURCEAPPROVE0findings. Predeclared3cohortexperiment remainsUNRUN pendingexactrelease.",
+        "Singlepredeclared3cohortexperiment exit0/source+HEAD+diff458unchanged; independentartifactACCEPT0issues/norerun.5defaultoffpairs .981850\u2013.996374/spread.093748 meet1.10/.10cap NOTspeedgain;3ONOFFpairs2.10\u20133.15%descriptive;5collectorlockpairsnoisy(.219713) preciseoverheadINCONCLUSIVE. Rawreader-profiling/measurements.jsonSHA6250e7a258e65a89257a2bda5166ce603d1e840bcc7ff349dfd111ab2a34a4be. Postdatadoc-onlyaccepted-scope65b4a4c29a0a873441932a188dea1c64a7f774590289f3bef4e896461c8e1aaf/5Pythonhashesunchanged. Finalbroad/staticpending.",
+        "Lateindependent main-hypothesis control CONFIRMED MEDIUM: currentread_image_rgb caller+_host_callargs retain decodedintegerndarray during _normalize_source_image astype. ActualtinyPNG8/16 RGB/RGBA spies retainonlyweakrefs: baselineb4ce rawDEAD atBGR\u2192RGB, candidate8f707 rawALIVE inall4 (288/384/576/768bytes), deadafterreturn; exactF32pixels/shapes equal. No timing/RSS/allocatorpeakclaim. SourceacceptanceWITHHELD beforemilestone; narrowrepair required.",
+        "Sameownership-cause secondhelper CONFIRMED beforeextendedfix: actual32\u00d748PNG source display/linear original views bothDEAD atlinear_to_asinh inb4cebaseline, bothALIVE incaller\u2192_host_call\u2192_prepare_frame_dir_views candidate. Pixelmathunchanged; notRSS/peak/timingclaim. prepare-lifetime-probe.json+prepare-red.log inreader-profiling-lifetime-repair. Narrowsecondsole-consumer helperinline authorised; otherextractions traced with no analogous changedrebinding lifetime.",
+        "Lifetime repair6scopebde302416e56d00c30eef058b679cd9d5cf9bbc08fd0fb7d14e9275edf7d304b independentlySOURCEAPPROVE0findings;77targetPASS3.030s/0newstatic. Pinnedbaseline/off/on actualPNG8/16 rawreleasedbeforeRGB, padded/resizedviewlifetimesandalltensorbytesold-equivalent; reusableoffscope reentrant/exceptionclean/no peropCMallocation. Onlyvideo_io/test changed, oldcollector source unchanged. Freshsame-cap reader-only measurement revisionUNRUN.",
+        "Repaircoordinator88affectedPASS26.087s/exit0/fullrepo+458sourceguardunchanged. Sourceapprovalbde302... finalbeforedata; freshlinkedreader-only5off+3ONOFFrevision remainsUNRUN. OriginalcollectorDiag unchanged; prior5noisypairs reused, no duplicateexperiment.",
+        "Freshsame-policyrepairrevision exit0/independentartifactACCEPT0issues:5offratios.965320\u20131.011161/spread.059562 meet1.10/.10cap, med202.542\u2192203.321ms NOTspeedgain;3ONOFF1.69\u20133.45%descriptive, allpixelhash/counts/458sourceHEADdiffstable. Oldnoisycollectorunchangedreused. Newd0a3988fc6914fbdd4e327c447f1dcd27dfe58f28e523bd88a936a5dce78bd5c raw; postdatadoc-onlyaccepted-scopebc42aa049ebe8ef35c4240f5b1cb327dc6aab48da917d0de78f2261e4d75b1e0/5Pythonunchanged. Finalbatch9-finalbroad/staticpending.",
+        "Finalfunctionalbroad1773authorisedPASS204.468s/458sourceunchanged, BUTbatch9fullstaticFAIL7newPyright/0newRuffvsactualbatch8. Newunion Tensor|ndarray inferred for read_frame_dir_working consumers: clean_plate_editor182\u00d72, shot_profiles256, test_colour_contract_profiles117\u00d72, test_screen_samples154, test_subject_guidance_editor223. Typing/sharedreturncontract regression notpixelruntimefailure; scopedcheckmisseddownstreamcallers. Classifybeforefix; no baselinechange/suppress/callerblanketcasts allowed.",
+        "Type-onlyvideo_io repairSHAf6d2fb5891826abe85ec792af6b50dc5995cedc6216c53b63f487a1961d7cd84: accurateParamSpec/TypeVarforwarder+NumPyclasscontracts,no downstreamcasts/Any/suppress/configchanges. Exact7resolvedonprovenexplicitfilecheck;84targetsPASS6.806s. all77functionASTbodies/89co_codeidentical vsmeasuredsource. Freshfullstaticandindependentreviewpending; no repeatedbenchmark/fullsuiteforannotation-onlydelta. UnsupportedPyrightprobeconfig/flagdetour recorded, ownscan stoppedviaownedcontroller130,no remainingprocesses/environmentmutation.",
+        "benchmark-results/product-next/batch9-summary.json:finalsourcea53aae852c190f3a91fa57f72fb875fef7afb424134e8698849f148b6cfc372c; fullstatic0newvsactualbatch8/7newfailed-batch9resolved; compositegateexplicit."
+      ],
+      "latest_required_repair": "Restore baseline raw integer buffer lifetime/sole ownership before downstream float transforms without extrafullframecopy or disablingobservations; no cleverholder/pointerhacks. PreservepublicAPI/scopes/defaultoffnoCMalloc. PreservepriorPASSmeasurements forpriorcandidate; preregister linked repairmeasurementrevision/samebaseline/cap beforedata, rerunonlychangedreadercohorts, reuseunchangedcollector evidence."
+    },
+    {
+      "id": "PERF-CI-001",
+      "component": "CI Linux optional desktop runtime",
+      "status": "open",
+      "priority": "P2",
+      "classification": "Actual hosted run40033787237 at41e7c32; independent read-only metadata/log diagnosis",
+      "problem": "53 hosted Qt import errors: libEGL.so.1 unavailable; local macOS Qt evidence does not cover Ubuntu setup.",
+      "resolution": "Provision explicit Linux Qt runtime packages and import smoke before full tests.",
+      "verification": [
+        "benchmark-results/product-next/checkpoint1-ci-diagnosis.json",
+        "benchmark-results/product-next/checkpoint1-ci-ubuntu.log",
+        "benchmark-results/product-next/checkpoint1-ci-windows.log",
+        "benchmark-results/product-next/ci-repair-summary.json"
+      ],
+      "local_remediation": "Implemented and independently APPROVED;26focusedPASS9.079s; hosted repaired-commit verification pending."
+    },
+    {
+      "id": "PERF-CI-002",
+      "component": "code-health source inventory",
+      "status": "open",
+      "priority": "P2",
+      "classification": "Actual hosted run40033787237 at41e7c32; independent read-only metadata/log diagnosis",
+      "problem": "Static verification crashes when undeclared external rg is absent, before collecting checker results.",
+      "resolution": "Reuse established Git source enumeration with hidden/untracked/ignored parity tests; do not weaken baseline.",
+      "verification": [
+        "benchmark-results/product-next/checkpoint1-ci-diagnosis.json",
+        "benchmark-results/product-next/checkpoint1-ci-ubuntu.log",
+        "benchmark-results/product-next/checkpoint1-ci-windows.log",
+        "benchmark-results/product-next/ci-repair-summary.json"
+      ],
+      "local_remediation": "Implemented and independently APPROVED;26focusedPASS9.079s; hosted repaired-commit verification pending."
+    },
+    {
+      "id": "PERF-CI-003",
+      "component": "worker fixture timing/containment",
+      "status": "open",
+      "priority": "P2",
+      "classification": "Actual hosted run40033787237 at41e7c32; independent read-only metadata/log diagnosis",
+      "problem": "Hosted worker colour poll exposes uncaught short observation timeout; hard-crash preview fixture exits before initial descendant discovery but asserts clean cleanup.",
+      "resolution": "Preserve deadline and truthful containment; use bounded polling and explicit fixture discovery barrier.",
+      "verification": [
+        "benchmark-results/product-next/checkpoint1-ci-diagnosis.json",
+        "benchmark-results/product-next/checkpoint1-ci-ubuntu.log",
+        "benchmark-results/product-next/checkpoint1-ci-windows.log",
+        "benchmark-results/product-next/ci-repair-summary.json"
+      ],
+      "local_remediation": "Implemented and independently APPROVED;26focusedPASS9.079s; hosted repaired-commit verification pending."
+    },
+    {
+      "id": "PERF-CI-004",
+      "component": "Windows acceptance",
+      "status": "open",
+      "priority": "P1",
+      "classification": "Actual hosted run40033787237 at41e7c32; independent read-only metadata/log diagnosis",
+      "problem": "Hosted Windows run cancelled at30min with many interim errors/failures and no final unittest traceback dump; no reliable final failure totals or demonstrated root cause.",
+      "resolution": "Fail-fast diagnostic run on actual Windows to emit first complete traceback, classify and repair root cause without weakening input identity guards.",
+      "verification": [
+        "benchmark-results/product-next/checkpoint1-ci-diagnosis.json",
+        "benchmark-results/product-next/checkpoint1-ci-ubuntu.log",
+        "benchmark-results/product-next/checkpoint1-ci-windows.log"
       ]
+    },
+    {
+      "id": "PERF-E-001",
+      "component": "worker_client.run_worker_batch",
+      "status": "resolved",
+      "priority": "P2",
+      "classification": "Independent bounded direct API fake-client reproduction",
+      "problem": "New finishing-reuse flag bypasses dependencies/type/workspace admission in public worker helper; no-workspace request silently dispatches ordinary render.",
+      "resolution": "Exact boolean plus enabled durable_stage2/workspace admission before imports/I/O/client creation;7invalid subcases red\u2192green; legacy default-helper compatibility preserved.",
+      "verification": [
+        "benchmark-results/product-next/stage2-finishing-review-fixed-integration.log",
+        "review_gate independent5identity/API cases PASS0.017s; repaired batch APPROVE"
+      ]
+    },
+    {
+      "id": "PERF-A-001",
+      "component": "infer.py shot-profile input artifact protection",
+      "status": "resolved",
+      "priority": "P1",
+      "classification": "Main source trace plus author exact infer.main/injected-session red reproduction, generated local fixtures only",
+      "problem": "New --shot_profiles input path is discarded after embedding the plan, so --diagnostics naming the same saved document overwrites original user recommendations after session.run; output/report source protection does not know this new input artifact.",
+      "root_cause": "New physical CLI input omitted from admission and final publication protection, despite immutable embedded runtime payload.",
+      "resolution": "Supplemental physical profile input paths retained to existing writer/report admission and final-persist guards. Samepath/hardlink/latecollision preserve originals and primary render error; independent3casesPASS.",
+      "verification": [
+        "benchmark-results/product-next/shot-profile-paths-red.log",
+        "benchmark-results/product-next/shot-profile-paths-green.log",
+        "benchmark-results/product-next/batch5-summary.json",
+        "independent regions_samples_review APPROVE"
+      ]
+    },
+    {
+      "id": "PERF-J-004",
+      "component": "regression_gate evidence contracts",
+      "status": "open",
+      "priority": "P2",
+      "classification": "Independent architectural finish-contract review; confirmed source branches",
+      "problem": "Numerical parity, observed memory and visual review required evidence always returns NOTVERIFIED even if evidence could be supplied; hardware alone cannot make these branches work.",
+      "root_cause": "First report-timing increment deliberately omitted evidence adapters.",
+      "resolution": "Bound numerical native-export agreement implemented, deliberately wrong actualexports detected, production/cancel/precision invariants repaired and reviewed. Observed-memory and visual trust adapters remain local implementation work; do not mark fullyresolved.",
+      "verification": [
+        "corridorkey/regression_gate.py:250-252",
+        "shot_profiles_arch_gate remaininglocalwork",
+        "implementation pending",
+        "benchmark-results/product-next/batch6-summary.json"
+      ],
+      "local_implementation": "Timing/numerical/resourceproducer and boundvisualdeclaration contracts now implemented/reviewed under batch7; actual CUDA measurements and genuine human/target acceptance unverified, no provenance authentication claim."
+    },
+    {
+      "id": "PERF-J-005",
+      "component": "regression_numerical production foreground contract",
+      "status": "resolved",
+      "priority": "P2",
+      "classification": "Author traced actual runtime producer and reproduced exact metadata rejection before acceptance",
+      "problem": "New helper initially rejected production fg alpha_association=None although RGBfg is inherently straight; old fixture omitted the field and masked incompatibility.",
+      "resolution": "Narrow allow None/absent/inherentstraight while reject explicitpremultiplied; exact production fixture red\u2192green; independent review pending.",
+      "verification": [
+        "/private/tmp/regression-numerical-producer-red.log",
+        "/private/tmp/regression-numerical-producer-green.log",
+        "16old+newfocusedPASS0.554s",
+        "independent review pending",
+        "benchmark-results/product-next/batch6-summary.json",
+        "independent repair-only final APPROVE; no remaining findings"
+      ]
+    },
+    {
+      "id": "PERF-J-006",
+      "component": "numerical evidence video FPS",
+      "status": "resolved",
+      "priority": "P2",
+      "classification": "Independent generated-native-EXR control PASS followed by exact producer-shape negative reproduction, not GPU measurement",
+      "problem": "New helper requires actual native_fps to equal image-only requested frame_dir_fps even for video; legitimate30fpsvideo/default24image-setting pairs are rejected before metric comparison.",
+      "resolution": "Apply requested frame_dir_fps consistency only to directory sources; compare finite actual source FPS and frozen source contracts for video.",
+      "verification": [
+        "/private/tmp/jnum-independent-producer-repro.log",
+        "regions_samples_review REQUEST CHANGES; repair pending",
+        "benchmark-results/product-next/batch6-summary.json",
+        "independent repair-only final APPROVE; no remaining findings"
+      ]
+    },
+    {
+      "id": "PERF-J-007",
+      "component": "numerical evidence optimization comparability",
+      "status": "resolved",
+      "priority": "P2",
+      "classification": "Independent generated-native-EXR control PASS followed by exact producer-shape negative reproduction, not GPU measurement",
+      "problem": "New helper compares complete baseline/candidate execution dictionaries, rejecting legitimate benchmark variants because stage2_calls/cache policy/cache dtype depend on accepted optimization settings.",
+      "resolution": "Keep exact per-side full execution binding in receipt; compare only deliberate invariant processing identity, preserving backend/device/precision/colour safety and existing pair policy.",
+      "verification": [
+        "/private/tmp/jnum-independent-producer-repro.log",
+        "regions_samples_review REQUEST CHANGES; repair pending",
+        "benchmark-results/product-next/batch6-summary.json",
+        "independent repair-only final APPROVE; no remaining findings"
+      ]
+    },
+    {
+      "id": "PERF-J-008",
+      "component": "numerical evaluation cooperative cancellation",
+      "status": "resolved",
+      "priority": "P2",
+      "classification": "Independent two-frame generatedEXR decode-hook control PASS then pending-cancel reproduced",
+      "problem": "New gate checks cancellation only around whole-job evaluate_job_quality; callback not forwarded to already cancellation-capable sequence readers/evaluators. All fourRGB reads complete after cancel requested on first read, potentially entire120-frame work before return.",
+      "resolution": "Optional callback through shared benchmark_quality helper and existing readers/evaluators/hash fences, preserve legacy default semantics; prove later frame not decoded after cancel and no successful partial publication.",
+      "verification": [
+        "/private/tmp/jnum-independent-cancellation-repro.log",
+        "regions_samples_review REQUEST CHANGES",
+        "author coherent repair batch inprogress",
+        "benchmark-results/product-next/batch6-summary.json",
+        "independent repair-only final APPROVE; no remaining findings"
+      ]
+    },
+    {
+      "id": "PERF-J-009",
+      "component": "numerical receipt cache-precision consistency",
+      "status": "resolved",
+      "priority": "P2",
+      "classification": "Independent repair-only exact producer-metadata negative; genuine control output files unchanged, no GPU measurement claim",
+      "problem": "Fix for legitimate cache-policy comparison ignored foundation_cache_dtype unconditionally. Enabled-cache candidate declaring unsupported float16 with unchanged requested/effective configuration can freshly capture/evaluate PASS, despite production requiring float32.",
+      "resolution": "Validate expected cache dtype per side from effective low_vram/foundation_cache_mb policy (None off, float32 on); continue allowing supported off\u2192on comparisons while pinning complete execution records.",
+      "verification": [
+        "/private/tmp/jnum-independent-repair-negatives.log",
+        "independent reviewer holds approval; source repair waits broad-test freeze terminal",
+        "benchmark-results/product-next/batch6-summary.json",
+        "independent repair-only final APPROVE; no remaining findings"
+      ]
+    },
+    {
+      "id": "PERF-J-010",
+      "component": "resource evidence verification callback scheduling",
+      "status": "resolved",
+      "priority": "P2",
+      "classification": "Confirmed local integration timeout; exact callback root cause inspected before remediation",
+      "problem": "First resource/gate affected integration ran54 cases in237.388s and failed1: late-alias publication test hit unchanged60s budget before the intended fence. Inner per-file/chunk checks recursively rescanned all pinned repository inputs, causing quadratic verification work.",
+      "root_cause": "Full pin validation used as the streaming read/repository-identity callback instead of lightweight cancellation/deadline admission.",
+      "proposed_action": "Retain full pin checks immediately before/after verification boundaries; use token+wall admission checks within streaming loops. Preserve per-file fingerprints/SHA and all existing60s/byte/job/output limits; add deterministic callback-shape regression. Also apply deadline check to successful output hashing.",
+      "evidence": [
+        "/private/tmp/resources-integration-first.log",
+        "/private/tmp/resources-integration-guard-before.json",
+        "/private/tmp/resources-integration-guard-after.json",
+        "All repository/code bytes unchanged during failed integration; environment/assets not the cause."
+      ],
+      "verification": [
+        "/private/tmp/resource-j010-pure-final.log:6PASS0.899s, deterministic callback red/green and after-hash mutation rejection",
+        "/private/tmp/resources-integration-j010-summary.json:56PASS8.600s/exit0; all repository+6file guards unchanged; fixtures only, no inference speed claim"
+      ],
+      "resolution": "Inner streaming verification uses token+wall admission, full pin fences retained immediately before/after phase; output hashing observes deadline; all original limits unchanged."
+    },
+    {
+      "id": "PERF-J-011",
+      "component": "resource phase actual benchmark-output binding",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Independent exact producer-shape negative/control reproduced before repair",
+      "problem": "Resource _prepare validates original measured record against normalized_batch staging output_dir, but actual benchmark.run_jobs always replaces output_dir with a fresh per-run artifact path. Genuine producer pair rejected before profiling; resource fixtures incorrectly kept both paths equal.",
+      "root_cause": "Reusing calibration _metrics guard with frozen phase template rather than a request bound to the actual original measured output.",
+      "proposed_action": "Clone validation request only to original measured output_dir; retain frozen source/settings/writer/hints and separate new-phase template. Add real producer output-relocation regression and mismatch negatives without weakening guard.",
+      "evidence": [
+        "/private/tmp/resources-independent-output-binding-red.log",
+        "corridorkey/benchmark.py run_jobs output replacement",
+        "corridorkey/regression_resources.py _prepare _metrics call",
+        "corridorkey/calibration_task.py _metrics source/output equality"
+      ],
+      "verification": [
+        "Independent known-valid actual-output-bound clone passes; identical frozen-staging request raises Actual record source/output differs from the owned measured job. No repo/Git/GPU queries.",
+        "/private/tmp/resource-j011-j013-pure-final.log:9PASS0.534s; source repair final, affected integration and independent repair review pending",
+        "benchmark-results/product-next/resources-integration-j011-j013-summary.json:63PASS8.885s/0skips, repo+7ownedguard unchanged",
+        "Independent final APPROVE;7tiny casesPASS0.349s;0new scopedstaticvsactualbatch6,1oldPyrightresolved; scope112bdcd4b95c65e3d566a108e3c415030fc5f19bbef8689846b5e7c99b8df37c"
+      ],
+      "resolution": "Validate all original repetitions with immutable actual-output-bound request clones; frozen phase templates unchanged. Fixtures now distinguish staging and per-run measured artifacts."
+    },
+    {
+      "id": "PERF-J-012",
+      "component": "resource provenance bounded reads and cancellation finalization",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Independent pure-temp callback/growth/cancellation proofs plus exact resource call-site inspection before repair",
+      "problem": "Resource _prepare rereads source/hint content via benchmark.asset_identity without callback or admitted extent after verified pin hashing. Cancelled token ignored across all files; growth can be fully read before final pin rejection. Failed/cancelled artifact finalization similarly selects check=None and hashes retained artifacts after pending cancellation. End-of-phase pins alone do not detect added source/model members.",
+      "root_cause": "Legacy unrestricted identity helper and success-artifact inventory reused at bounded/cancellable resource boundary; existing shared helpers preserve their intended default behavior.",
+      "proposed_action": "Reuse already verified ordered receipts for exact existing identity serialization; bounded membership checks before success, preserve per-file full hash/fingerprint fences. Skip costly failed/cancelled content hashing while retaining owned artifacts with explicitly incomplete inventory/NOT VERIFIED; successful phase checks token+wall throughout.",
+      "evidence": [
+        "/private/tmp/resources-independent-read-cancel-red.log",
+        "3tiny files all hashed with check=None after cancel on first hash; growth4to2048bytes hashed before finalpin rejection",
+        "Failed/cancelled branch selectsNone and hashes retained artifact with pendingcancel"
+      ],
+      "verification": [
+        "No repository/GPU queries or resource imports during author edits; caller-boundary defect, not shared helper failure.",
+        "/private/tmp/resource-j011-j013-pure-final.log:9PASS0.534s; source repair final, affected integration and independent repair review pending",
+        "benchmark-results/product-next/resources-integration-j011-j013-summary.json:63PASS8.885s/0skips, repo+7ownedguard unchanged",
+        "Independent final APPROVE;7tiny casesPASS0.349s;0new scopedstaticvsactualbatch6,1oldPyrightresolved; scope112bdcd4b95c65e3d566a108e3c415030fc5f19bbef8689846b5e7c99b8df37c"
+      ],
+      "resolution": "Reuse ordered verified receipts with shared legacy-exact sequence_identity; bounded source/hint/model membership fences; failed/cancelled attempts retain outputs without content hashing/inventory. Successful full hash/deadline/fingerprint fences and metadata-only bounded output scan retained."
+    },
+    {
+      "id": "PERF-J-013",
+      "component": "resource original correction hash-key normalization",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Independent exact caller-guard pure-temp negative before repair; no bad-GPU acceptance claim",
+      "problem": "Original benchmark correction asset paths may legitimately contain ../ after relocation. Expected hashes keyed by lexical paths fail canonical admitted pin.path lookup, silently skipping comparison to original SHA for those assets.",
+      "root_cause": "Lexical expected-hash keys compared with normalized FilePin paths.",
+      "proposed_action": "Normalize expected correction hash keys through admitted pin.path, preserving aliases/hardlink checks; regression with relocated ../ resource and changed bytes must reject before worker work.",
+      "evidence": [
+        "/private/tmp/resources-independent-correction-path-red.log"
+      ],
+      "verification": [
+        "Tiny originalhash mismatch yields lookupguardFalse; no resource module/repo/GPU invocation. Later runtime correction loader may still reject, so no demonstrated bad-inference PASS claimed.",
+        "/private/tmp/resource-j011-j013-pure-final.log:9PASS0.534s; source repair final, affected integration and independent repair review pending",
+        "benchmark-results/product-next/resources-integration-j011-j013-summary.json:63PASS8.885s/0skips, repo+7ownedguard unchanged",
+        "Independent final APPROVE;7tiny casesPASS0.349s;0new scopedstaticvsactualbatch6,1oldPyrightresolved; scope112bdcd4b95c65e3d566a108e3c415030fc5f19bbef8689846b5e7c99b8df37c"
+      ],
+      "resolution": "Original correction expected SHA keys normalized through admitted pin.path; conflicting identities rejected; legitimate ../ relocation preserved with oldSHA enforced."
+    },
+    {
+      "id": "PERF-J-014",
+      "component": "optional host profiling compatibility",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Fresh broad gate confirmed regression on unchanged existing CPU-fixture telemetry tests",
+      "problem": "New resource-profile admission unconditionally raises when profile_stages=True and no CUDA device, breaking established explicit CPU-fixture host-stage/output telemetry, cancellation and QuickKey parity workflows.1731 authorised cases ran215.611s with3failures across2existing tests; source unchanged.",
+      "root_cause": "General optional host stage profiling conflated with new CUDA allocator capture requirement in runtime start/end guards.",
+      "proposed_action": "Preserve host-only profiling when CUDA absent; bind/reset/read CUDA allocator metadata only if actual CUDA selected. Resource capture gate still requires actual CUDA/synchronized stages/positive peaks and refuses fixtures. No CPU inference fallback or fabricatedGPUdata.",
+      "evidence": [
+        "benchmark-results/product-next/batch7-admissible-tests.log",
+        "benchmark-results/product-next/batch7-partition-run.json",
+        "test_output_telemetry_workflow:cancelled_profile and regular/QuickKey profile parity"
+      ],
+      "verification": [
+        "Broadred1731/3failures/0errors/0sourcechanges; focused compatibility repair and independent delta review pending",
+        "/private/tmp/resource-j014-focused-final.log:14PASS2.328s, originalregular/QuickKey/cancel red2tests/3subfailures repaired",
+        "IndependentSOURCEAPPROVE0findings; finaljointgate pending",
+        "/private/tmp/resource-j014-scoped-static.json:0newvsactualbatch6;1oldPyrightresolved"
+      ],
+      "resolution": "Host-only optional telemetry restored; CUDA begin/end capture only when actual captured index exists; strict resource-record CUDA admission unchanged. Additivev4resources seam preserves explicitpolicyvalidation."
+    },
+    {
+      "id": "PERF-J-015",
+      "component": "redundant unpinned numerical source-identity reads",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Exact tempfile control/negative confirmed before repair; no acceptance bypass claimed",
+      "problem": "Numerical snapshot verifies admitted file pins and charges conservative bytes, then source_identity reopens the same source without those extents.44-byte admitted source grown to2048bytes before that redundant read is fully reread before expected identity rejection. Evaluate also reconstructs source identity through another live reread rather than verified receipts.",
+      "root_cause": "Duplicate source identity construction reuses unrestricted live hashing instead of already verified ordered admitted source hashes.",
+      "proposed_action": "In NUM-owned snapshot/evaluate source-identity construction, reuse admitted verified ordered hashes with existing sequence_identity and bounded membership/fingerprint fences. Preserve legacy receipt wire and all evaluator quality checks/cancellation; do not claim total evaluator IO is a hard sandbox/cap.",
+      "evidence": [
+        "/private/tmp/numerical-source-growth-proof.log"
+      ],
+      "verification": [
+        "Known-valid control passes; mutation fails expected source binding, but2048actual bytes read after44byteadmission. Narrow twofile repair proposed.",
+        "Firstcandidate40affectedPASS1.317s/scoped0 but excludesvisual. Independent+main exactcrossproducer review BLOCKER: genericfence unconditionallyreadsjobs/budgets, validvisualcapture raisesKeyErrorjobs, resourceCLIpublication samecontract.",
+        "Repairreleased beforeacceptance: keep genericassets/directoriesfence; NUMmembership only explicitnumericalkind; malformedtypedNUMstillreject; crossproducer/visualaffectedchecks required.",
+        "Genericfence repair now57affectedPASS2.373s including16visual; scoped0, finalindependentrecheck+coherent broadpending. NUMSHAebbcf36f7c3dbd8b406eb435e31c2cfc63e0883596e7697346bf31d347cec348",
+        "IndependentrepairAPPROVE; actualvisual+genericresource/visualfence andgrowth/order/membership/cancel probes pass",
+        "benchmark-results/product-next/batch7-summary.json:1752authorisedPASS209.072s/456sourceunchanged/0newstatic"
+      ],
+      "resolution": "NUM-owned source identities reuse verified ordered charged pins; membership/fingerprint/cancellation/report-source equality retained. Explicit numerical-kind fence boundary preserves generic visual/resource guards. Shared evaluator verification unchanged; no totalIOsandbox claim."
+    },
+    {
+      "id": "PERF-REL-001",
+      "component": "birth-pinned benchmark terminal-exit confirmation",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Actual broadfailure and deterministic delayed-owner confirmation RED before repair; narrow independentlyreviewed bounded fix",
+      "problem": "Batch8 planned authorised broad ran1758cases209.909s with1setUpClasserror/0sourcechanges. ActualDecodeReuseRunner report complete9/9/exact_equalTrue andreturncode0, but cleanup_error Stress cleanup NOT VERIFIED: MeasurementError: Root process exited;19prior complete samples,0terminal_exit_race_samples. Finalownerstatusfailed.",
+      "root_cause": "Existing typed root_exited recovery branch checks root_exited() once; native provider may observe disappearance before Popen owner reports terminal. Containment source unchanged by stage-retention feature. Must not assume this from returncode alone or suppress genuine cleanup uncertainty.",
+      "proposed_action": "Reproduce previous-complete typedrootabsence with delayed genuine Popen terminalconfirmation; smallest bounded owner-confirmation retry/reconciliation while preserving birthpins, group/descendant finalverification, initialdiscovery failure, denial/identityreuse/partialsample rejection and Windows unsupported status. No unrelatedsignals or process termination.",
+      "evidence": [
+        "benchmark-results/product-next/batch8-admissible-tests.log",
+        "benchmark-results/product-next/batch8-decode-owner-failure.json",
+        "benchmark-results/product-next/batch8-partition-run.json",
+        "corridorkey/stress_containment.py sample/verify"
+      ],
+      "verification": [
+        "ActualBroadfailurecaptured before remediation; deterministic RED/independent review needed. No actual stale-process absence claim yet.",
+        "/private/tmp/containment-rel001-focused.log:25PASS1.214s; up to10ownerpolls/9*.01s requestsleep bound, no hardOSdeadlineclaim",
+        "/private/tmp/containment-rel001-decode-reliability.log:3separateactualdecode-runner loads5PASS each; notperformance/flakeguarantee",
+        "IndependentAPPROVE:latepoll10accepted/poll11stillstickyfailed, denial/reuse/deadlinenoretry, livepinnedchild/finalgroupverification preserved. Source06105c769798fd9f25187c6eb8bc029d3dcd4647eca0469f9824584407139654",
+        "Finalcoherentbroad/staticpending",
+        "benchmark-results/product-next/batch8-summary.json:coherent1762authorisedPASS208.138s/final457sourcesstable/0newfullstatic."
+      ],
+      "resolution": "BoundedPopenownerterminalconfirmation onlyinsidealready-typed root_exited+priorcomplete discovery branch; allsticky/nativeidentity/child/group/initial/Windowsguards preserved."
+    },
+    {
+      "id": "PERF-I-003",
+      "component": "qualified CUDA upload and existing synchronization-wait telemetry",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Portable software contract independently accepted; real CUDA timing/overhead/quality externally NOT VERIFIED",
+      "problem": "Current host readers and aggregate stage timings do not separately observe the RVM cache-miss upload+float boundary or existing runtime-owned synchronization waits.",
+      "proposed_action": "Extend existing optional diagnostics and RVM miss path; preserve whole tensor expression, existing-stage barrier count, CPU/off and generic synchronizer semantics, lifetime/thread ownership and bounded groups. No encoder or pure DMA cost claim.",
+      "acceptance": [
+        "Regression-first CPU plumbing tests with actual CUDA timing explicitly NOT VERIFIED",
+        "Actual CPU source and captured matching CUDA target/runtime synchronizer required; cache-hit/off/mismatched paths unchanged",
+        "Wait-only observation adds no synchronization calls; new transfer scope adds one documented profile-only pair; no additional hidden calls, lock-held waits, owning cycles, changed tensor promotion or payload lifetimes",
+        "Independent review plus focused static regression; real GPU numerical/timing/overhead requires external acceptance"
+      ],
+      "evidence": [
+        "benchmark-results/product-next/batch10-summary.json",
+        "benchmark-results/product-next/cuda-observations/final-scope.json"
+      ],
+      "verification": [
+        "Regression-first RED2 then50focusedPASS0.279s/scoped0new",
+        "Independent SOURCE APPROVE5files with nested4callback/error/replacement/off/CPU/weakref probes",
+        "1783authorisedPASS207.707s/459sourcesunchanged;fullstatic0newvsactualcheckpoint21",
+        "15actualHTTPtestsNOTVERIFIED/PERM002;actualCUDA_NOTVERIFIED"
+      ],
+      "resolution": "Optional actualCPU-to-explicitcapturedCUDA RVM cache-miss completed upload+float scope; directdeviceboundruntimecallback. Existingwaitobservations addZERO sync calls; new transfer stage adds one normalprofiling-only pre/postpair. Inlineexpression/lifetimes/defaults/cache semantics preserved; dashboard lanes connected. Waits inclusive/overlapping not additive."
+    },
+    {
+      "id": "PERF-A-002",
+      "component": "measured whole-timeline shot-plan recommendation",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Boundedportable software contract independentlyaccepted; actualGPU/footage/targetacceptanceNOTVERIFIED",
+      "problem": "Source heuristics alone cannot establish resource-informed configurations. Existing paired throughput supports enabled plans, but separate allocator trials change recipe-bound scratch/profile fields and reject them; no gate-backed candidate-plan import exists. Whole-job peaks cannot justify per-shot fit.",
+      "proposed_action": "Reuse existing paired producer+numerical/resource gate; shared exact shot-plan execution clone permits scratch/profile-only recipe rebinding, resource owner exact comparison, offthread existing editor import of complete accepted candidate and explicit futureApply. No calibration runner/resource schema duplication.",
+      "acceptance": [
+        "Preserve exact fullselectedtimeline/source/conditioning/corrections/resets and complete plan; no independent winning-row recombination",
+        "A/B differ only rowStage2 caps; resource_fit staysunavailable, label actual observed whole-timeline allocator budget, nothardcap/per-shotfit",
+        "Require actual reevaluated numerical+resource gate with measured comparable timing; rejectnoisy/fail/stale/missing/CPUfixture evidence",
+        "Source/recipe/receipt/export fences, bounded IO/cancel/overwriteprotection, original default workflows and immutablequeues preserved",
+        "Portable tests and independent review; actual GPU recommendation quality/performance externally NOT VERIFIED"
+      ],
+      "evidence": [],
+      "verification": [
+        "Finaljoint1805authorizedPASS208.176s/no skips/462sourceunchanged/0newstaticvsactual10and9;benchmark-results/product-next/batch13-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-A-003",
+      "component": "measured recommendation final visual evidence fence",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Independent actual v4 race RED; exact control and repaired source probe GREEN",
+      "problem": "After actual regression gate passes, visual reviewer declaration may change accept to reject during later source validation while immutable topvisualreceipt stays unchanged; recommendation omitted finalvisual_inputs fence.",
+      "root_cause": "Newconsumer reused gate.evaluate but not all gateCLI publication fences.",
+      "resolution": "Reuse numerical/visual/resource shared fences at recommendation return plus existing top receipt pins/cancellation.",
+      "evidence": [
+        "/private/tmp/a002-independent-visual-final-fence-red.log",
+        "/private/tmp/a002-independent-visual-final-fence-green.log",
+        "benchmark-results/product-next/shot-plan-measurements/visual-repair-final-scope.json"
+      ],
+      "verification": [
+        "Actualv4RED1 then14focusedPASS2.684s/Ruff0Pyright0",
+        "Independent current-reader exactv4control+late-declarationrace GREEN SOURCEAPPROVE; finaljointintegrationpending",
+        "FinaljointgatePASS1805/462/0new; priorfailedproofsretained and no existingtestsweakened"
+      ]
+    },
+    {
+      "id": "PERF-I-004",
+      "component": "optional native EXR encode and filesystem service observations",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Boundedportable software contract independentlyaccepted; actualGPU/footage/targetacceptanceNOTVERIFIED",
+      "problem": "Native completion latency includes queue/backlog and does not isolate combined cv2.imwrite service; missing FFmpeg alone is not the only local instrumentation gap.",
+      "proposed_action": "Profile-only host stage wraps originalinlinecv2.imwrite plusFalsefailure check; runtime usesexistingprofiledwriter partial; exactencodinglane label combinednativeencoding+filesystemservice, notpureCPUencode/fsync/durability.",
+      "acceptance": [
+        "Actual float signed/HDR and halfalpha off/on byte/pixel equality; originalarrays/params/queue/cancel/nativeerrors and callback containment retained",
+        "Boundedthreadsafe host-only measurements with no lockheldnativewrite, no GPUbarrier/no newcopy",
+        "Immediateobserverrelease onlyafterworkerconfirmedretired; live-timeoutownership preserved",
+        "Independentreview and targeted+jointbroad/static; descriptive predeclared>=3pair optionaloverhead observation, no speedgainclaim"
+      ],
+      "evidence": [
+        "benchmark-results/product-next/native-writer-observations/",
+        "benchmark-results/product-next/native-writer-retirement/"
+      ],
+      "verification": [
+        "55affectedPASS3.458s/5scope0new, firstcandidateSOURCEAPPROVE",
+        "Firstjointbroad1804tests4failures208.973s uncoveredobserverlifecycle regression; NOTACCEPTED",
+        "Retirementrepair48affectedPASS4.344s/2scope0new/independentSOURCEAPPROVE; finaljointintegrationpending",
+        "Finaljoint1805authorizedPASS208.176s/no skips/462sourceunchanged/0newstaticvsactual10and9;benchmark-results/product-next/batch13-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-I-005",
+      "component": "native writer diagnostic observer retirement",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Actual broad regression +existing immediate-retirement RED before repair",
+      "problem": "New EXR host_observer reference enters pre-existing writer/worker boundconsumer cycle and keeps diagnostics alive after successful job; first existingreaderretirement testfails and subsequentcases polluted.",
+      "root_cause": "Newobserver owner was not retired when nativeworker stopped; eventual GC test did not prove accepted immediate-release invariant.",
+      "resolution": "ExrSequenceWriter.release finally clears observer iff workerthread confirmednotalive. Active timedoutowner retainsobserver untilretirement+release retry; nativeerrors remainunchanged. No forcedGC or weakenedreader test.",
+      "evidence": [
+        "benchmark-results/product-next/batch12-failure-analysis.json",
+        "benchmark-results/product-next/native-writer-retirement/i004-retirement-existing-red.log",
+        "benchmark-results/product-next/native-writer-retirement/i004-retirement-narrow-red.log"
+      ],
+      "verification": [
+        "48affectedPASS4.344s includingexistingfour-mode immediate readerretirement;0newscopedstatic",
+        "Independent success withwriterstronglyheld provesimmediaterelease, same-nativeerror+failedscope, blockedtimeout retainsdiagnostic thenjoin/retryclears/SAMEtimeout preserved; SOURCEAPPROVE",
+        "Finaljointintegrationpending",
+        "FinaljointgatePASS1805/462/0new; priorfailedproofsretained and no existingtestsweakened"
+      ]
+    },
+    {
+      "id": "PERF-G-002",
+      "component": "discoverable existing desktop despill controls",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Original-scope local G usability gap, not external GPU blocker",
+      "problem": "Engine supports despill_space/despill_preserve_luma/despill_edges_only but common desktop form exposes only strength/screen; advancedJSON is only access.",
+      "proposed_action": "Expose existing fields through existingform widgets and sharedvalidation, accurateoperation/domain/edge-band guidance; no runtime/default/schema change.",
+      "acceptance": [
+        "Defaults andsharedconfigvalidation unchanged; invalid luma/domain combination visibly refused withoutimplicitchange",
+        "Advancedsettings preservation, actualcodecroundtrip andfuture-job-onlyapplication/immutablequeues",
+        "FocusedQt/static plusindependentreview andintegratedwindowgate"
+      ],
+      "verification": [
+        "RED3 beforefix;8standaloneQtPASS0.193s/scopedRuff0Pyright0; sourcefrozen382f2160, review/integrationpending",
+        "Final1834authorizedPASS209.901s/464sourceunchanged/0newfullstaticactualbatch13; independentSOURCEAPPROVE;batch14-summary.json"
+      ],
+      "evidence": [
+        "benchmark-results/product-next/despill-controls/final-scope.json"
+      ]
+    },
+    {
+      "id": "PERF-G-003",
+      "component": "actual native pixel edge inspection",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Original-scope local inspection gap; zooming a1280thumbnail is not nativepixelinspection",
+      "problem": "Existing preview downsamples to1280 then magnifies; preserves UIpan/zoom but discards fine nativepixel detail. Currentreaders decodefullnative beforethumbnail; returnedsize alone is notdecodeallocationbound.",
+      "proposed_action": "Opt-in nativepixel still inspection through existing singlePreviewLoader/viewports/backgrounds, explicitfullimageadmission andpixel/encodedbounds beforedecode, originalthumbnaildefaultunchanged. Nativecomparison/stalefencing/1:1display/nearestinterpolation andplaybackpause/refusal; no seconddecoder/cache orROIcostclaim.",
+      "acceptance": [
+        "Admitted native pixels reachviewer unresampled; actualpixelpatterns/UHDfixtures andnativeA/Bmapping",
+        "Existingheaderadmission beforedecoder andfrozenindexchecks, explicitunsupportedvideo/oversize failures, no silentthumbnailfallback",
+        "Latestrequest fencing/nativeoptionidentity/pinnedresolution compatibility; no render/job/project/schema mutation",
+        "Nativegrid rendering anddark/light/custom/checker reuse, documentedfullnative memorywork nothardRSScap",
+        "FocusedCPU/Qt/static/independentreview; realmanageddisplay/pretrainedqualityexternal"
+      ],
+      "evidence": [
+        "corridorkey/desktop_preview.py",
+        "corridorkey/desktop_viewport.py"
+      ],
+      "verification": [
+        "Final1834authorizedPASS209.901s/464sourceunchanged/0newfullstaticactualbatch13; independentSOURCEAPPROVE;batch14-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-D-002",
+      "component": "moving refinement regions through existing tracked brush coverage",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Original D moving-subject local implementation gap, not missingGPUhardware",
+      "problem": "Only static refinementregions supported; existingcoverage tracker can transport theirmasks, but anchor admission/UI excludesregion and regionrasterconsumer ignoresderivedtracks. Blindwhitelist extension would route region tofinalartistconstraints and fail orchangehints.",
+      "proposed_action": "Reuse existingfloatcoverage tracking/assets/inspection; typeadmission+completepurpose/targetanchor binding, separate movingregion finishingweight consumption/maxstrength, staticoutsideacceptedrange; distinctregiontrackingdirection withoutchangingauthored both. Preserve oldschemas/strictoldreaderfailclosed, derivedprovenance/undo/portable/cacheinvalidations.",
+      "acceptance": [
+        "Forward/back/both softcoverage+multipleanchors, exactoverlap/maxweight/strengthonce/staticoutside",
+        "Regiontracks neverhints/carry/forcedneuralanchors/finalartistmatte; rawalpha/foreground/defaults unchanged",
+        "Existingcut/reset/range/reliability/cancel/resource bounds;partial/stale/corruptpreviewcannotcommit",
+        "Inspectacceptsave/reopenrelocateportableundo/redo/editinvalidation, acceptedderivedoverlay",
+        "Compatibleold1\u20135documents andordinarybrush behavior; no newtracker/weight/dependency/schema unlessjustified",
+        "Focusedtests/static+independentreview;actualocclusion/footagequalityexternal"
+      ],
+      "evidence": [
+        "corridorkey/correction_tracking.py",
+        "corridorkey/correction_rasters.py",
+        "corridorkey/correction_tracking_editor.py"
+      ],
+      "verification": [
+        "Final1834authorizedPASS209.901s/464sourceunchanged/0newfullstaticactualbatch13; independentSOURCEAPPROVE;batch14-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-D-003",
+      "component": "accepted-region overlay source publication fence",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Actual independent late-source mutation RED before repair",
+      "problem": "Displayframe changed afteritsrealhash whilelaterfileshashed; oldRGB+acceptedmaskstillpublished becauseonlymaskpinsfenced.",
+      "root_cause": "Newaccepted-overlay consumer usedcontenthash without retained predecode sourceindex andfullstat/membershippublicationcheck.",
+      "resolution": "Independentactualhashforward found displayframe changed afteritsrealhash whilelaterframeshashed stillpublished. CaptureboundedindexBEFOREpreview, ONEposthash overcapturedindex +finalstat/fullmembershiprescan +maskpins/cancel nowrejectsoriginal,strongerlateframe andaddition; no duplicatecontenthash ornewtrackingalgorithm. Cooperatingprocessfences, notatomicfilesystemguarantee.",
+      "evidence": [
+        "benchmark-results/product-next/tracked-regions/independent-late-source-overlay-red.log",
+        "benchmark-results/product-next/tracked-regions/independent-late-source-overlay-green.log"
+      ],
+      "verification": [
+        "RED2actualfilemutation/addition;68affectedPASS2.719s/2Python0; independentstrongerlatefile+singlehash/control/cancelPASS",
+        "Final1834authorized/464files0newstatics; no forcedGC/testweakening/atomicFSclaim"
+      ]
+    },
+    {
+      "id": "PERF-D-004",
+      "component": "composite-region configured despill influence",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Actualsupportednonneuralpurposeeffect independentlyaccepted locally; pretrained/targetqualityNOTVERIFIED",
+      "problem": "Region schema/consumers currentlyonlyrefinement; usercannotspatiallyscope existing configured despill independently of alpha/artistconstraints.",
+      "proposed_action": "Explicit v5composite/despill pair andexistingRasters.composite_region(frame) coverage; existingregioneditor/tracker/persistence, then sharedruntime blendinchosendomainbeforecompositing/association acrossneuralEXR/video/sourceDraft/Quick/fallback. No newmodelinputs or ROIcostclaim.",
+      "acceptance": [
+        "No region exactoldbytes/defaultexecution; Nonefullconfiguredoperation,zeroidentity/fullcandidate/fractionalcorrectdomain, maxoverlapstrengthonce/static+tracked",
+        "Alpha/rawFG/hints/carry/artistconstraints/reconstruction/sourceframe mapping/modelownership andchronology unchanged",
+        "Signedabove1linear/alpha0-nearzero/straight-premult/background/edge-luma/cutout-video domain explicit; finite/shape/range contracts",
+        "Onlycutout/checker consumeregion, no unnecessarymaskwork forrawFG/alpha-only; atmostoneactivebatchtransfer",
+        "UIpurpose choice+oldschemas1\u20135+oldreaderfailclosed, undo/portable/bindings/assets/cancel; rendererproducer jointindependentreview/tests/static",
+        "No actualGPUquality/performance claim fromCPUfixtures"
+      ],
+      "evidence": [
+        "corridorkey/runtime.py:_despill_configured",
+        "corridorkey/correction_rasters.py"
+      ],
+      "verification": [
+        "55producer/59consumerfocused +independentactual16fileprobes; final1856authorizedPASS212.886s/468sourceunchanged/0newfullstaticactualbatch14;batch15-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-D-005",
+      "component": "diagnostic-region captured tracking overlay display influence",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Actualsupportednonneuralpurposeeffect independentlyaccepted locally; pretrained/targetqualityNOTVERIFIED",
+      "problem": "Existing capturedreliability/uncertainty overlay cannotbespatiallyrestrictedusingauthor/acceptedtrackedregion coverage independentlyofrenderpixels.",
+      "proposed_action": "Explicitv5diagnostic/tracking_overlay pair andexistingRasters.diagnostic_region(frame); clipONLYactualmapRGBAopacity bynativecoveragearea-resampledtoproxy, existingeditor/tracker/overlayworker/provenancefences.",
+      "acceptance": [
+        "No region oldoverlaybytes/semantics; fullcandidate/zero/fraction/overlap/strengthonce/nativeorigin/proxygeometry/offset precise",
+        "Capturedmapvalues/scalarstats/trackingdecisions/sourcepixels/renderoutputs unchanged; no fabricatedmaps/scores/calibratedconfidence orsavedtrackbackfill",
+        "Unavailable/stale/anchorunmeasured behavior unchanged; document/source/decode/candidate/proxy+regionassetpublication fences/cancellation",
+        "ExplicitUIpurpose+data/persistence/undo/relocation/tracking compatibility; no unwantedcapture/enabling expensive diagnostics",
+        "Focusedcaptured-map CPU/Qt andindependentreview/static; actualrepresentativequalityexternal"
+      ],
+      "evidence": [
+        "corridorkey/tracking_overlays.py:render_layer",
+        "corridorkey/correction_tracking_editor.py:tracking_overlay_view"
+      ],
+      "verification": [
+        "55producer/59consumerfocused +independentactual16fileprobes; final1856authorizedPASS212.886s/468sourceunchanged/0newfullstaticactualbatch14;batch15-summary.json"
+      ]
+    },
+    {
+      "id": "PERF-E-002",
+      "component": "exact global despill edits reuse raw neural stages",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Implemented and locally verified; fullgoal/targetacceptance remain open",
+      "problem": "Currentdefault-offfinishing projections excludeonlytwoalphacontrols; changingfiveglobaldespillsettingsneedlesslychangesrawStage2/upstream parent namespaces. Fullwriter/output identitiesmuststillchange.",
+      "proposed_action": "Typedprivatecontextv2excludesalpha2+despill5, keepsv1parse/keymeaningunchanged. Sameoptins/separateddomains/current-fulljobcallback/model/source/hint/correction/state/dtype/scheduling/code/writer dependencies; actualAeditedBcleanB parity/cachecalls/freshattempt proofs. No cache/seal rewrite/delete.",
+      "acceptance": [
+        "Fiveglobalfieldsandcombinedvalideditsprojectoutonlyv2; allnonfinaldependenciesstilldifferent andmalformed/class/crossdomainsreject",
+        "Oldv1payload/keysemanticsretained, v2requirescomplete7fieldinventory; fullReplay/per-entryformats unchanged",
+        "A\u2192editedB\u2192cleanB actualCPUfixtureexports exact/changedRGBexpected/alphaRAWFGHDRassociationstable; zeroCORRESPONDINGNNcalls whenenabled;freshattempt/zerooldprefixrestore/priorAretained",
+        "Independentoptins/flags/memory/spatial/Quick paths +corrupt/missing/quota/cancel/model/source/hints/Doc/geometry/precision/context negative guards",
+        "Checkerstrengthsuffix/fullcurrentoutput/journal/writerprefixidentity retained; shotprofilebindingconservativemiss notremovedforhit",
+        "Scoped/fullstaticandindependentreview; actualGPUquality/performanceunverified"
+      ],
+      "evidence": [
+        "corridorkey/stage2_identity.py",
+        "corridorkey/recovery_identity.py",
+        "benchmark-results/product-next/batch16-summary.json"
+      ],
+      "verification": [
+        "1867authorisedPASS231.924s/470Pythonstable/fullstatic0newactual15+legacy/independentAPPROVE; exactfocused+measurementdetails summary. HTTP15NOTVERIFIED/PERM002."
+      ],
+      "resolved_utc": "2026-10-24T09:55:52.416193+00:00"
+    },
+    {
+      "id": "PERF-OPT-001",
+      "component": "unused and duplicate final-render despill work",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Implemented and locally verified; fullgoal/targetacceptance remain open",
+      "problem": "EXRcutout+checker repeatsidenticalconfiguredDSP; videolegacycutoutcomputesunusedlinearDSP beforedisplayDSP, same-domainotherpaths mayrepeat. Globalstrength0 stillpacks/transfersactivecompositeweights althoughblendreturnsFG.",
+      "proposed_action": "AfterEfreeze, TDDsame-domainper-render-batchreuse/lazyonlyneededcandidates; keepallneededguards/metadataparsing/domain/precision/outputs. Bypassinactiveglobal0 pack atsharedresponsiblehelper whilefullinputpreflight/directmaskvalidation remain. MeasurepredeclaredmatchedCPUcomponentcohort+untimedcall/nbytes/lifetime separately; no newcache/service orGPUgainclaim.",
+      "acceptance": [
+        "Exactbyteoutputbaseline/domain/endpoints/signedzeroHDR/alpha/association/regions/defaults/lowspatialQuickfallback, no additionalNN/model/hint/carry changes",
+        "Measuredspycountsforneededcallsanddefaultno-work; no neededvalidation/cancel/dataadmission weakened",
+        "PolicyfixedBEFOREdata:16cases,2warmup/version,5AB/BApairs,7calls/sample,synchronousCPU/synthetic2x128x192F32/isolatedrequestedthreads1, no parallelperf",
+        "Speedup-onlyclaimifmedianpairedratio<=.95,4/5pairs<1,MAD/median<=.10; symmetric>=1.05 regression, othersinconclusive/alloutcomesretained; exactbyte numericalgate",
+        "Pre-executionharnesshash/before-aftercontext/source/HEAD/rawtimings/variation/config stored; separateuntimedcall/storageweakrefs notRSS/VRAM/peak",
+        "Independent source/policy review andsingleperformanceexecutionrelease afterallactorsidle; no wholepipeline/GPU/FPS/footage claim"
+      ],
+      "evidence": [
+        "benchmark-results/product-next/render-despill-optimization/runtime-before.py",
+        "benchmark-results/product-next/render-despill-optimization/policy.json",
+        "benchmark-results/product-next/batch16-summary.json"
+      ],
+      "verification": [
+        "StagingREADONLY; runtimebaselineSHA7af2eed6 andpolicySHA606edf9e captured beforeimplementation/timing; no measuredcandidate yet",
+        "1867authorisedPASS231.924s/470Pythonstable/fullstatic0newactual15+legacy/independentAPPROVE; exactfocused+measurementdetails summary. HTTP15NOTVERIFIED/PERM002."
+      ],
+      "resolved_utc": "2026-10-24T09:55:52.416193+00:00"
+    },
+    {
+      "id": "PERF-E-003",
+      "component": "guarded pure render-region semantic cache dependencies",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Implemented and locally verified withinpureDocboundary; mixed/fullE andtargetacceptanceopen",
+      "problem": "Pure composite/diagnostic documents change wholemanifest/path identity despite masks having no neural effects. Their exactsource/shots/presence DO affect scheduling/state and mustremain.",
+      "proposed_action": "Extendexistingtypedfinishingcontexts with strictguardedprivatev3onlyfor nonempty pure schema5 composite/despill ordiagnostic/tracking_overlay docs. PreservefullcurrentReplay/assets/path/admission/bind/finalpublication/writerprefix. Empty/mixed/refinement/reset/ordinary/trimap/guidance conservative; no newgraph/cache/flags.",
+      "acceptance": [
+        "Strictoriginalfullwrapper/schema/identity+documentparser beforeeligibility; malformed/preprojected/crossdomain/unknownfields rejected/conservative notsilentlydropped; v3closedprojection+pathabsenceconsistent.",
+        "Exactdocumentpresence/source/shots/fullmodels/hints/state/schedule/precision/profiles retained; v1/v2directcanonicalbytes/keys/wire/seals unchanged.",
+        "ActualCPUfixtureA-editB-cleanB purpose/static/tracked/path/provenance cachehits+expectedRGB/alpha/rawFG/EXRparity; distinctoptins/nooptin/controlnegatives; freshattempt/noprefixrestore/Aoutputssourcepreserved.",
+        "Corrupt/missing/hash/track/cut/source/currentlatecontext/asset/resource/cancel cannotbypassfulladmission/finalpublication; intermediatevalidrawentryafterfailure notwholeoutputsuccess.",
+        "Scopedactualbatch16static0new, focusedREDbeforefix, independentstableimplementationreview; genuineGPUquality external."
+      ],
+      "evidence": [
+        "benchmark-results/product-next/semantic-reuse-discovery.md",
+        "benchmark-results/product-next/batch17-summary.json"
+      ],
+      "verification": [
+        "BoundedindependentdesignAPPROVE; noimplementationacceptance. Emptydocs explicitlyconservative. Projectionstructuralidentitynotauthenticatedprovenance.",
+        "53focused/30actualscenarios +independentactualprobes;1910authorizedPASS248.686s/472stable/fullstatic0newactual16+legacy. HTTP15NOTVERIFIED."
+      ],
+      "created_utc": "2026-10-24T09:59:05.637195+00:00",
+      "resolved_utc": "2026-10-24T10:25:21.041850+00:00"
+    },
+    {
+      "id": "PERF-E-004",
+      "component": "mixed authored/derived raw-neural dependency projection",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Implemented and locally verified for final-only/derived-track edits; genuine neural-prefix/fullE/target acceptance open",
+      "problem": "Mixed documents remain conservative although knownfinalregion/derivedtrack/outerrevision changes may be downstream-only. ActualEditor dropsalltracks; finalBalpha maylegitimatelychange.",
+      "proposed_action": "Oneprivatev4raw-neuralprojection forstrictschema5 withretainednonfinalauthoredentries, evenafterlastfinalremoval. Retaincanonicalorderedallnonfinalentryfields/guidance/exactsource/shots/presence; omitonlyknownfinalregions/allacceptedderivedtracks/outerrevision/privatepath afterstrictoriginalparse. NeverchangeEditorretirement/rebindtrackidentity. Purev3/directlegacy unchanged.",
+      "acceptance": [
+        "BEFOREidentityimplementation: uncached actualEditor Aordinarytracked->Bretired; finalalpha deliberatelydifferent; compareevery sensitivefixture NNinput/output/state/Hanncarry/schedule andQuickanchor/promotion/fallback digests acrossnormal/low/spatial fullrate,hold/offline/causal/adaptive/forcedfallback; yieldedoutputeditcannotmutateanchors/cache.",
+        "Strictoriginalwrapper/trackbinding/assets thenfilteredDocwithtracks[]; retaineverycanonicalorderednonfinalentryincldisabledIDs/revisions/paths/hashes/ranges/directions/trimap/refinement/reset/guidance. No inventedpartialtrackvalidator or bindingpatch.",
+        "v4schema5nonfinalpresent supportfirstfinaladd/lastremove/outerrev changes; None/empty/older/purev3factory anddirectv1-v3 semantics preserved; no oldsealrewrite/migration.",
+        "AeditBcached==cleanB notA wherefinalalphachanges, freshfullidentity/journal/output/noprefix/AandSourcepreserved, independentoptins andnegativeNNdependencies.",
+        "Matchingrawprojection cannotbypasscurrentauthored/derived/guidance/invalidtrack/assets/source/cuts/model/cancel/latepublication refusal.",
+        "Focusedregression/scopedactualbatch17Counter0new/independentreview/integrationgate; fixtureNNcall avoidance notperformance/GPUquality measurement."
+      ],
+      "evidence": [
+        "benchmark-results/product-next/purpose-finishing-reuse/mixed-discovery.md",
+        "benchmark-results/product-next/mixed-finishing-preproof/main-proof-acceptance.json",
+        "benchmark-results/product-next/batch18-summary.json"
+      ],
+      "verification": [
+        "IndependentconditionaldesignAPPROVE raw-neural-onlyvariant; no sourcecounterexample found. Preproofnotyetexecuted.",
+        "Preproof c96dcde6:20matchedA/Bcases/42uncachedfixture-runs/168storagechecks, nontrivialhints/state andsensitivitycontrols; actualNNinputs/outputs/state/Hann/Quick/motion equal while1111finalalpha pixelsdiffer. Originalapplication9hashes unchanged. Main-proof-acceptance.json; noGPU/speedclaim.",
+        "79focused/22actualcachedBcleanB +20paireduncached preproof; independent actual integrity/parity APPROVE;1923authorizedPASS269.822s/475stable/fullstatic0newactual17+legacy. HTTP15NOTVERIFIED."
+      ],
+      "created_utc": "2026-10-24T10:31:03.568291+00:00",
+      "resolved_utc": "2026-10-24T11:57:36.886235+00:00"
+    },
+    {
+      "id": "PERF-E-005",
+      "component": "Stage2 exact-input unchanged-prefix reuse across genuine neural edits",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Implemented and locally verified Stage2-only; upstream temporal/fullgoal/target acceptance open",
+      "problem": "Retained authored correction and first/full hint identities change the whole Stage2 parent despite some earlier complete NN calls having identical inputs. Existing full selected-batch keys already bind all actual Stage2 RGB/baton/frame/group/policy/execution arguments.",
+      "proposed_action": "Under existing default-off Stage2 reuse policy, introduce explicit private-v5 input-qualified parent narrowing only correction and first/full hint records/path after strict original metadata validation. Preserve full source/model/assets/code/environment/device/precision/writer/settings/unknown policies; keep full current Replay admission/bind/final publication/journals/prefix/profiles. Upstream factories and IID grouping semantics unchanged.",
+      "acceptance": [
+        "Before app edit, RED identifies equal actual early full-batch input digests but old parent misses; late authored and full-hint conditioning edits placed beyond real Hann/Quick lookahead.",
+        "Validate complete original correction wrapper/document/tracks/source and file{path,sha256}/sequence{path,files,sha256} hint forms using existing sequence_identity aggregate; no filesystem reopening. Unknown hint members reject/retain, unknown siblings/settings never disappear; projected records cannot masquerade as full originals.",
+        "Explicit closed v5 tags/path rules; directv1-v4 canonical bytes/keys unchanged, old seals never rewritten. Upstream v2-v4 factory results byte-identical. Trusted loaded eval-model boundary, not custom mutated-model support.",
+        "Actual cached B has early whole-call hits, first affected-input miss and current suffix/carry evaluation. Exact B==cleanB!=A with fresh full provenance/journal/output/no old-prefix restore/source+A preserved.",
+        "Normal/low/spatial and proportionate Quick grouping; regroup/no-matching-batch, initial-hint conditional no-hits, source/model/device/precision/settings, malformed/current-corrupt/late mutation,quota/cancel negatives. Whole batches never split.",
+        "Focused tests, scoped Counter against actualbatch18, independent stable review and main integration; no GPU/performance gain claim. Upstream neural-prefix scope remains separate due shared IID producer-group numerical caveat."
+      ],
+      "evidence": [
+        "benchmark-results/product-next/incremental-prefix-facts.md",
+        "benchmark-results/product-next/incremental-range-root-cause-candidate.md",
+        "benchmark-results/product-next/batch19-summary.json"
+      ],
+      "verification": [
+        "Independent conditional Stage2-only design APPROVE: actual forward onlyRGB/baton, no explicit recurrent argument, MAE mask defaultsNone; full trusted model/context and complete entry grouping/execution remain required. No implementation accepted yet.",
+        "Repaired1932authorizedPASS316.400s/477stable/fullstatic0newactual18+legacy; initial1931/oneRSS-oracle-failure retained; independent E005/QA006 approvals. HTTP15NOTVERIFIED."
+      ],
+      "created_utc": "2026-10-24T12:13:16.180749+00:00",
+      "resolved_utc": "2026-10-24T13:42:58.603898+00:00"
+    },
+    {
+      "id": "PERF-QA-006",
+      "component": "macOS native process-memory test reproducibility",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Confirmed invalid test oracle repaired; no production memory defect reproduced, exact historic RSS movement unobserved",
+      "problem": "test_actual_owned_allocated_child_and_observer_overhead detected owned child RSS above24MiB, but aggregate tree RSS1669562368 didnotexceed prior aggregate+24MiB1677656064. Parent/other RSS may change between non-atomic samples; observer docs explicitly disclaim atomic/hardcap semantics.",
+      "proposed_action": "Bounded reproduce with controlled root RSS shrink; inspect actual snapshot/additivity. Only if test oracle confirmed wrong, preserve child size/discovery/birth/cleanup/timing checks and assert same-snapshot total inclusion/additivity rather than requiring stable parent across samples. Production module edits notauthorised withoutseparate confirmedbug.",
+      "acceptance": [
+        "Preserve raw failedbatch19/1931tests318.708s/1failure/noerrors/sourceunchanged; classify before remediation.",
+        "Existing actualmac test and deterministic controlledRSS-drop reproduction distinguish production aggregation from temporal delta assumption.",
+        "If oraclewrong, regression locks aggregate child inclusion when rootRSSfalls; actual owned32MiB child resident threshold and lifecycle/reaping/known removal remain; no skip, loweredthreshold or checker change.",
+        "Targeted tests/static and independent reviewer; onceallsourcefrozen rerun coherentbroadintegration under freshprefix, keep originalfailure intact."
+      ],
+      "evidence": [
+        "benchmark-results/product-next/batch19-admissible-tests.json",
+        "benchmark-results/product-next/batch19-admissible-tests.log",
+        "tests/test_process_memory.py:174",
+        "corridorkey/process_memory.py module contract",
+        "benchmark-results/product-next/batch19-summary.json"
+      ],
+      "verification": [
+        "Repaired1932authorizedPASS316.400s/477stable/fullstatic0newactual18+legacy; initial1931/oneRSS-oracle-failure retained; independent E005/QA006 approvals. HTTP15NOTVERIFIED."
+      ],
+      "created_utc": "2026-10-24T13:14:26.618134+00:00",
+      "resolved_utc": "2026-10-24T13:42:58.603898+00:00"
+    },
+    {
+      "id": "PERF-E-006",
+      "component": "Temporal-only RVM/Hann exact-input prefix scope",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Implemented and locally verified temporal-only exact-input boundary; full product and target acceptance open",
+      "proposed_action": "Pair UpstreamFinishingContextv5 with one temporal-only reuse_scope. Keep legacy upstream factoryv2-v4 for IID; route new validated temporal factory only to enabled RVM/Hann. Reject temporal parent at both IID constructor and direct feature_identity; use O(1) immutable scope access without serde fields or per-frame JSON parses. Share original hint validator at lower identity layer without import cycle.",
+      "acceptance": [
+        "Before app edit record sensitive uncached RVM all-matching chunks/state and Hann matching early inputs/state; old semantic parents miss. Include late-anchor/both-direction EARLY-span strength change so raw first Hann input/output match, but current postraw correction changes outgoing carry and next event identity.",
+        "Actual cached B first rawHann hit must still apply CURRENT correction/aux carry; changed next state/input misses, raw returned aux remains immutable. RVM incoming state/chunk/shot exact, B==cleanB!=A; current full provenance/fresh attempt/no oldprefix/source+A preserved.",
+        "Exact version/scope pairing, both IID cache and direct pure identity refuse temporal-only parent; legacy parents still valid, old upstreamfactory and direct Stage2v1-v5/Upstreamv1-v4 literal payload keys unchanged.",
+        "Full source/model/assets/code/environment/settings/writer/unknowns and current full admission/bind/final publication/prefix/journals/profiles retained. Only known semantic hint/correction records/path projected after strict original validation; no new flags/DAG/service/cache/base rewrite.",
+        "Independent stage flags and disabled policies, normal/low/spatial and proportionate Quick/fallback/adaptive; actual key membership/carry transitions, active Stage1 recurrence rejection, global Hann schedule/reset-cut conservative misses, corruption/current bad hints/quota/cancel/late publication guards.",
+        "Scoped Counter actualbatch19-repaired; independent stable review and main integration. No IID producer-group numerical weakening, arbitrary mutable-model support, GPU/performance claim."
+      ],
+      "evidence": [
+        "benchmark-results/product-next/temporal-prefix-scope-facts.md",
+        "benchmark-results/product-next/batch20-summary.json"
+      ],
+      "verification": [
+        "Independent bounded design APPROVE WITH CONDITIONS; static actual-input/state map found no missing supported argument. No implementation accepted.",
+        "Independent exact-source APPROVE;1941 authorized PASS430.142s/479 unchanged Python files/full static0new actual19-repaired+legacy;15HTTP NOT VERIFIED. Composite focused evidence, not111pass. Current carry and IID exclusions preserved."
+      ],
+      "created_utc": "2026-10-24T13:53:27.489730+00:00",
+      "resolved_utc": "2026-10-24T15:18:30.537642+00:00"
+    },
+    {
+      "id": "PERF-B-002",
+      "component": "Conditioned progressive sequence previews and full-context fidelity",
+      "priority": "P1",
+      "status": "resolved",
+      "classification": "Implemented and locally verified bounded conditioned full-context sequence preview; actualGPUquality/latency/video acceptance open",
+      "problem": "Current one-frame execution changes temporal/carry/window/group context and cannot claim selected-frame parity with the original full request.",
+      "proposed_action": "Extend existing session/runtime capture rather than a second engine. Retain complete original sequence request and whole Stage2 groups, run full context initially and capture selected final output only. Preview-specific strict result admission; full export admission unchanged. Preserve original hints/correction dependency/source protection, stale fences and owned cleanup.",
+      "acceptance": [
+        "Sensitive CPU selected output equals clean-full request in normal and low-VRAM modes with RVM state, Stage1 lookahead/carry, hints, correction/reset, nonzero offset and interior group target; fixture mutation controls demonstrate sensitivity.",
+        "Only selected EXR frame per output; no normal export writes or sparse result masquerading as full export; distinct successful preview status; completed_view remains strict.",
+        "Full context source and conditioning dependency identities captured/rechecked before and after execution; source/matte alignment and context cache invalidation, protected scratch, stale/cancel/model ownership retained.",
+        "Strict worker selector validation, legacy preview/render request compatibility, runtime processed context vs actually submitted count truthful; no inference/quality/latency gain claim, full-timeline cost explicit.",
+        "Focused regression/static actual batch20, independent stable source review and coherent integration gate before acceptance."
+      ],
+      "evidence": [
+        "benchmark-results/product-next/preview-context-interface-facts.md",
+        "benchmark-results/product-next/remaining-acceptance-gaps.md",
+        "benchmark-results/product-next/batch22-summary.json"
+      ],
+      "verification": [
+        "Read-only executor design and independent bounded review in progress; no source mutation released.",
+        "Independent design APPROVE with conditions: typed diagnostics selector as existing control transport; default runner explicit runtime kw; strict actual context/capture coverage before preview_complete, no custom-runner fallback. Count/telemetry mapping, source/conditioning dependencies and distinct sparse admission required. Implementation released bounded7core files+focused tests/guide.",
+        "Originale668 reviewHIGH manifestmix race independently reproduced despite candidate1947PASS. RetainoriginalFilePin+SHA/newREDregression; repaired96d578ca independentAPPROVE. Final1948authorizedPASS359.475s/480stable/fullstatic0newactual20+legacy;15HTTPNOTVERIFIED. NoGPU/latencyclaim."
+      ],
+      "created_utc": "2026-10-24T15:20:11.788380+00:00",
+      "resolved_utc": "2026-10-24T15:51:37.497243+00:00"
+    },
+    {
+      "id": "PERF-I-006",
+      "component": "Optional measured two-anchor authored-tracking disagreement overlay",
+      "priority": "P2",
+      "status": "resolved",
+      "classification": "Implemented and locally verified optional actual two-anchor authored-tracking disagreement; targetquality/QuickKeycapture notclaimed",
+      "proposed_action": "Retain existing warped-anchor difference only under current capture opt-in, immutable candidate bytes, optional third map through existing bundle/receipt/loader/UI. Keep old2-map receipts valid and other producer/runtime behavior unchanged.",
+      "acceptance": [
+        "Before editing lock zero-flow known unequal/identical two-anchor expected measured maps and current opt-out mask/reliability/uncertainty/flow count/provenance behavior.",
+        "Default-off no new retained map; capture on adds only immutable actual TWO-anchor spatial map; authored/singleanchor/uncomputed/stopped absent/unavailable, never syntheticzero or scalar reconstruction.",
+        "Old2-map/new3-map receipts strict order/geometry/hash/filename/source/request/frame-offset binding; finite unit/size/native4Mi/proxy256/64Mi diagnostics quota/cancel/cleanup/tamper coverage.",
+        "Existing editor/UI selectable coverage-difference legend and availability. Render alpha/reliability/uncertainty/fallback/cuts/resets/temporal/output bits unchanged; same flow calls, no model/runtime/draft algorithm edits.",
+        "Focused static against actualbatch22, independent frozen review/main integration. Actualfootagequality/QuickKeyspatialcapture and performance gains notclaimed."
+      ],
+      "evidence": [
+        "benchmark-results/product-next/disagreement-map-facts.md",
+        "docs/product-improvements-brief.md section9",
+        "benchmark-results/product-next/batch23-summary.json"
+      ],
+      "verification": [
+        "Read-only producer/candidate/existingcapture/bundle/receipt/loader/UI traced. Bounded release aftercheckpoint31.",
+        "Independent exact9scope3c2a2398/patch9f01fe3d APPROVE;7testsPASS0.908s plus nonzero-flow oracle confirms warped difference.98focusedPASS2.956s, scoped0newactual22; mainglobalgate pending.",
+        "Independent9scope3c2a2398/patch9f01fe3d APPROVE;98focused+7independent including warped-nonzero-flow oracle. Final1955authorizedPASS350.965s/481stable/fullstatic0newactual22+legacy,1existingRuffresolved;15HTTPNOTVERIFIED. NoGPU/quality/performanceclaim."
+      ],
+      "created_utc": "2026-10-24T15:52:58.887906+00:00",
+      "resolved_utc": "2026-10-24T16:15:31.276328+00:00"
     }
-  ]
+  ],
+  "updated_utc": "2026-10-24T16:15:31.276328+00:00"
 }

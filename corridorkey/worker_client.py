@@ -376,9 +376,19 @@ class WorkerClient:
 
 def run_worker_batch(manifest, report_path, *, capacity=4, workspace=None, max_cache_bytes=0,
                      resume=False, durable_foundations=False, durable_rvm=False, durable_hann=False, durable_stage2=False,
-                     durable_writer_prefix=False,
+                     durable_writer_prefix=False, reuse_stage2_finishing_edits=False, reuse_upstream_finishing_edits=False,
                      client_factory: Callable[..., WorkerClient] = WorkerClient):
     """Working sequential CLI client; GUI callers can use the bounded queue API."""
+    if type(reuse_upstream_finishing_edits) is not bool:
+        raise ValueError('reuse_upstream_finishing_edits must be a boolean')
+    if reuse_upstream_finishing_edits and (workspace is None
+            or any(type(value) is not bool for value in (durable_foundations, durable_rvm, durable_hann))
+            or not any((durable_foundations, durable_rvm, durable_hann))):
+        raise ValueError('upstream finishing-edit reuse requires an explicit upstream durable cache and workspace')
+    if type(reuse_stage2_finishing_edits) is not bool:
+        raise ValueError('reuse_stage2_finishing_edits must be a boolean')
+    if reuse_stage2_finishing_edits and (durable_stage2 is not True or workspace is None):
+        raise ValueError('finishing-edit reuse requires durable_stage2 and a recovery workspace')
     from .batch import load_jobs
     from .diagnostics import write_json_atomic
     from .lifecycle import cleanup_all
@@ -431,7 +441,9 @@ def run_worker_batch(manifest, report_path, *, capacity=4, workspace=None, max_c
                                   'max_cache_bytes': max_cache_bytes, 'resume': resume,
                                   'durable_foundations': durable_foundations, 'durable_rvm': durable_rvm,
                                   'durable_hann': durable_hann, 'durable_stage2': durable_stage2,
-                                  'durable_writer_prefix': durable_writer_prefix})] if workspace is not None else
+                                  'durable_writer_prefix': durable_writer_prefix,
+                                  'reuse_stage2_finishing_edits': reuse_stage2_finishing_edits,
+                                  'reuse_upstream_finishing_edits': reuse_upstream_finishing_edits})] if workspace is not None else
                     [('render', {'job': job_to_wire(job)}) for job in jobs])
         last_progress_write = 0.0
         for action, payload in requests:

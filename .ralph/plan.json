@@ -8,9 +8,15 @@
       "status": "in_progress",
       "acceptance": "See docs/product-performance-brief.md PERF-A and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
-        "docs/product-performance-brief.md"
+        "docs/product-performance-brief.md",
+        "docs/shot-profiles.md",
+        "benchmark-results/product-next/batch5-summary.json",
+        "benchmark-results/product-next/batch6-summary.json",
+        "benchmark-results/product-next/batch13-summary.json"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Target acceptance on actual CUDA/approved localweights/representativefootage; native FFmpeg, Windows/NVIDIA cleanpackage and newSHA hostedCI, Resolve host and real visualreview. PERM001 publication and PERM002 fifteen realHTTPtests require explicit platform approval; do not autoexecute deferred commands. Preserve bounded currentcontracts and unsupported measurements as unavailable; no duplicate calibration/encoder inference.",
+      "local_state": "bounded_software_contract_locally_verified_target_acceptance_unverified",
+      "full_feature_accepted": false
     },
     {
       "id": "PERF-B",
@@ -20,7 +26,7 @@
       "evidence": [
         "docs/product-performance-brief.md"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Full-context conditionedsequencepreview locallyverified; actualGPUresponsiveness/quality and video timing/provider acceptance open."
     },
     {
       "id": "PERF-C",
@@ -30,7 +36,7 @@
       "evidence": [
         "docs/product-performance-brief.md"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Supportedsequencebrushtracking/anchors/undo/persistenceimplemented; representativecut/occlusion quality external. No newlymandatoryvideoextensionestablished."
     },
     {
       "id": "PERF-D",
@@ -38,9 +44,14 @@
       "status": "in_progress",
       "acceptance": "See docs/product-performance-brief.md PERF-D and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
-        "docs/product-performance-brief.md"
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch4-summary.json",
+        "docs/refinement-regions.md",
+        "benchmark-results/product-next/batch14-summary.json",
+        "benchmark-results/product-next/batch15-summary.json"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Actualrepresentativequality andtargethardwarevalidation; neuraloptionalMAEtokenmaskisnotROIcompute. Supportednonneuralpurposeeffectsverifiedbatch15.",
+      "local_state": "static_and_tracked_refinement_composite_diagnostic_purposes_verified_neuralROIunsupported"
     },
     {
       "id": "PERF-E",
@@ -48,9 +59,18 @@
       "status": "in_progress",
       "acceptance": "See docs/product-performance-brief.md PERF-E and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
-        "docs/product-performance-brief.md"
+        "docs/product-performance-brief.md",
+        "/private/tmp/upstream-finishing-final-integration.json",
+        "/private/tmp/upstream-finishing-final-integration.log",
+        "/private/tmp/upstream-finishing-final-source-freeze.json",
+        "/private/tmp/upstream-finishing-final-scope.json",
+        "benchmark-results/product-next/batch16-summary.json",
+        "benchmark-results/product-next/batch17-summary.json",
+        "benchmark-results/product-next/batch18-summary.json",
+        "benchmark-results/product-next/batch19-summary.json"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Exact Stage2/RVM/Hann input-state reuse boundary locallyverified with currentcarry/IIDguards; actual pretrainedGPUparity pending, no arbitraryDAG obligation.",
+      "local_state": "Stage2_genuine_edit_prefix_verified_upstream_temporal_prefix_LOCALremaining"
     },
     {
       "id": "PERF-F",
@@ -58,9 +78,12 @@
       "status": "in_progress",
       "acceptance": "See docs/product-performance-brief.md PERF-F and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
-        "docs/product-performance-brief.md"
+        "docs/product-performance-brief.md",
+        "benchmark-results/product-next/batch4-summary.json",
+        "docs/clean-plate-guidance.md"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Multi-samplesyntheticguidanceandexistingplateworkflowverifiedlocally; actualscreen/platealignmentandqualityexternal.",
+      "local_state": "bounded_increment_verified"
     },
     {
       "id": "PERF-G",
@@ -69,15 +92,17 @@
       "acceptance": "See docs/product-performance-brief.md PERF-G and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
         "docs/product-performance-brief.md",
-        "benchmark-results/product-next/batch1-summary.json"
+        "benchmark-results/product-next/batch1-summary.json",
+        "benchmark-results/product-next/batch14-summary.json"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "next_action": "Actualhair/blur/translucency/HDRmanageddisplay/targetqualityvalidation remainsunverified; UIfunctionality verifiedbatch14.",
       "local_increment": {
         "status": "locally_verified",
         "batch": 1,
         "evidence": "benchmark-results/product-next/batch1-summary.json",
         "full_feature_accepted": false
-      }
+      },
+      "local_state": "existingdespillcontrols_and_boundednativepixelinspection_verified"
     },
     {
       "id": "PERF-H",
@@ -87,7 +112,7 @@
       "evidence": [
         "docs/product-performance-brief.md"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Connectedreference-agreementobjectiveverified; genuineCUDAmeasurementexternal, illustrativeothermemoryobjectivesnotautomaticmandatoryscope."
     },
     {
       "id": "PERF-I",
@@ -96,15 +121,21 @@
       "acceptance": "See docs/product-performance-brief.md PERF-I and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
         "docs/product-performance-brief.md",
-        "benchmark-results/product-next/batch1-summary.json"
+        "benchmark-results/product-next/batch1-summary.json",
+        "benchmark-results/product-next/profiling-overhead-summary.json",
+        "benchmark-results/product-next/batch8-summary.json",
+        "benchmark-results/product-next/batch9-summary.json",
+        "benchmark-results/product-next/batch13-summary.json"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "next_action": "Bounded software lanes and authored two-anchor disagreement locallyverified; actual CUDA/FFmpeg/delivery/quality acceptance pending. QuickKey mapcapture notclaimed.",
       "local_increment": {
         "status": "locally_verified",
         "batch": 1,
         "evidence": "benchmark-results/product-next/batch1-summary.json",
         "full_feature_accepted": false
-      }
+      },
+      "local_state": "bounded_software_contract_locally_verified_target_acceptance_unverified",
+      "full_feature_accepted": false
     },
     {
       "id": "PERF-J",
@@ -113,15 +144,17 @@
       "acceptance": "See docs/product-performance-brief.md PERF-J and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
         "docs/product-performance-brief.md",
-        "benchmark-results/product-next/batch1-summary.json"
+        "benchmark-results/product-next/batch1-summary.json",
+        "benchmark-results/product-next/batch6-summary.json"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "next_action": "Timing/numerical/resourceproducer/boundvisualdeclarationsverifiedboundedlocalincrements; actualCUDAresource/visualhuman/qualityacceptanceexternal, noauthclaim.",
       "local_increment": {
         "status": "locally_verified",
         "batch": 1,
         "evidence": "benchmark-results/product-next/batch1-summary.json",
         "full_feature_accepted": false
-      }
+      },
+      "local_state": "timing_and_bound_native_export_agreement_verified"
     },
     {
       "id": "PERF-OPT",
@@ -130,15 +163,17 @@
       "acceptance": "See docs/product-performance-brief.md PERF-OPT and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
         "docs/product-performance-brief.md",
-        "benchmark-results/product-next/batch1-summary.json"
+        "benchmark-results/product-next/batch1-summary.json",
+        "benchmark-results/product-next/batch16-summary.json"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate.",
+      "next_action": "Measured local DSP reuse accepted; futureoptimisations require actual bottleneck evidence. No GPU/pipeline/peakclaim.",
       "local_increment": {
         "status": "locally_verified",
         "batch": 1,
         "evidence": "benchmark-results/product-next/batch1-summary.json",
         "full_feature_accepted": false
-      }
+      },
+      "local_state": "renderer_local_reuse_verified_9component_speedups_7inconclusive"
     },
     {
       "id": "PERF-CLEAN",
@@ -146,9 +181,11 @@
       "status": "in_progress",
       "acceptance": "See docs/product-performance-brief.md PERF-CLEAN and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
-        "docs/product-performance-brief.md"
+        "docs/product-performance-brief.md",
+        "docs/dependency-decisions.md"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Currentconsumer-backed inventory accepted: retain supportedoptional/Windows/backends/dependencies; no further deletion justified. Revisitonlyactualnewconsumer/security/platformevidence, notcountreduction.",
+      "local_state": "inventory_complete_retained_with_consumer_rationale"
     },
     {
       "id": "PERF-DEPS",
@@ -156,9 +193,11 @@
       "status": "in_progress",
       "acceptance": "See docs/product-performance-brief.md PERF-DEPS and docs/acceptance.md; usable connected behavior, compatible persistence, independent review and real evidence required.",
       "evidence": [
-        "docs/product-performance-brief.md"
+        "docs/product-performance-brief.md",
+        "docs/dependency-decisions.md"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "Currentconsumer-backed inventory accepted: retain supportedoptional/Windows/backends/dependencies; no further deletion justified. Revisitonlyactualnewconsumer/security/platformevidence, notcountreduction.",
+      "local_state": "inventory_complete_retained_with_consumer_rationale"
     },
     {
       "id": "PERF-TARGET",
@@ -168,7 +207,7 @@
       "evidence": [
         "docs/product-performance-brief.md"
       ],
-      "next_action": "Map/reuse current implementation and deliver next bounded verified increment; external quality/platform acceptance remains separate."
+      "next_action": "NOTVERIFIED:actualCUDA/NVIDIA+approvedweights/representativefootage,FFmpegCLI,Windowscleanpackage/newSHAhostedCI,ResolveSDK/host/viewer/export andgenuinevisualreview."
     },
     {
       "id": "audit-remediation-20261024",
@@ -1127,9 +1166,9 @@
     "first_local_commit": "56c067f21e0c685ab699e4eb3e0aa9db628cd743"
   },
   "acceptance_matrix": "docs/acceptance.md",
-  "next_action": "Current audit locally complete. Remaining product tasks and external GPU/quality/Windows/Resolve acceptance remain in their existing task rows; no automatic supervisor/push.",
-  "objective_source": "docs/product-improvements-brief.md",
-  "current_checkpoint_evidence": "benchmark-results/ext05-export-connected-final-fixed/source-verification.json",
+  "next_action": "Safe overnight checkpoint: no additional straightforward currently-authorized local defect established by bounded A-J triage. Next approve/reject PERM004 isolated PyAV experiment, then implement/prove remaining CFR timestamp+pixel/OpenCV-output correspondence and high-bit encoded video precision/admission; PERM001 publication/indexownership, PERM002HTTP, optionalPERM003 metadata separate. ActualCUDA/weights/licensedfootage/quality/Windows/newSHAhostedCI/Resolve prerequisites remain. No overall completion.",
+  "objective_source": "docs/product-performance-brief.md",
+  "current_checkpoint_evidence": "benchmark-results/product-next/batch6-summary.json",
   "active_audit": {
     "objective": "Comprehensive current-repository audit and repair, user request2026-10-23",
     "workflow": ".omx/ultragoal/goals.json",
@@ -1272,15 +1311,20 @@
     "baseline": "benchmark-results/audit-fixes/verification-summary.json",
     "baseline_source_unchanged": true,
     "standalone_supervisor": false,
-    "next_action": "Edge finishing and report acceptance gates; then connected feasibility/shot/region/incremental workflows.",
-    "current_task": "Checkpoint/push accepted G/J/I/OPT increments; continue B/H/A/D/E/F and remaining acceptance",
-    "workers": {},
-    "dependency_disposition": "Retain all declared core/optional/transitive dependencies; dynamic foundations/packaging consumers prevent deletion proof. Optional groups unchanged. Details in native dependency_cleanup result.",
+    "next_action": "Safe overnight checkpoint: no additional straightforward currently-authorized local defect established by bounded A-J triage. Next approve/reject PERM004 isolated PyAV experiment, then implement/prove remaining CFR timestamp+pixel/OpenCV-output correspondence and high-bit encoded video precision/admission; PERM001 publication/indexownership, PERM002HTTP, optionalPERM003 metadata separate. ActualCUDA/weights/licensedfootage/quality/Windows/newSHAhostedCI/Resolve prerequisites remain. No overall completion.",
+    "current_task": "PERM002closed/PERM004isolatedpreflightpassed; publish explicit reviewed product paths, preserve121 unrelated stagedentries",
+    "workers": {
+      "conditioned_preview": "completed/frozen B002+I006",
+      "preview_design_review": "completed independent approved, allprobes terminal",
+      "remaining_local_gate": "completed bounded A-J triage, no additional straightforward authorized localdefect established",
+      "timestamp_decoder_option": "completed; PERM004 isolatedexperiment deferred, noinstall"
+    },
+    "dependency_disposition": "docs/dependency-decisions.md records core/optional/desktop/build/dev/transitive consumers and retained/deferred decisions; no dependency/module deletion justified.",
     "cleanup_disposition": "Public reader triple retained; opt-out candidate removes only unused production window allocation. No internal module deletion justified.",
-    "updated_utc": "2026-10-23T22:13:06.597525+00:00",
-    "status": "batch1_locally_accepted_publication_pending",
+    "updated_utc": "2026-10-24T16:15:31.276328+00:00",
+    "status": "user_authorised_permission_review_and_publication_in_progress",
     "owned_processes": [],
-    "cycles_completed": 4,
+    "cycles_completed": 41,
     "verification": {
       "status": "batch1_locally_accepted",
       "tests": {
@@ -1322,7 +1366,7 @@
       ],
       "resource_measurement": {
         "returned_stack_payload_before": 7077888,
-        "after": 10,
+        "after": 4718592,
         "reduction_fraction": 0.3333333333333333,
         "stack_calls_before": 15,
         "preprocess_calls": 24,
@@ -1335,7 +1379,1896 @@
         "raw": "reader-experiment-results.json"
       },
       "product_complete": false,
-      "publication": "pending git performer checkpoint"
+      "publication": {
+        "status": "pushed_confirmed",
+        "commit": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "branch": "review/corridorkey-audit-20261023",
+        "related_source_hashes_match": 433,
+        "unrelated_setup_files_unchanged": 167
+      }
+    },
+    "branch": "review/corridorkey-audit-20261023",
+    "pushed_commit": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+    "push_confirmed": true,
+    "cycles_since_checkpoint": 0,
+    "batch2_verification": {
+      "status": "locally_accepted_hosted_ci_investigation_open",
+      "tests": {
+        "count": 1613,
+        "seconds": 166.569,
+        "skips": 0,
+        "command_record": "batch2-tests.json"
+      },
+      "static": {
+        "files": 435,
+        "gate_pass": true,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_vs_legacy": 0,
+        "new_vs_batch1": 0,
+        "command_record": "batch2-static.json"
+      },
+      "source_freeze": "batch2-source-freeze.json",
+      "review": {
+        "code": "APPROVE",
+        "architecture": "CLEAR",
+        "scope_digest": "7c6c05d741b64dbd66fa1bbc6e17f1552f19b059ac6286c95187e9489a5dddfc"
+      },
+      "increments": [
+        "PERF-B bounded selected/remaining range preview",
+        "PERF-H explicit reference-agreement calibration constraints"
+      ],
+      "performance_claim": "None; fixtures prove correctness, not GPU speed or quality",
+      "hosted_ci": "Prior41e7c32 Ubuntu failure under investigation; Windows pending; not accepted",
+      "product_complete": false
+    },
+    "batch3_verification": {
+      "status": "locally_accepted_publication_deferred_PERM-001",
+      "tests": {
+        "count": 1626,
+        "seconds": 167.833,
+        "skips": 0,
+        "command_record": "batch3-tests.json"
+      },
+      "static": {
+        "files": 437,
+        "gate_pass": true,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_vs_legacy": 0,
+        "new_vs_actual_batch2": 0,
+        "command_record": "batch3-static.json"
+      },
+      "source_identity": "ef0e9fac1c49d45573c7f0a73f41fe4a3f88c8b81c21dcb1d9a7f5e861271946",
+      "review": {
+        "code": "APPROVE after PERF-E-001 repair",
+        "architecture": "CLEAR",
+        "E_scope": "b4db99adc6e3ba6d4aa02aa533f547985231ac1681d5e2d68c60073cc4c11369",
+        "CI_scope": "b0ae55a3629e3ab14f40e6a1519e2c0eece11799f4339d5818233b1d02cbbd91",
+        "architecture_scope": "14376b9b19c39a91eeeb33e4fbc5185b0530099c2a4752bae793d8c48c0d29ef"
+      },
+      "accepted_increments": [
+        "PERF-B bounded sequence range previews",
+        "PERF-H explicit reference-agreement constrained calibration",
+        "PERF-E exact raw-stage2 reuse across2final finishing settings",
+        "PERF-CI Linux setup/portable inventory/fixture observation repairs; actual hosted pending"
+      ],
+      "performance_claim": "No new walltime/resource benchmark; fixture forward reuse and exact pixels only",
+      "publication": {
+        "status": "deferred_platform_permission",
+        "permission": "PERM-001",
+        "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c"
+      },
+      "product_complete": false,
+      "self_review": "Main traced shared-engine defaults, full vs raw identities, native source mapping, actual immutable worker/queue plumbing and migration/rollback. No model/colour/precision changes, guard suppression or dependency removal. Independent API bug fixed before acceptance; hosted failures remain explicit."
+    },
+    "overnight": {
+      "active": true,
+      "permission_ledger": "docs/overnight/permissions-required.md",
+      "handoff": "docs/overnight/morning-handoff.md",
+      "approval_requests_pending": false,
+      "permission_items": [
+        "PERM-001",
+        "PERM-002",
+        "PERM-003"
+      ]
+    },
+    "publication": {
+      "status": "deferred_platform_permission",
+      "permission": "PERM-001",
+      "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c"
+    },
+    "batch4_verification": {
+      "status": "locally_verified_increment_partial_broad_gate",
+      "features": [
+        "PERF-D explicit edge-finishing refinement regions",
+        "PERF-F synthetic multi-sample screen guidance"
+      ],
+      "source_files": 439,
+      "source_identity": "1aa174d5016c209b4ec6bc2f4e82541b04d9d7166bd1b8c513a72ea046ad7ccb",
+      "tests": {
+        "discovered": 1646,
+        "executed": 1631,
+        "seconds": 176.287,
+        "failures": 0,
+        "errors": 0,
+        "test_skips": 0,
+        "permission_blocked": 15,
+        "full_suite_completed": false,
+        "permission": "PERM-002",
+        "command_record": "batch4-admissible-tests.json"
+      },
+      "focused": {
+        "D": {
+          "count": 146,
+          "seconds": 7.313,
+          "record": "refinement-regions-integration-final.json"
+        },
+        "F": {
+          "count": 54,
+          "seconds": 0.289,
+          "record": "screen-samples-integration-final.json"
+        }
+      },
+      "static": {
+        "files": 439,
+        "gate_pass": true,
+        "new_vs_legacy": 0,
+        "new_vs_actual_batch3": 0,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "composition": "Full static before one legacy test oracle migration; only tests/test_guidance_provenance.py then changed, separately scoped Ruff/Pyright0 and all final admissible tests passed. No package-source drift.",
+        "record": "batch4-static.json"
+      },
+      "review": {
+        "independent": "APPROVE0findings19files",
+        "D_scope": "ade8be71cb56b3379093dee82e95c0ccddfdafe65341f1c604dc1e05de368023",
+        "F_scope": "9e865daf7d0cf261be8b30b5fe9ae16aa9e4afa91bca98690a40d2c1dcc33abf",
+        "main": "Traced final-only frame-aware finishing before artist constraints, region exclusions from ordinary/temporal operations, schema-preserving guidance writer and bounded synthetic working-linear field/provenance. No expansion to neural computation or colour/precision defaults."
+      },
+      "semgrep": {
+        "status": "NOT VERIFIED",
+        "reason": "ca-certs: empty trust anchors before scan",
+        "record": "batch4-semgrep-status.json"
+      },
+      "performance": "No new speed/resource benchmark or neural ROI cost reduction claimed.",
+      "publication": {
+        "status": "deferred_PERM-001",
+        "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c"
+      },
+      "tradeoffs": [
+        "D gates expansion/feather only; existing full-frame guided/trimap refinements unchanged.",
+        "F reference is synthetic heuristic, not true empty plate/alignment proof. Outside influence is unknown-class refinement, not output ROI.",
+        "15socketchecks unverified under current source, not silently skipped."
+      ],
+      "product_complete": false
+    },
+    "batch5_verification": {
+      "status": "bounded_A_increment_locally_verified_partial_broad_gate",
+      "source_files": 445,
+      "source_identity": "ca5ee3223112477f40a08887943407a8ce5ee942bf236b5d19805b3e219253d5",
+      "tests": {
+        "discovered": 1670,
+        "executed": 1655,
+        "seconds": 180.771,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "permission_blocked": 15,
+        "full_suite_completed": false,
+        "command_record": "batch5-admissible-tests.json",
+        "raw_partition": "batch5-partition-run.json"
+      },
+      "focused": {
+        "count": 203,
+        "seconds": 6.545,
+        "skips": 0,
+        "record": "shot-profiles-final-integration.json"
+      },
+      "static": {
+        "files": 445,
+        "gate_pass": true,
+        "new_vs_legacy": 0,
+        "new_vs_actual_batch4": 0,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "record": "batch5-static.json"
+      },
+      "review": {
+        "code": "APPROVE19files0findings;3independentpathcases+400batch/parsercases",
+        "architecture": "CLEAR boundedinitialscope",
+        "scope_digest": "60379fb8aa3ad2f71cc216ee0c889eefbe8595bb5e5ef8b4b89b10d64668ba52"
+      },
+      "bug_fixed": "PERF-A-001 new CLI profile input is protected against report/writer collision at admission/final fence, preserving primary failures",
+      "scope": "One original temporal job; explicit per-shot Stage2caps/finalexpand-feather only. Source heuristics, not quality/resource optimisation.",
+      "limits": [
+        "Six enabled-profile derived-workflow combinations explicitly reject; no silentrekey.",
+        "Image analysis4MiPixels/64MiB, native inference unchanged; UHDanalysis outsidethisincrement.",
+        "resource_fit hardcodedunavailable, no resource-informed optimisation implemented.",
+        "GPUbatchparity/footagequality notverified."
+      ],
+      "publication": {
+        "status": "deferred_PERM-001",
+        "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c"
+      },
+      "remaining_local": [
+        "J numerical/resource/visual evidence-contract admission",
+        "I CPUcomponentoverhead measurement review; wholepipelineGPUoverhead external",
+        "A ordinaryUHD sourceanalysis support withinexplicitnativebudgets; resource-informedrecommendations remainpartial"
+      ],
+      "product_complete": false
+    },
+    "instrumentation_component_evidence": {
+      "status": "CPU_component_observation_independently_approved",
+      "counts": "10000 no-op host stages;2warmup pairs/5alternating timedpairs/3separateallocationpairs",
+      "timing": "positive cost observed; magnitudevariable/inconclusive",
+      "off_on_median_ms": [
+        3.99875,
+        5.067083
+      ],
+      "paired_added_ns_per_scope": {
+        "median": 113.4499,
+        "min": 58.5625,
+        "max": 157.625,
+        "cv": 0.3288892324286066
+      },
+      "additional_retained_peak_python_bytes_at_10000_records": 2155480,
+      "not_measured": [
+        "pipeline/GPU/synchronization overhead",
+        "FPS/quality/startup",
+        "RSS/VRAM"
+      ],
+      "source_count": 445,
+      "source_changed": [],
+      "review": "independent APPROVE; rawpolicy/results preserved",
+      "result_sha256": "5b6d7959da19cff36f28b339b24ea8f29943a50ff02d742a9060ce64e861d60b",
+      "hardware_fields_unavailable_permission": "PERM-003",
+      "record": "profiling-overhead-results.json"
+    },
+    "orchestration_notes": [
+      {
+        "utc": "2026-10-24T00:51:07.192662+00:00",
+        "classification": "coordinator handoff error, not OMX/tool failure",
+        "problem": "send_message queued authorised repairs to already completed worker without reactivating it; active status was assumed.",
+        "correction": "Verified actual agent status; followup_task reactivated regression_gates and explicit STARTED acknowledgement received. Future completed-worker assignments use followup_task, not send_message.",
+        "duration": "Not reliably measured; no fabricated savings or elapsed estimate."
+      }
+    ],
+    "batch6_verification": {
+      "status": "UHD_and_numerical_increment_verified_composite_gate",
+      "source_files": 448,
+      "final_source_identity": "d18a171291414f8b9e5a31c40809851bd2b676fe9cef746f7fa0108d95564fe2",
+      "broad_reference": {
+        "executed": 1676,
+        "seconds": 183.38,
+        "skips": 0,
+        "discovered": 1691,
+        "permission_blocked": 15,
+        "full_suite_completed": false,
+        "record": "batch6-admissible-tests.json",
+        "partition": "batch6-partition-run.json"
+      },
+      "final_delta": {
+        "paths": [
+          "corridorkey/regression_numerical.py",
+          "tests/test_regression_gate_numerical.py"
+        ],
+        "tests": 37,
+        "seconds": 1.254,
+        "record": "jnum-j009-green.log",
+        "scope_Ruff_Pyright_new_vs_actual_batch6": 0,
+        "scope_diagnostics": 0
+      },
+      "verification_claim": "Composite: prior broad authorised gate covers unchanged code; final helper/test-only precision guard covered by fresh affected gate/NUM/quality tests and scoped static checks. NOT a single full final-state suite pass;15loopbackcases remainNOTVERIFIED/PERM002.",
+      "static_reference": {
+        "files": 448,
+        "gate_pass": true,
+        "ruff": 511,
+        "pyright_errors": 684,
+        "pyright_warnings": 17,
+        "new_vs_legacy": 0,
+        "new_vs_actual_batch5": 0,
+        "record": "batch6-static.json"
+      },
+      "UHD": {
+        "focused": 104,
+        "seconds": 4.839,
+        "independent": "APPROVE6files;4smalltests+header/race/offset/FPSproofs",
+        "scope": "1393b68d2f0bd84b6ad509e28f47c004af740e80a82c356d6ca7208ff702fcdb",
+        "bounds": "Aoptin16MiPixels/256MiB;existingdefault4Mi/64Miunchanged;notRAMcap",
+        "inference_4K_quality": "NOT VERIFIED"
+      },
+      "numerical": {
+        "independent": "APPROVE5files after producer/comparison/cancel/precision repairs",
+        "helper_sha256": "12280bda38a50c6b3bb585442db992c31aca58fa43fb5275033b8c9eba426f0c",
+        "scope": "v2actualcompletedexportalphaMAE/linearblack-compositeMAE;notinvisibleFG/rawpixelorabsolutequality",
+        "declaration": "policyseparatefrompostrunreceipt;chronologyauthenticitynotproved",
+        "fixed_issues": [
+          "PERF-J-005",
+          "PERF-J-006",
+          "PERF-J-007",
+          "PERF-J-008",
+          "PERF-J-009"
+        ]
+      },
+      "remaining_local": [
+        "J separately-profiled observed-memory evidence producer/contract",
+        "J bound visual declarations vsverified-human trust contract",
+        "Resource-informed A recommendations remainnotimplemented; old firstincrements explicitlybounded"
+      ],
+      "publication": "DEFERRED_PERM001;lastpushed41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "product_complete": false
+    },
+    "upstream_finishing_verification": {
+      "status": "bounded_local_increment_accepted",
+      "scope_digest": "c53ef4f5a555680be129e7c615126f1f8dcf00fabfe08e04fb6fa4dcab2cf707",
+      "affected_tests": 188,
+      "seconds": 48.686,
+      "skips": 0,
+      "source_files": 454,
+      "source_unchanged": true,
+      "independent_review": "APPROVE,5 tiny independent cases plus exact IID/RVM/Hann roundtrips,0findings",
+      "evidence": [
+        "/private/tmp/upstream-finishing-final-integration.json",
+        "/private/tmp/upstream-finishing-final-integration.log",
+        "/private/tmp/upstream-finishing-final-source-freeze.json",
+        "/private/tmp/upstream-finishing-final-scope.json"
+      ],
+      "scope": "Default-off typed upstream context for explicitly enabled foundation/RVM/Hann across only expansion/feather; Stage2 separate flag/full output identities unchanged. Actual active-RVM/cold-vs-clean fixture parity, no GPU/speed claim.",
+      "external": "Actual pretrained GPU parity/performance and platforms NOT VERIFIED"
+    },
+    "resource_verifier_repair": {
+      "issue": "PERF-J-010",
+      "status": "resolved",
+      "affected_tests": 56,
+      "seconds": 8.6,
+      "exit_code": 0,
+      "repo_and_scope_unchanged": true,
+      "evidence": "benchmark-results/product-next/resources-integration-j010-summary.json",
+      "scope": "Analytic fixture verification only; no GPU or matched performance comparison"
+    },
+    "resource_capture_verification": {
+      "status": "bounded_local_producer_and_contract_verified_broad_gate_pending",
+      "scope_digest": "112bdcd4b95c65e3d566a108e3c415030fc5f19bbef8689846b5e7c99b8df37c",
+      "affected_tests": 63,
+      "seconds": 8.885,
+      "skips": 0,
+      "guard_unchanged": true,
+      "review": "APPROVE after J010\u2013013;7independent puretemp tests",
+      "new_static_vs_actual_batch6": {
+        "ruff": 0,
+        "pyright": 0
+      },
+      "resolved_pyright": 1,
+      "scope": "Separate explicitly profiled per-job CUDA allocation peaks only; original unprofiled throughput unchanged. Sequence-only; fixture providers never qualify. Not auth, RSS/globalGPU/hardcap or measured production GPU result.",
+      "evidence": "benchmark-results/product-next/resources-integration-j011-j013-summary.json",
+      "external": "Actual CUDA/weights/source runs NOT VERIFIED"
+    },
+    "batch7_first_broad": {
+      "executed": 1731,
+      "failures": 3,
+      "errors": 0,
+      "source_changed": [],
+      "seconds": 215.611,
+      "full_suite_completed": false,
+      "blocked": 15,
+      "record": "batch7-partition-run.json"
+    },
+    "visual_declaration_verification": {
+      "status": "bounded_source_increment_independently_approved_joint_gate_pending",
+      "scope": "f3d9f80a38052a76b01cc1f4876338a6eb22790ac798ad799ba4665c47a72919",
+      "new_tests": 16,
+      "new_seconds": 1.103,
+      "coherent_tests": 37,
+      "coherent_seconds": 1.804,
+      "independent": "APPROVE,multipairsource11/bothsides/exportSHA/immutability,tamper,all6outcome\u00d7modecombos",
+      "trust": "Boundlocaldeclarationonly; actualhuman/auth/display/chronologyNOTVERIFIED",
+      "evidence": "/private/tmp/regression-visual-final-scope.json"
+    },
+    "batch7_verification": {
+      "status": "bounded_E_upstream_J_resources_visual_NUM_accepted",
+      "source_files": 456,
+      "source_identity": "d3b5594ebd1a6d93e6fff4f4bf2b7c82f4f57095712311e7a10133006bde1bfb",
+      "tests": {
+        "executed": 1752,
+        "seconds": 209.072,
+        "skips": 0,
+        "discovered": 1767,
+        "permission_blocked": 15,
+        "full_suite_completed": false,
+        "command_record": "batch7-final-admissible-tests.json",
+        "partition": "batch7-final-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 683,
+        "pyright_warnings": 17,
+        "new_vs_legacy": 0,
+        "new_vs_actual_batch6": 0,
+        "resolved_vs_actual_batch6": {
+          "ruff": 0,
+          "pyright": 1
+        },
+        "record": "batch7-static.json"
+      },
+      "reviews": {
+        "Eupstream": "APPROVE22scope+5independenttiny",
+        "resource": "APPROVE7scope afterJ010\u2013013",
+        "host_profile": "SOURCEAPPROVE4scope+14focused,finalbroadcovers",
+        "visual": "APPROVE4scope+independentmultipair/tamper/6outcomemode",
+        "NUM": "APPROVE2scope aftergenericfencecompatibilityrepair,57affectedincludes16visual"
+      },
+      "scope": "Default-off foundation/RVM/Hann finishing reuse; separate profile-memory capture; bound visualdeclarations not authenticatedinspection; NUMchargedpinreuse. ActualGPUmemory/quality/speedNOTVERIFIED.",
+      "prior_failed_gate": {
+        "record": "batch7-admissible-tests.json",
+        "executed": 1731,
+        "seconds": 215.611,
+        "failures": 3,
+        "root_cause": "PERF-J-014 host/CUDA profiling conflation; repaired without weakening tests"
+      },
+      "publication": {
+        "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "new_work": "uncommitted PERM-001"
+      },
+      "next": "PERF-I-001 bounded optional stage telemetry, regression+measured allocation evidence first",
+      "product_complete": false
+    },
+    "batch8_first_broad": {
+      "executed": 1758,
+      "selected": 1761,
+      "discovered": 1776,
+      "errors": 1,
+      "failures": 0,
+      "seconds": 209.909,
+      "source_changed": [],
+      "full_suite_completed": false,
+      "permission_blocked": 15,
+      "record": "batch8-partition-run.json"
+    },
+    "batch8_verification": {
+      "status": "bounded_stage_telemetry_and_exit_race_accepted",
+      "source_files": 457,
+      "source_identity": "427c585a498a78b813d4a4bf6c2d5e81e069d9b1467c188e7293639a1cc7c163",
+      "tests": {
+        "executed": 1762,
+        "seconds": 208.138,
+        "skips": 0,
+        "discovered": 1777,
+        "permission_blocked": 15,
+        "full_suite_completed": false,
+        "record": "batch8-final-admissible-tests.json",
+        "partition": "batch8-final-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 681,
+        "pyright_warnings": 17,
+        "new_vs_legacy": 0,
+        "new_vs_actual_batch7": 0,
+        "resolved_vs_actual_batch7": {
+          "ruff": 0,
+          "pyright": 2
+        },
+        "record": "batch8-static.json"
+      },
+      "retention": {
+        "consumer_tests": 94,
+        "consumer_seconds": 11.011,
+        "source_review": "APPROVEafteraggregatevalidationrepair",
+        "artifact_review": "ACCEPT0issues/norerun",
+        "measured_scope": "4f8cfc4e3073a7faa247155f3bcdf65e547b8d00ed4b18e3ac5a6bfe13cba5fb",
+        "doc_only_accepted_scope": "fea3d37f29663a458749028414df7adabb0a897fd59e07f7642b018cebaf6e8b",
+        "measurements_sha256": "b0ce575a3749ede1ad3e039cbc1c9e101dc0a66e054ee7230c83d7c5f2a12ff2",
+        "cohort": 10000,
+        "memory_pairs": 3,
+        "timing_pairs": 5,
+        "retained_python_bytes_baseline_range": [
+          1929912,
+          1930200
+        ],
+        "retained_python_bytes_candidate_range": [
+          5400,
+          5704
+        ],
+        "compact_json_bytes": [
+          720742,
+          1142
+        ],
+        "wall_median_ms": [
+          5.239124991931021,
+          7.517083082348108
+        ],
+        "paired_wall_ratio_range": [
+          1.338,
+          1.508
+        ],
+        "scope": "CPUcomponent/tracedretention+serialization only; slowercollection, notinference/RSS/VRAM. Stage total10000usescontrolledsyntheticclock."
+      },
+      "lifecycle": {
+        "issue": "PERF-REL-001",
+        "review": "APPROVE",
+        "tests": 25,
+        "seconds": 1.214,
+        "actual_decode_reliability_loads": 3,
+        "actual_tests_per_load": 5,
+        "scope": "Typed root_exited after prior complete discovery only; max10ownerpoll/9*.01srequestsleep. Sticky denial/reuse/partial/initial/child/group/Windowsunsupportedguards retained; no hardOSdeadline/flakefree claim."
+      },
+      "prior_failed_gate": {
+        "record": "batch8-admissible-tests.json",
+        "selected": 1761,
+        "executed": 1758,
+        "seconds": 209.909,
+        "errors": 1,
+        "root": "REL001native/Popenconfirmationrace after completeddecodeCLI; preservedrawartifact"
+      },
+      "publication": {
+        "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "new_work": "uncommitted PERM-001"
+      },
+      "product_complete": false,
+      "next_local": "Optional CPU source-reader decode/preprocessing scopes; private-meta observer/short profiling-only accumulator lock, exactdefaultpixels/caches/contracts/overhead tests beforeacceptance. Notimplemented yet."
+    },
+    "completed_increments": [
+      "PERF-I bounded stage retention with measured storage benefit/slowerCPUtradeoff",
+      "PERF-REL001 typed terminal-root confirmation race repair",
+      "PERF-I002 host source-reader observations, consistentthreadedcollector/snapshots, baseline-equivalentpayloadlifetimes",
+      "PERF-I003 qualifiedCUDAupload+float andexistingwaitobservations with honestdashboard; actualCUDA unverified",
+      "PERF-A-002 measuredwholeplanrecommendation",
+      "PERF-A-003 visualpublicationfence repair",
+      "PERF-I-004 nativeEXRserviceproducer",
+      "PERF-I-005 immediateobserverretirement repair",
+      "PERF-G-002 existingdespilldesktopcontrols",
+      "PERF-G-003 boundednativepixelinspection",
+      "PERF-D-002 movingrefinementregions",
+      "PERF-D-003 accepted-overlay-sourcepublicationfence",
+      "PERF-D-004 composite/despillregionproducer+runtimeconsumer",
+      "PERF-D-005 diagnostic/tracking_overlaydisplayeffect"
+    ],
+    "batch9_first_broad": {
+      "executed": 1771,
+      "seconds": 202.788,
+      "failures": 0,
+      "errors": 0,
+      "source_changed": [],
+      "permission_blocked": 15,
+      "full_suite_completed": false,
+      "record": "batch9-partition-run.json",
+      "acceptance": "FunctionalbroadPASS, candidateheldforseparatelyconfirmedrawbufferlivenessregression"
+    },
+    "batch9_verification": {
+      "status": "I002_CPUreader_observations_lifetime_and_typing_verified_composite",
+      "source_files": 458,
+      "final_source_identity": "a53aae852c190f3a91fa57f72fb875fef7afb424134e8698849f148b6cfc372c",
+      "verification_claim": "COMPOSITE:1773authorised broad tests beforevideo_io annotation-onlydelta;84freshaffectedtests+independent77completefunctionAST/89codeobjectidentity+freshfullstatic. NOTasinglefullfinal-state-suitepass;15HTTPNOTVERIFIED.",
+      "tests": {
+        "broad_executed": 1773,
+        "broad_seconds": 204.468,
+        "broad_skips": 0,
+        "discovered": 1788,
+        "permission_blocked": 15,
+        "full_suite_completed": false,
+        "record": "batch9-final-admissible-tests.json",
+        "partition": "batch9-final-partition-run.json",
+        "annotation_delta_affected": 84,
+        "annotation_delta_seconds": 6.806,
+        "body_ast_equal": 77,
+        "code_objects_equal": 89
+      },
+      "static": {
+        "gate_pass": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "new_vs_legacy": 0,
+        "new_vs_actual_batch8": 0,
+        "resolved_vs_actual_batch8": {
+          "ruff": 0,
+          "pyright": 3
+        },
+        "resolved_new_in_failed_batch9": 7,
+        "record": "batch9-final-static.json",
+        "failed_prior_artifacts_preserved": "batch9-static.json/batch9-health"
+      },
+      "reader_scope": "Optional native cv2 source decode attempts plus sibling source normalization/colour/model-prep host-wall scopes. Profile-only shortlock protects updates/snapshot copies. Source/header/requests/caches/pixels/dtypes unchanged; probe/open/seek/stack/hints/GPU transfers excluded.",
+      "reviews": {
+        "source": "APPROVE6files then2filelifetime repair",
+        "artifact": "ACCEPTpriorandfreshrevisionwithscopebounds",
+        "typing": "APPROVE1filebody-equivalentdelta"
+      },
+      "lifetimes": {
+        "classification": "Confirmed temporarypayload retention introduced by helperextraction, notRSS/peakgain",
+        "fix": "Inline original normalization/prepare bodies under reusable offscope; remove2introducedprivate helpers, nofullframecopy",
+        "evidence": "reader-profiling-lifetime-repair/baseline-parity.json",
+        "consumer_tests": 88,
+        "consumer_seconds": 26.087
+      },
+      "performance": {
+        "scope": "ControlledPNG8 CPUreader only,16frames\u00d745freshpasses720frames/arm; warmfilesystem; no inference/GPU/RSS/otherformatperformance",
+        "new_reader_receipt": "reader-profiling-lifetime-repair/measurements.json",
+        "sha256": "d0a3988fc6914fbdd4e327c447f1dcd27dfe58f28e523bd88a936a5dce78bd5c",
+        "default_off_pairs": 5,
+        "default_off_candidate_over_baseline_range": [
+          0.96532,
+          1.011161
+        ],
+        "default_off_noise_spread": 0.059562,
+        "default_off_limit_ratio": 1.1,
+        "default_off_status": "PASSdeclarednonmaterialslowdownrule;NOTspeedupconfidence",
+        "default_off_median_ms": [
+          202.542,
+          203.321
+        ],
+        "profiling_on_off_pairs": 3,
+        "profiling_on_off_observed_overhead_percent_range": [
+          1.69,
+          3.45
+        ],
+        "profiling_on_off_median_ms": [
+          201.597,
+          207.978
+        ],
+        "collector": "Unchangeddiagnostics:prior6250e...5pairsreused,spread.219713preciselockcostINCONCLUSIVE; no duplicatecollector run",
+        "revision_reason": "Confirmedpayloadlifetimefix, nottimefishing. Originalpolicies/results/harnessesretained."
+      },
+      "type_repair": "AccurateCallableParamSpec/TypeVar forwardingandNumPyclasscontracts; no downstreamcasts/Any/suppress/configchanges. Coldimportunmeasured.",
+      "publication": {
+        "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "later_work": "uncommittedPERM001"
+      },
+      "remaining_required_local": [
+        "Aresource-informedshotrecommendationcontract needslocaldesign/codeplusrepresentativeCUDAdata; notattachment-only/notsolelyhardwareblock",
+        "Icompleted-CUDAtransferandexisting-sync-waitproducers; narrowRVMupload+floatproposalonly, notimplemented",
+        "Encoder-onlymeasurementscannotbeinferredfrompipesubmission; needexactprovider/binary contract"
+      ],
+      "product_complete": false
+    },
+    "batch10_verification": {
+      "status": "I003_portable_software_contract_accepted_actual_CUDA_NOT_VERIFIED",
+      "updated_utc": "2026-10-24T05:46:49.852327+00:00",
+      "source_files": 459,
+      "source_identity": "9422a091ffa693d9aa5f71db9ba7551d0f9d0317410e7be286168e536585ae98",
+      "tests": {
+        "executed": 1783,
+        "seconds": 207.70653254096396,
+        "discovered": 1798,
+        "permission_blocked": 15,
+        "skips": 0,
+        "full_suite_completed": false,
+        "source_changed": [],
+        "record": "batch10-admissible-tests.json",
+        "partition": "batch10-partition-run.json",
+        "focused": 50,
+        "focused_seconds": 0.279
+      },
+      "static": {
+        "gate_pass": true,
+        "source_files": 459,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "new_vs_actual_checkpoint21": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch10-static.json"
+      },
+      "scope": {
+        "files": {
+          "corridorkey/diagnostics.py": "ba1ac5d88b14f5e1e8bb8e8fdcfa71fb3f7788be5a0b53a788a31dc76170774c",
+          "corridorkey/runtime.py": "53e4b5967d392e9cf9e433372432943386ba79d2c64c0005dc8d1877cc5cf494",
+          "corridorkey/feasibility.py": "7f312a3ab39cb41a7680e4c3a6dcfa88a38e11ec6cc5665dce3665adea9a2cab",
+          "tests/test_cuda_transfer_observations.py": "7341e080c0aee57cfa9a35231468f8f58685298c8848cc372ebb884e4c2f32a8",
+          "docs/realtime-feasibility.md": "65d281e76d22c210a5fac1b64e0eb52c2b7e68fb7e834ebb2b47a4a253acfb40"
+        },
+        "scope_sha256": "b3416f508c73985767a116c9b464bc6699c470a8c30552142bdb00de295c8cec"
+      },
+      "review": "Independent SOURCE APPROVE,0findings; mocked extra nested/error/off/lifetime probes; no GPU proof",
+      "behavior": "Optional actualCPU-to-explicitcapturedCUDA RVM cache-miss completed upload+float scope; directdeviceboundruntimecallback. Existingwaitobservations addZERO sync calls; new transfer stage adds one normalprofiling-only pre/postpair. Inlineexpression/lifetimes/defaults/cache semantics preserved; dashboard lanes connected. Waits inclusive/overlapping not additive.",
+      "performance": "No new speed/resource/realGPU timing/overhead/quality claims or experiment. Prior CPUreader evidence historical; no unchanged workload rerun.",
+      "publication": {
+        "last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "later_work": "uncommitted PERM-001"
+      },
+      "product_complete": false
+    },
+    "checkpoint_number": 25,
+    "batch11_prior_candidate": {
+      "record": "batch11-admissible-tests.json",
+      "command_wall_seconds": 209.67492812499404,
+      "accepted": false,
+      "reason": "ActualAvisualfence race found independently; priorcandidate evidence retained"
+    },
+    "batch12_failed_gate": {
+      "record": "batch12-admissible-tests.json",
+      "executed": 1804,
+      "failures": 4,
+      "errors": 0,
+      "seconds": 208.973,
+      "source_changed": [],
+      "classification": "Confirmedintroducedobserverlifecycle regression, notflakyignore; no existingtestweakened/forcedGC"
+    },
+    "batch13_verification": {
+      "checkpoint": 23,
+      "accepted_utc": "2026-10-24T06:30:35.779671+00:00",
+      "status": "bounded_local_A002_and_I004_contracts_accepted_external_product_acceptance_open",
+      "source_files": 462,
+      "source_identity": "0b8dd4f6b9db82b0c36904370f11bdab7783419820758a9b26567b204862fde6",
+      "tests": {
+        "executed": 1805,
+        "test_runner_seconds": 208.176,
+        "command_wall_seconds": 209.5707415419165,
+        "discovered": 1820,
+        "permission_blocked": 15,
+        "skips": 0,
+        "failures": 0,
+        "errors": 0,
+        "full_suite_completed": false,
+        "record": "batch13-admissible-tests.json",
+        "partition": "batch13-partition-run.json"
+      },
+      "static": {
+        "gate_pass": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "deltas": {
+          "batch10-health": {
+            "ruff": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0
+            },
+            "pyright": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0
+            }
+          },
+          "batch9-final-health": {
+            "ruff": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0
+            },
+            "pyright": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0
+            }
+          }
+        },
+        "record": "batch13-static.json",
+        "syntax_imports_dependencies": "PASS; rawretaineddiagnostics notstaticclean"
+      },
+      "A002": {
+        "scope": {
+          "files": {
+            "corridorkey/shot_profiles.py": "72d9afacb6c1f7a207cc2417b26dc8b5de02fbfd30a97d12e2c0d53bb4f36ef8",
+            "corridorkey/regression_resources.py": "8ed32f271cb93fceb81ef0693f18852fdcf302f2edae7adf3af52b3199b1e780",
+            "corridorkey/shot_profile_recommendations.py": "9b9d2b6604d981af4d6d5336e1ed751f7650ab28ecfd9f0bdc192bfe59eac5bf",
+            "corridorkey/desktop_shot_profiles.py": "b18ec9b78d9a2249d121a77ea64ffd2d170b7a774dacc23e2029b778e12b2475",
+            "tests/test_shot_profile_measurements.py": "5d676ccec2d141448b7c8b88af03eed380122a3a5ce6e54d0e3b45866c31afc2",
+            "docs/shot-profiles.md": "87d7ef0b4a0105202da3e269def7c3e32d3cd4156f2c3286cb2db77044c607d5"
+          },
+          "scope_sha256": "5276f88bb58acd6c641138c28420a832f8466b25fc9a1e38a6b33ab793df68a1",
+          "prior_scope_sha256": "bd6f552d15339b79d2e207ee5872721b8db6f37a3a6501f8d46d480e5858f435",
+          "changed_since_prior": [
+            "corridorkey/shot_profile_recommendations.py",
+            "tests/test_shot_profile_measurements.py"
+          ]
+        },
+        "behavior": "Existing paired producer+NUM/resource gate; exact scratch/profile-only enabledplan execution rebind; fullplancandidate differs ONLY rowStage2caps; offthread existingeditor inspection andexplicitfutureApply; no queuedmutation/newrunner/schema/deps. Whole-selected-timeline allocator observations, never per-shotfit/hardcap/globalbest.",
+        "verification": "34initialfocusedPASS2.410s,14repairPASS2.684s; independent6file SOURCEAPPROVE+actualv4late-declarationcontrol/raceGREEN",
+        "defect_repaired": "PERF-A-003 missingfinalvisualfence: reuse finalnumerical/visual/resource fences, top receiptpins/cancelretained",
+        "actual_CUDA_recommendation": "NOT VERIFIED; structuralGPU-shaped fixture tests are plumbing only"
+      },
+      "I004": {
+        "files": {
+          "corridorkey/video_io.py": "80ecec218b61c0a6549d59a44b0f446a9609b527a955b8be2cff09046ca4ed11",
+          "corridorkey/runtime.py": "4fbe674a0263ee74af33b175bb256c576362f4fe92357014955e0b8d4df9bc99",
+          "corridorkey/feasibility.py": "ca8b707b4ae0ea657280e18e8b4a8616c6df6f9838130de97465a3fc3b36f0f6",
+          "tests/test_native_write_observation.py": "82950d12e23bcc1f772125a632bf7938249f9eb0e1a8b583c4d754f8015ccd3e",
+          "docs/realtime-feasibility.md": "1dd9dd364b9c924d343564e2e2943556c99b3e7d88cf3eaac0f646e582fd59aa"
+        },
+        "final_repair_files": {
+          "corridorkey/video_io.py": "80ecec218b61c0a6549d59a44b0f446a9609b527a955b8be2cff09046ca4ed11",
+          "tests/test_native_write_observation.py": "82950d12e23bcc1f772125a632bf7938249f9eb0e1a8b583c4d754f8015ccd3e"
+        },
+        "behavior": "Profile-only native_image_encode_and_write host scope around unchanged inlinecv2.imwrite+falsecheck; honestdashboard combinedencoding+filesystemservice. Retirehostobserver iff workerconfirmedstopped; active timeout retainsowner, errors/callbacks/pixels/params/defaults unchanged.",
+        "verification": "55initialaffectedPASS3.458s;48retirementaffectedPASS4.344s including unchangedreaderimmediate4mode; independent source+native/error/live-timeout repairAPPROVE",
+        "performance": {
+          "receipt": "native-writer-retirement/overhead-measurements.json",
+          "sha256": "658a8ee0f88528d16e4d7f26057905a8035f2b6ec7ef692be2ade29ba79c0b5e",
+          "warmup_pairs": 2,
+          "measured_pairs": 3,
+          "median_ms": {
+            "off": 101.727834,
+            "on": 103.622167
+          },
+          "paired_percent_range": [
+            1.4292159779309754,
+            2.6757394339930407
+          ],
+          "sample_cv": {
+            "off": 0.025523847009512927,
+            "on": 0.01939638735218736
+          },
+          "functional": "120totalwarm+measuredgeneratednativeEXRs, exactbyte/decodedF32pixels perpair;12completed hostobservationson/0off;462sourceunchanged",
+          "interpretation": "Descriptive +1.43\u20132.68% CPUwritercohort observedinstrumentationcost, notconfidence/hardoverheadbound/speedup/inference/GPU/RSS/fsync. Timerincludesconstructor/submit/release; synthetic12x256RGBAfloat32ZIP, nofootage.",
+          "review": "Independent boundedACCEPT with provenancecaveat: actualsourceafterequal is harnessassertion, notretainedinstantaftermanifest; finalbroad/currentfreeze provideadditionalevidence. Pre-executionharnessSHA recorded. Oldreceipt preservedforprerepaircandidate only."
+        }
+      },
+      "prior_failed_gate": {
+        "record": "batch12-admissible-tests.json",
+        "executed": 1804,
+        "failures": 4,
+        "errors": 0,
+        "seconds": 208.973,
+        "source_changed": [],
+        "classification": "Confirmedintroducedobserverlifecycle regression, notflakyignore; no existingtestweakened/forcedGC"
+      },
+      "publication": {
+        "branch": "review/corridorkey-audit-20261023",
+        "head_last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "later_work": "UNCOMMITTED/PERM001; no newstage/commit/push attempted"
+      },
+      "remaining": "ActualCUDA/weights/representativefootage quality+profiling, nativeFFmpeg/video, WindowsNVIDIAcleanpackage/newSHAhostedCI, Resolveactualhost/SDKwhereapplicable andrealhumanvisualreview;15HTTPPERM002;staticlegacydebt+Semgreptrust-anchor unavailable",
+      "product_complete": false
+    },
+    "completed_cycles_this_batch": [
+      "PERF-D-004 composite/despillregionproducer+runtimeconsumer",
+      "PERF-D-005 diagnostic/tracking_overlaydisplayeffect"
+    ],
+    "local_remaining_audit": {
+      "recorded_utc": "2026-10-24T06:45:35.840112+00:00",
+      "prior_goal_turn": "progress checkpoint23accepted, notoverallcompletion",
+      "finding": "Allremainingexternal was too broad: G002/G003 locallyimplementable; D unsupportedpurposes/movingregions partialcode not solelyhardware. Existingboundedacceptanceevidence remainsvalid.",
+      "blocked_audit_reset": "Meaningfullocalworkavailable; notatanimpasse"
+    },
+    "batch14_verification": {
+      "checkpoint": 24,
+      "accepted_utc": "2026-10-24T07:26:55.767306+00:00",
+      "status": "G002_G003_D002_and_source_fence_local_contracts_accepted_FULLGOAL_OPEN",
+      "source_identity": "8467a614eb15fca393979fdfeef59e1f53fdbe8aa515a85576770e4b5d14629d",
+      "source_files": 464,
+      "tests": {
+        "executed": 1834,
+        "test_runner_seconds": 209.901,
+        "command_wall_seconds": 211.2737995000789,
+        "discovered": 1849,
+        "permission_blocked": 15,
+        "full_suite_completed": false,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "record": "batch14-admissible-tests.json",
+        "partition": "batch14-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch13": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch14-static.json",
+        "interpretation": "No new diagnostics notstaticclean; no baseline/configweakening"
+      },
+      "despill_controls": {
+        "manifest": {
+          "files": {
+            "corridorkey/desktop_settings.py": "9b8b47fdc6d60ca7a6b1f9d58043f103492c4f10abd0ec057b85bdc11bec0879",
+            "tests/test_desktop_settings.py": "3e20acfc0cdcf0f22bdd588aa7e7c103536491573af5b15340bdb94addb67c20",
+            "docs/edge-finishing.md": "0f667f7a4bd4b827dd97542f50c13c9a69bcc1c0fd6a5deb4a6daad3b866679a"
+          },
+          "scope_sha256": "382f21608849896275656dd7ea6d16768b5a78d075398ac3d908a17323b70c84"
+        },
+        "focused": "8standaloneQtPASS0.193s/Ruff0Pyright0",
+        "behavior": "Expose existing domain/luma/edgeonly settings, defaults/config/runtime/advancedfields/immutablefuturejobs unchanged",
+        "review": "SOURCEAPPROVE; finaljoint58/finalbroad coverswindow behavior"
+      },
+      "native_preview": {
+        "manifest": {
+          "files_sha256": {
+            "corridorkey/desktop_preview.py": "28a1ee80cc51eab7d337638f9ec52ec0a03628aba5a6c8f56f8edcaa5a07a732",
+            "corridorkey/desktop_window.py": "1d2c90c80faeded5546c59052622c305a6849d3d9bb20c3e23767900def4af22",
+            "corridorkey/desktop_viewport.py": "1104fea096d46464a11c31c1d0a3f158fd8e124c1b2a2eb1b721aef43601c867",
+            "corridorkey/desktop_playback.py": "2915d2a598fcebd9b899941019e8f9f95fc8206acba839c71842c4aa9df6c65a",
+            "tests/test_preview_native_pixels.py": "6087460e2f18b45e435c6c285734fe9f2646ad01c50a388ebdb06c6e6f7df84a",
+            "docs/preview-native-pixels.md": "38278e13869f798c471a33b33670566ab501e680fac68006bf6fa44770104e9a"
+          },
+          "scope_sha256": "9bd5bc84d0c3bc4890db75e73b1a642b3de157ebacb2ded70b9a842ec1818b8b",
+          "shared_ui_evidence": "PROVISIONAL pending D source freeze/integration",
+          "native_reader_evidence": "6 pure cases /private/tmp/native-preview-final-pure.log",
+          "red": "/private/tmp/native-preview-red.log"
+        },
+        "focused_pure": "6PASS1.231s/Ruff0Pyright0",
+        "behavior": "Explicitimage/sequence-only nativepixels viaexistingworker/latestqueue; capturedbytes admitted16Mi-pixels/256MiB perimage beforedecode, channel/shape/index/filepins; nearestlogicalcanvas1:1, samefullA/Bmapping/colour/backgrounds, clearsstaticA/redecodes movingpair, pauses/refusesautoplay; default1280thumbnail andengine/job/projectformats unchanged",
+        "resource_tradeoff": "FULLnative decode/composition; notROIdecode/selectiveneuralcomputation orhardRAMcap. UHD3channeluint8returnedbuffer byshape24,883,200B vs1280x7202,764,800B (9x); not measuredRSS. Native mode explicitly opt-in.",
+        "provisional_old": "52/10oldQt evidence overlappedDmodulewrites, reclassifiedPROVISIONAL notglobalstableproof",
+        "joint_frozen": "58testsPASS12.007s(-Werror), then finalbroad; independentalias/native1302vs1280 andsource3,4\u2192export0,1 probesPASS",
+        "review": "SOURCEAPPROVE; actualmanageddisplay/Windows/quality notcertified"
+      },
+      "moving_regions": {
+        "manifest": {
+          "files": {
+            "corridorkey/correction_tracking.py": "1f441c2f5d5214e5bd8f25876fec98de5a0b833fc815b0cc0a2307c2d695b4aa",
+            "corridorkey/corrections.py": "6e1982e2f8569277eca3154ca710c297f27ea42550e319bfd63ac8307e4708b5",
+            "corridorkey/correction_tracking_editor.py": "83c4f232361c4bde7e90f6d6e21d12435433ab7467cda3696333abcb0f5067f5",
+            "corridorkey/correction_rasters.py": "91d5de674bb4d15e7850a5f530b5a300c0ce623dfdc18eaf9da367e9d3aaa4dd",
+            "corridorkey/correction_editor.py": "38771aa818e46aa2d4358ce283efa1a023dedd8a36bb01e68cba0085b73d326f",
+            "corridorkey/desktop_corrections.py": "6ef85b516eaeac4d5bafceccef249eded4172b3198680fb6e9846a455f1deef9",
+            "tests/test_tracked_refinement_regions.py": "41f55bcd8abc4c5f83bf5d69f44bb9c22f26f72737c0eebeed0a9432685ecca2",
+            "docs/refinement-regions.md": "29f36906b979322ed473572416b6b9d396146690fe3a932684fc1696c605abb8",
+            "docs/tracked-corrections.md": "0e2febd7ef8081add5c39b343d0f88b0046e51acfb8877f4a1f89447de710ede"
+          },
+          "scope_sha256": "61e43c9fd196c63fb506ed6d187241624be103e169788456b8e108c1c67e0532",
+          "prior_scope_sha256": "329fd1480e99e3c79d1d61e6733a5e469a13462d062b578ce1b6c2190cd18ebb",
+          "changed_since_prior": [
+            "corridorkey/correction_editor.py",
+            "tests/test_tracked_refinement_regions.py",
+            "docs/refinement-regions.md"
+          ]
+        },
+        "focused": "68coherentPASS2.719s; repaired2PythonRuff0Pyright0; overall7Python3oldRuff/0Pyright/0new",
+        "behavior": "Reuse existingF32coverage tracker andv5bindings, forward/back/both withdistinctregiontrackingdirection; acceptedderivedmasksONLYfinishingweights, notartistmatte/hints/carry/forcedframes; strengthonce/maxoverlap/staticoutside acceptedtrack; sourceoffset1 singleframeauthor\u21924trackframes, normal/low/spatial/Quick/fallback export parity",
+        "persistence": "Actualinspectacceptsave/reopenrelocateportableundo/editinvalidation/assets/cut/occlusion/cancel verified; oldparser1\u20135payload/identityexact, oldstaticv5rejectsnewtrackedregion failclosed, no schema6/newwirefields",
+        "source_fence_repair": "Independentactualhashforward found displayframe changed afteritsrealhash whilelaterframeshashed stillpublished. CaptureboundedindexBEFOREpreview, ONEposthash overcapturedindex +finalstat/fullmembershiprescan +maskpins/cancel nowrejectsoriginal,strongerlateframe andaddition; no duplicatecontenthash ornewtrackingalgorithm. Cooperatingprocessfences, notatomicfilesystemguarantee.",
+        "review": "FinalSOURCEAPPROVE/0remainingfindings; exactrealhash/control/cancel/math/persistence/assetprobesGREEN"
+      },
+      "fideliity_correction": "Originalscopeaudit foundlocallyimplementable G/D gaps after23. First-boundary acceptance wasnotfullfeaturecompletion; allremainingexternal classification explicitlycorrected.",
+      "remaining_required_local": [
+        "D composite-purpose configured-despillregion effect, notenumonly; reuseallruntimeoutputpaths, no selective-neuralcostclaim",
+        "D diagnostic-purpose actualcaptured-overlay restriction, notinventedqualityscore/backfill; preservebinding/proxygeometry",
+        "Furtheroriginal-requirement completionaudit afterthese, no scope shrink to testedsubset"
+      ],
+      "external_and_permissions": "PERM001publication,PERM00215realHTTP,PERM003optionalmetadata remainunchanged; actualCUDA/assets/footage/FFmpeg/Windows/Resolve/human NOTVERIFIED; Semgrepinitializationfailednotpassed",
+      "publication": {
+        "branch": "review/corridorkey-audit-20261023",
+        "head_last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "later_work": "uncommitted PERM001, no newstaging/commit/push"
+      },
+      "product_complete": false
+    },
+    "current_interfaces": {
+      "composite_region(frame)": "nativefloat32HWcoverageorNone",
+      "diagnostic_region(frame)": "nativefloat32HWcoverageorNone",
+      "supported_region_pairs": [
+        "refinement/edge_finishing",
+        "composite/despill",
+        "diagnostic/tracking_overlay"
+      ],
+      "staging": "Coreproducerfreeze before runtimewriter; no sharedimport tests during writes. No new wirefields/schema/engineconfig/modelchannels."
+    },
+    "batch15_verification": {
+      "checkpoint": 25,
+      "accepted_utc": "2026-10-24T08:35:50.972062+00:00",
+      "status": "D004_composite_and_D005_diagnostic_region_effects_accepted_FULLGOAL_OPEN",
+      "source_identity": "046703bcf440c3a965f11b22142df4ec58bd3d0621cc79291fe432694746d257",
+      "source_files": 468,
+      "tests": {
+        "executed": 1856,
+        "test_runner_seconds": 212.886,
+        "command_wall_seconds": 214.51949749991763,
+        "discovered": 1871,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch15-admissible-tests.json",
+        "partition": "batch15-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch14": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch15-static.json",
+        "interpretation": "No new is notstaticclean; baseline/checkerconfiguration retained"
+      },
+      "producer_diagnostic": {
+        "manifest": {
+          "identity": "184a60ec82ffe3dd8e31941c7459c5e03c7b3297ffa548685b658d644672a56d",
+          "files": {
+            "corridorkey/corrections.py": "1be45a8a90f7e7b91098c4967ede9f59b31c0a571a47a9bfc1a0c30a9920eab8",
+            "corridorkey/correction_rasters.py": "022d64912d1cfab7092e31102cfe203402b8fc4e9ce21818377348abaeabcaf6",
+            "corridorkey/correction_editor.py": "18af464642584720eeb041fd337e1d4d51f8c184c1508bdf8aa6446972bfe239",
+            "corridorkey/correction_tracking_editor.py": "d73f3071e2b312c1f3442abab8c15dd0cf14119d1886f5ec613949bc0088917f",
+            "corridorkey/correction_tracking.py": "790be99241c39fd12050e1302ce2bca08bd1e85e2b7ecdeb886e0c376afb374a",
+            "corridorkey/desktop_corrections.py": "b529413a6ad88193e0c0d5f4ffc8b35d131c840423dbdc5cc2e29a30bf71abd4",
+            "corridorkey/tracking_overlays.py": "b795e37da8eb8e9beb764a349c1e40cb39aae43d852a96dd44ce5b75a9138710",
+            "tests/test_region_purposes.py": "0c9bd8baa8f3a7bf0b00cda35ed9ce51652187316c41faeb5175c4e1d40a2d9a",
+            "tests/test_diagnostic_regions.py": "f341330b1713302ba9a79298e0d5663b711a4402cc069b9e34c11815fda2e198",
+            "tests/test_region_purposes_ui.py": "022829002fb458099bab8e3c0c65de330e550d073304961036a68cfaac1befe1",
+            "docs/refinement-regions.md": "f9330d78d259f129826f0471517133132420286094247dfe1c9cf0b383ba9d9a",
+            "docs/tracked-corrections.md": "1081f0b2a50fe77f05a9d686f4f53f07d37e07cf047c8f5c02364748b8485838",
+            "docs/diagnostic-regions.md": "e3732a2d3737b2bfd7028784836254263150a52d09ec6368a0fc648aff221f18"
+          },
+          "previous_scope_identity": "5e1b4ef2d3dc34fae4358516571552949df07ea0169cbee719e80fe71bf41c44",
+          "original_freeze_sha256": "2c5162a5c1d7b8622e1428bea3bb0e552d455df37a7573c6a8197a2123d43668",
+          "delta": {
+            "docs/refinement-regions.md": {
+              "before": "2e92f5554cc642850deab211b8d330bf898da998aa35e84d68129384a89d57c4",
+              "after": "f9330d78d259f129826f0471517133132420286094247dfe1c9cf0b383ba9d9a"
+            }
+          },
+          "python_bytes_unchanged": true,
+          "original_freeze_preserved": true,
+          "state": "DOC-ONLY FROZEN; no imports or tests run"
+        },
+        "prior_manifest_preserved": "region-purposes/freeze.json identity5e1b4ef2; one-doc openingcorrection\u2192184a60ec, all10Pythonbytesunchanged",
+        "behavior": "V5 supportedpairs refinement/edge_finishing,composite/despill,diagnostic/tracking_overlay. ExistingRastersselectors isolatepurpose, maximum nativecoverage\u00d7strength, static/acceptedtracked; Nonelegacywholeframe, activezero suppress, strength0 disablesregion. Existingeditor optionalpurpose/refinementdefault, targetderived; trackingbindscompletepair, neverhints/artist/carry/forcedframes.",
+        "actual_diagnostic_effect": "Only actualcapturedtrackingoverlayRGBAalpha isscoped bynativeunion\u2192INTER_AREAproxycoverage; values/observations/scalarstats/source/render/trackingdecisions unchanged. Full/zero/fraction/unavailable/stale/currentdoc/source/decode/candidate/map/mask/cancelguards; no savedtrackbackfill orconfidence/native-localizationclaim.",
+        "verification": "55focused-WerrorPASS4.055s, syntax10Py/scopedRuff3old0new/Pyright0; old1\u20135canonicalidentityunchanged/originalparserrejectsnewpurposes",
+        "self_review": "Unknownpurpose+targetNone lookup loophole closed beforeacceptance/regression; actualmap/candidate/diagnostic lateasset publicationpins; LOW staleguideopeningcorrected doc-only"
+      },
+      "composite_consumer": {
+        "manifest": {
+          "identity": "6a1cef498224a76620507833f868201fbacb74a9c3c9dfebd6f00038ac8299a1",
+          "files": {
+            "corridorkey/runtime.py": "7af2eed67c24abdcf3be0bf50237ba74df9496dbc6b87f5bad3e1ac97b0ffd57",
+            "tests/test_composite_region_rendering.py": "7696ca1aa45e2eeed223a07e6eb5ff9cecc72dbe32725fc455570207915511ed",
+            "docs/composite-regions.md": "be421ac2d97ebbee1f548151aa6225769afde96a9d900c7d8578e95c84868e0c"
+          },
+          "state": "FROZEN: all three owned files; no further edits/imports/tests until coordinator release",
+          "test_result": "Ran 59 tests in 3.666s",
+          "new_tests": 13,
+          "baseline_arrays_byte_identical": 48,
+          "scoped_static": {
+            "ruff": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0,
+              "current_count": 21,
+              "baseline_count": 21
+            },
+            "pyright": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0,
+              "current_count": 58,
+              "baseline_count": 58
+            }
+          },
+          "evidence_directory": "benchmark-results/product-next/composite-regions"
+        },
+        "behavior": "ConfiguredRGBdespill weighted inestablishedworkingdomainbeforecompose/association inallneuralEXR/video/sourceDraft/Quick/spatial/fallback. ZeroRGBidentity/fullcandidate/fraction endpoints, alpha/rawFG/hints/carry/modelshape unchanged; typednativecoverage andoneincrementallypackedactivebatchtransfer, Noneframes1/noactivemasksnoallocation, rawFG/alphaonlyskip.",
+        "verification": "59targetedPASS3.666s/13newtests;48prechangeoutputarrays byte-identical, scopedCounter0new(actual14 retained21Ruff58Pyright); global0roundingfixed+regression",
+        "limitation": "Pointwisewholeframecandidate maystillcompute; notselectiveneuralROI/crop/extra pretrainedchannels ormeasuredperformance. In-memoryvideo-writer fixtures notactualFFmpeg."
+      },
+      "independent_review": {
+        "decision": "FinalSOURCEAPPROVE all16files/0openfindings; hashesunchangedafteractualprobes",
+        "probes": "ComplementarymaskMAXnative-before-area; purposeNone/zero/strength0/fraction; invalidNonepairrefusal; actualcapturedsourceoffset3/mapRGBidentity+observations; lateSource/candidate/map/regionasset mutations/cancelreject; newpurposestrack[0,4)beyondauthor[1,2),start1,strengthonce/save/reopen/relocate/undo; actualnormal/low/Quick/spatialfloatEXR fixture outputs/hints/modelshape/rawFG/alpha unchangedwhilecutout intentionallydiffers",
+        "evidence": "region-purposes/independent-{purposes,publication,tracked-export}.log"
+      },
+      "resource_tradeoffs": "Activecomposite batch adds nativeF32(T,1,Hout,Wout) coverage, CPU pack thenone transfer; reusedacrossoutputs, notsecondretainedmaskbatch. Diagnosticmask nativeF32 and\u2264256proxyopacity; actualRAM/VRAM/overhead unmeasured, nohardcap orspeedgainclaim. Defaultnomaskskipverified.",
+      "neural_region_investigation": "runtime callsstage2(rgb_t,baton_t), full(1,T,4,H,W). stage2.py445\u2013489 optionalmae_mask_16 replaceslearnedtokens viawhere AFTERfullpatchification; notROI/skipcompute. No region neuralcostclaim; context/quality mustbevalidatedbeforefuturecropping.",
+      "next_required_local": [
+        "E extendexistingtypedStage2/upstreamfinalsetting projections with5globaldespillfields whilefullcurrentjob/writerprefix/provenanceremainstrict",
+        "E broaderpurpose-aware semanticdependencies remainLOCALlargerwork; do notomitwholecorrectionmanifest/path/identity justtoforcehits",
+        "Measure/rank rendererredundantpointwiseDSP work andinactiveglobalstrength maskpacking beforeoptimization; currentlyunmodified/notacceptedperformanceclaims"
+      ],
+      "publication": {
+        "branch": "review/corridorkey-audit-20261023",
+        "head_last_pushed": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "new_work": "uncommitted/PERM001; no staging/push"
+      },
+      "external": "15realHTTPPERM002; optionalhostmetadataPERM003; actualCUDA/assets/footage/FFmpeg/Windows/Resolve/humanacceptanceNOTVERIFIED; Semgrepinitfailure no scanpass",
+      "product_complete": false
+    },
+    "model_routing": {
+      "new_executor_requested_model": "gpt-6.1-sol",
+      "new_executor_requested_effort": "medium",
+      "resolved_model": "Notexposedbynative tool; no claimedobservedmodel/globalconfigchange"
+    },
+    "batch16_verification": {
+      "checkpoint": 26,
+      "accepted_utc": "2026-10-24T09:55:52.416193+00:00",
+      "status": "E002_global_despill_reuse_and_OPT001_measured_renderer_accepted_FULLGOAL_OPEN",
+      "source_identity": "1303b7c226f30b58b006ee9b5251f001092a713338ea8d06063b24c10e8747e0",
+      "source_files": 470,
+      "tests": {
+        "executed": 1867,
+        "test_runner_seconds": 231.924,
+        "command_wall_seconds": 233.83411049994174,
+        "discovered": 1882,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch16-admissible-tests.json",
+        "partition": "batch16-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch15": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch16-static.json",
+        "interpretation": "No new vs actual15 and legacy; not staticclean, baseline/checker preserved"
+      },
+      "finishing_reuse": {
+        "manifest": {
+          "identity": "a6ef0b09f7e7450da1c001dbca4a272a3f42756ea40dca54b6c09f36f4ce339b",
+          "files": {
+            "corridorkey/stage2_identity.py": "0988fdec19b3bc75de0bbec98995dd56de1076f29f2e50bee98b7c462629bba9",
+            "corridorkey/recovery_identity.py": "004ce2e9de94d668f35cb53cc5e4a6ed1ded31aeb0778ae9b6d62dc334867e4a",
+            "tests/test_stage2_finishing_identity.py": "80269cdc7812e072dd33d668c6b99346649693212f88d299ec7f4418d05e556d",
+            "tests/test_upstream_finishing_identity.py": "8acb6a90eb73ae3ff7104578f340dbee3c4510e64c7ed5b5e24e4e6ee093bc96",
+            "tests/test_stage2_finishing_recovery.py": "07ae3b205e338a084ac9960f4a7a19e3de72c0e463b1e6908e156888d66619de",
+            "tests/test_upstream_finishing_recovery.py": "fb620b5e4d2ca0c3dbcd511bbfa0533352eea40d3ea32c6407c6a15994f1dc1a",
+            "tests/test_upstream_finishing_adapters.py": "84e04a50e948cb0468a655141fcccbec1d07441ef3dddb3c3d2a18cf78b95f6a",
+            "docs/stage2-recovery.md": "a2965620d3fdb1e96c42ced5034dbb5b1dbb397da54d3d76b2abc89e5b9b6240",
+            "docs/upstream-finishing-reuse.md": "571fafe159c2a42ef842b9297a8fdadf20f4d136a97c67f62301fae9fbc3fba3",
+            "corridorkey/recovery.py": "cedcca77789a386182a4d858b69eb18791f76d487c0037a2522fcb0a64cdbbac",
+            "corridorkey/worker.py": "4e4a26c29674b5085fd0589364fa7fa7be9377fc24f907dde894eecf5e26cb8e",
+            "corridorkey/desktop_recovery.py": "522b5cf8ff8fcdf7ec2a9955568e8b667f87b6d51995e356982ba1a8dff0add3",
+            "tests/test_despill_finishing_policy.py": "8f75cb782e48d8ab7afce0bd79ac7dc564d853269f1845effa59ed82927f0c53"
+          },
+          "previous_scope_identity": "874796d174b06071e62e4bd5c08e21b61b8a3c0924f8c16d9f71c572fb57503d",
+          "original_freeze_sha256": "4eaf372c641837feb24ca9d53fc46531b4e44aa2d2e715543d533b2c7cc0a8ac",
+          "delta": {
+            "docs/stage2-recovery.md": {
+              "before": "2a91103f702c96220fdaaf5d0f8e50b2b279069b8a6d3f5acaac5bc14efa367a",
+              "after": "a2965620d3fdb1e96c42ced5034dbb5b1dbb397da54d3d76b2abc89e5b9b6240"
+            }
+          },
+          "python_bytes_unchanged": true,
+          "original_freeze_preserved": true,
+          "state": "DOC-ONLY FROZEN; no app imports/tests"
+        },
+        "original_manifest_preserved": "despill-finishing-reuse/freeze.json 874796d1; doc-only callback clarification a6ef0b09, all11Pythonunchanged",
+        "behavior": "Existing separate defaultoff optins, privatecontexts v2 exclude exact7globalalpha/despill finalcontrols; directv1 original2fieldcanonicalbytes/keys retained. All correction/source/profile/state/model/schedule/writer dependencies conservative; fullcurrent output/journal/provenance and freshattempt/no prefixreuse. Typed bind fullvalidation; eachaccess boundowner/cancel; finalpublication fullreidentify.",
+        "verification": "57focused-WerrorPASS33.523s/11Py/scoped0new;12Stage2+26upstreamA-editB-cleanB scenarios, actual CPUfixturecache/modelcall/EXR/HDR/alpha/rawFG/association/previous-output preservation and negativeguards",
+        "limitation": "Not broader purpose/mixedDoc dependencygraph; profilebindings conservatively miss; no realGPUgain"
+      },
+      "renderer_optimization": {
+        "manifest": {
+          "files": {
+            "corridorkey/runtime.py": "40eedfaf221fcfee5320725ce96ef98343956b700904f21af6d499230d31a4a8",
+            "tests/test_render_despill_reuse.py": "bf09987ee8e6d7a4e60c9d1e3818c11d3c9e5a31dfd18aa9fc869d30b89f4804",
+            "docs/render-finishing-performance.md": "4c2e0058df8fa79f9e043d4a6243437b5fba2d49fc4dae5e6a2509017d2c1845"
+          },
+          "identity": "27028a37bd26d855663faf1891893240200c1323059c11ec42c782b292dfb5ee",
+          "state": "ALL THREE OWNED SOURCE/TEST/DOC FILES FROZEN; untimed characterization next; NO TIMING until explicit coordinator PERFORMANCE release",
+          "harness_sha256": "7f900be249bd6fc14983b961712a81cc88af31c2a51975580a4158f60f096ef2",
+          "policy_sha256": "606edf9ee2b2f7c82f490edade4e00a05d85acca5e309f59ffa529289a7778dd",
+          "amendment_sha256": "f452ce1d8c3e2b0ec940d2bf06058c8c083cb0a59bda6231da1b05641a20c3b0",
+          "new_tests": 8,
+          "scoped_static": {
+            "ruff": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0,
+              "current_count": 21,
+              "baseline_count": 21
+            },
+            "pyright": {
+              "new": {},
+              "resolved": {},
+              "new_count": 0,
+              "resolved_count": 0,
+              "current_count": 58,
+              "baseline_count": 58
+            }
+          }
+        },
+        "behavior": "Same-domain batchlocal DSPcandidate reuse, no unusedlegacylinearwork; globalzero avoidsmaskpack/retrieval/transfer at batchseam; mixeddomains/genuineguards/fullpreflight preserved",
+        "correctness_boundary": "FiniteHDR oldfalse rejection onlyunusedlinear overflow removed; selecteddisplayoraclepasses, actuallyusedlinearoverflowstillrejects. Distinctbugfix not ordinarybyteparitycase.",
+        "verification": "63focusedPASS3.602s/8newtests;7680untimedbaselinebyte-exactcases,16call/storage/lifetimecases; scoped0new",
+        "measurement_summary": "render-despill-optimization/measurement-summary.json",
+        "measurement_policy_sha256": "606edf9ee2b2f7c82f490edade4e00a05d85acca5e309f59ffa529289a7778dd",
+        "executed_harness_sha256": "fbf3bfedf2d1c890d7dae4b39a2f49d40d1a8cf01dbed0d2d00f2841239c0100",
+        "timings_sha256": "e93291394d77b76bf453e7ed07eeba030ca36d52c7d9b64abb3289b25cba62c3",
+        "measurement": "ONE isolatedwarmCPU postmodelsynthetic experiment,16fixedcases/2warmups/version/5ABBApairs/7calls; neuralB2/draftT1,requested/effectiveintra1/inter10. All prepostoutput/aggregate exactfencespass;491source/config HEADandbundle unchanged. 9descriptivepolicy speedups,7inconclusive,0policyregressions; alloutcomes/rawvariation retained, no resultdrivenreruns.",
+        "resource_limit": "Eliminatedcandidatecalls/storage-referenceobservations notRSS/allocator/peakVRAM proof; maskpacking/transfer outside timedhelpers. No inference/FPS/GPU/coldstartup/footage extrapolation"
+      },
+      "independent_review": {
+        "decision": "FinalSOURCEAPPROVE E13/OPT3; actualpureadapter/render/guardprobes; finalharness+postcasefence APPROVE; independent80rawratio/classification recomputation ACCEPT; callbackdoconlyAPPROVE",
+        "reviewer_oracle_errors": "Earlier incorrect per-hitcallback and exception-type expectations retained as reviewer-oracle failures, not productdefects",
+        "findings_resolved": "Inaccuratecallbackguide fixeddoconly; missingpostcasenumericalfence fixedbeforefirsttiming, originalpolicy/priorharness retained"
+      },
+      "main_review": "batch16-main-preacceptance-review.json plusfinal sourcefreeze/JSON/records checks",
+      "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "publication": "No new Git mutation,commit,push; PERM001deferred, unknown255stagedpaths ownershipunverified preserveindex. Lastpushed41e7c32",
+      "cleanup_dependencies": "No newdependencies/services/cacheflags or removals; obsolete repeated/unused localarithmetic removed with behavioral/tests/measurementevidence. Supportedoptional/Windowsdeps retained.",
+      "permissions": "PERM001/002/003 unchanged; no deferredactionexecuted. Optional psinventory returnedOperationnotpermitted, no retry/approvalbypass/unknownlivenessinference.",
+      "external": "ActualCUDA/models/licensedfootage/quality/FFmpeg/Windows/newSHAhostedCI/Resolve unverified; Semgrepinit failedno scanpass",
+      "next_action": "LOCAL E003 guardedpurecomposite/diagnosticDocsemanticdependency reuse designreview thenTDDimplementation; retain exactdocpresence/source/shots, fullcurrentadmission/publication/writerprefix, mixeddocsconservative. No externalonlyscope shrink.",
+      "product_complete": false
+    },
+    "batch17_verification": {
+      "checkpoint": 27,
+      "accepted_utc": "2026-10-24T10:25:21.041850+00:00",
+      "status": "E003_guarded_pure_region_semantic_reuse_accepted_FULLGOAL_OPEN",
+      "source_identity": "8df1240a6235484c446e8c385f3150f0358a9bd8e52913f1deba9464f58cb05a",
+      "source_files": 472,
+      "tests": {
+        "executed": 1910,
+        "test_runner_seconds": 248.686,
+        "command_wall_seconds": 250.55294199998025,
+        "discovered": 1925,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch17-admissible-tests.json",
+        "partition": "batch17-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch16": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch17-static.json",
+        "interpretation": "No new vs actual16 and legacy, not staticclean; checkers/baseline intact"
+      },
+      "implementation": {
+        "manifest": {
+          "identity": "42a8ca15989bfb9067a47807a4cc36047f67e9c5d0082ee0e2c5632d76034497",
+          "files": {
+            "corridorkey/recovery_identity.py": "0e5c4197d02b2efc4bddadeaaa531ca59ebb1374f88be7bb4b9e57d3254161b1",
+            "corridorkey/stage2_identity.py": "cc96a721296a179aa7ee676e42a43640ecbdba57afdc2dba41f0a29e48397ab9",
+            "docs/stage2-recovery.md": "ae4bce6044a8f1f3a6eb96b4696e845da37d354821fb5d9fc6d31e95cd59fecf",
+            "docs/upstream-finishing-reuse.md": "8d37b601585a51103c2236d75e6a2d5f6d74574401681a6c0c492d0a5af44d43",
+            "tests/test_stage2_finishing_identity.py": "69dd304f9d68b38d1bbaadca6eeb3df3f1df9c64ee7cb509f2ca934adf7d7f01",
+            "tests/test_upstream_finishing_identity.py": "cbe93f5a6b3e10fa0c721b82a1f30f9321b7768a1ff933538861b93293d7c376",
+            "corridorkey/recovery.py": "25be96a25e47e980474514a381c32102cbdc8c97b109c59227f3c219a4d3e80d",
+            "corridorkey/worker.py": "fe32c7f350ca630945b415f60120e5027be7f11542aa89f8d5dfc3a296874fc3",
+            "corridorkey/desktop_recovery.py": "498551df120e225bef4220aa5e0d631b2e873c6975212fdf881d6ccae4ca78dc",
+            "tests/test_purpose_finishing_identity.py": "2cb1d1866e22ee8a698738a0c6241131e8c2c880af00882228d22bb833ee47ca",
+            "tests/test_purpose_finishing_recovery.py": "449c48faab1b3cb3fca7d5956abf012ee027a47ea54ad9b3f0741962b1f4ae00"
+          },
+          "state": "ALL11OWNEDFILES FROZEN; no app imports/tests/edits until coordinator release",
+          "baseline": "checkpoint26 / actual batch16-health",
+          "private_policy": "v3 only eligible nonempty pure render-region documents; exact v2 for valid ineligible parents",
+          "legacy": "direct v1/v2 payload/key semantics and public raw-entry formats preserved"
+        },
+        "behavior": "Existing independent defaultoff finishing optins emitprivatev3 onlyfor strictlyparsednonempty schema5 docs with solelycomposite/despill and/ordiagnostic/tracking_overlay regions+theiracceptedtracks. Preserveexactdocumentpresence/source/shots; omitonlyprovenfinalregiondetails/path inprivatecontext.",
+        "guard": "Originalcompletewrapper keys,hexSHA,strictdocumentparser/trackbindings,identity/sourceconsistency beforeeligibility; closedv3tag/source/shots/pathabsence. Malformed/preprojected/crossdomain structurallyinconsistent refuse; structuralidentitynotauthenticatedprovenance.",
+        "compatibility": "Validabsent/empty/mixed/ordinary/refinement/reset/trimap/guidance factoriesretainv2 exactcanonicalbytes/keys; directv1v2 parsedsemantics unchanged. FullReplay/canonical/jobidentity/IID/Stage2batchformatASTs unchanged; no oldseal migration/deletion/rekey.",
+        "full_dependencies": "ActualfullReplay/path/manifest/assets/currentinitialadmission/loadedbind/currentfinalpublication/writerprefix/journal/profiles intact. Boundowner/cancel eachaccess; no perhitfullhashclaim. AllNNactualinputs/state/schedule/group/precision/backend contracts retained.",
+        "verification": "53focused-WerrorPASS16.364s/30actualAeditBcleanBscenarios;9ownedPython syntax/Ruff0/Pyright0/newCounter0; broadadds43newcases. Bothpurposes/static/tracked/provenance/path/all4independentoptins/lowspatialQuickfallback; exactEXR/nativealpha/rawFG/source/Aoutputpreservation, freshBjournal/attempt0prefix; matchingrawcachecannotbypasscorruptcurrentderivedasset/latefullmanifest/cancelpublication.",
+        "help": "Only6humanstrings in3CLI/UI files, ASTnormalizedproof preserves flags/defaults/wires/widgetbehavior. No newcontrols."
+      },
+      "review": {
+        "decision": "IndependentfinalSOURCEAPPROVE/allprobesterminal; main distinctintegrationreview",
+        "identity_probes": "bothpurposes/semanticchanges/source+shotsinvalidation/eightmalformedvariantseach/tendirectoldv2/conservativeboundaries",
+        "actual_probes": "trackedcompositeupstream-only/staticdiagnosticStage2-only AeditBcleanB/freshidentity+outputs/noprefix/exactnativebytes/corruptmatchingcache/latefullpubrefusal",
+        "logs": [
+          "purpose-finishing-reuse/independent-identity.log",
+          "purpose-finishing-reuse/independent-actual-recovery.log"
+        ],
+        "main_review": "batch17-main-preacceptance-review.json"
+      },
+      "classified_oracle_changes": "Twoold malformedwrapper fixtures nowcorrectlyexpectValueError atstricterfactoryadmission; directoldcontexts kept. FirstlatepubtestProgressEvent-asdict failure preserved/fixedtestonly, notproductbug. Scopedimportorderfixedwithoutdiagnosticsuppression.",
+      "performance": "No newbenchmark orwalltimegain claimed. AvoidedfixtureNNcalls correctness only; previouscheckpoint26 fixedwarmCPUrenderer evidence unchanged/scoped historical, notGPU/pipeline/RSS/peak proof.",
+      "cleanup_dependencies": "No newdependency/service/graph/cache/flag or moduledeletion; Windows/optionalbackends retained.",
+      "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "publication": "Allnewworkuncommitted/PERM001; unknownstaged255paths preserved, noGitmutation/commit/push; last41e7c32.",
+      "permissions_external": "PERM001/002/003 unchanged;HTTP15NOTVERIFIED. ActualCUDA/assets/licensedfootage/quality/FFmpeg/Windows/newSHAhostedCI/Resolve unverified; Semgrepinitializationfailedno scanpass.",
+      "next_action": "LOCAL mixed-document semanticdependency discovery/proof; do notclaimpureboundaryfullE. Preserveorderednonfinal/neuralcorrection/track/guidance/reset/shots/source semantics; no generalizedDAG or blindmanifestomission.",
+      "product_complete": false
+    },
+    "batch18_verification": {
+      "checkpoint": 28,
+      "accepted_utc": "2026-10-24T11:57:36.886235+00:00",
+      "status": "E004_mixed_final_only_raw_reuse_accepted_FULLGOAL_OPEN",
+      "source_identity": "6793829cd3f2c26efcfd1a111bd552bf3731ad7026cc7282b5010bb7341d8fdd",
+      "source_files": 475,
+      "tests": {
+        "executed": 1923,
+        "test_runner_seconds": 269.822,
+        "command_wall_seconds": 271.3239101669751,
+        "discovered": 1938,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch18-admissible-tests.json",
+        "partition": "batch18-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch17": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch18-static.json",
+        "interpretation": "No new vs actual17 and legacy; not static-clean; checker/baseline intact"
+      },
+      "implementation": {
+        "manifest": {
+          "identity": "4f2efedc8429f045490c094fbdab0753d37c5b7d2a94ab4d94c2d14702514760",
+          "files": {
+            "corridorkey/recovery_identity.py": "c41108b7c94d61c4e2b2e855592c11003a0fbe831b2b1f6e66f36509afc9f8c3",
+            "corridorkey/stage2_identity.py": "a866ad97e7aac61305ddc4a836a0ba0b0f06ef68254ac143180782bf2c30ac4e",
+            "docs/stage2-recovery.md": "2528be18243358716a1b3e7c6b14fbd93ac9d4003b10ab95773a412067654bcc",
+            "docs/upstream-finishing-reuse.md": "fc9b883702ec1b0f575681a2f7bdad17f0198c7d11daea574cef00f97c073fb0",
+            "corridorkey/recovery.py": "367aef924536fa8a8ae2108fad4ab15e02959ca4376dd2144e4822de79dfac52",
+            "corridorkey/worker.py": "d5e1d18c059640cd090cefb87f43e9651e3abfb4ec57a08aa076cae1f33f39a9",
+            "corridorkey/desktop_recovery.py": "e68e4241421bfcb608366e0c856fc4bdc55049f7e0441ad3857c34eb93ffaa5e",
+            "tests/test_purpose_finishing_identity.py": "84c5992793d72caa1c4a7907cffadf94a85876c73b7660b16d9798b6c2d58bed",
+            "tests/test_purpose_finishing_recovery.py": "00cf4fb0e225be40f2ecb1a7f028a8a010d11ea64f1082c460e5a5af947c6c6d",
+            "tests/test_mixed_finishing_identity.py": "3396a60e89167b17f9fa2d76647a1984a98abf0906f363ae4b3b3101485d7a8c",
+            "tests/test_mixed_finishing_cache.py": "0a45f172b1ea5463226d2052ecd906df1c7c49bfeff41282b1bdbd970cba7046"
+          },
+          "state": "ALL11OWNEDFILES FROZEN; no further imports/tests/edits until coordinator release",
+          "baseline": "checkpoint27 / actual batch17-health",
+          "private_policy": "v4 retained-entry schema5; pure-v3 unchanged; None/empty/older v2 unchanged",
+          "accepted_preproof": "c96dcde60af31dc66c1b2412fd1a96b4535cdbd6cf8d3a93502e5fc2d958da75",
+          "preproof_files_unchanged": true
+        },
+        "behavior": "Existing default-off independent raw reuse policies select privatev4 for schema5 retained-entry documents, including after last final-region removal. Retain every canonical ordered nonfinal authored field, IDs/entry revisions/disabled controls/paths/hashes/reset/trimap/refinement, complete guidance/source/shots/presence. Only known composite/diagnostic entries, fully validated accepted derived tracks, outer revision/private wrapper/path are omitted privately.",
+        "validation": "Original full wrapper/document/identity/source/all track bindings parsed BEFORE filtering; strict filtered document revision0/tracks[]. No rebinding. Full actual Replay/path/manifest/assets/current admission/bind/final publication/writer prefix/journal/profile/provenance unchanged. Per-access owner/cancel retained; no per-hit full hashing claim.",
+        "compatibility": "Pure-v3 factory and directv1-v3 canonical bytes/keys unchanged. None/empty/older-schema factories retain exactv2 behavior; v4 explicit new private namespace. No old seal migration/rewrite/deletion; no runtime.py/editor/adapters/store/model-forward changes. Three CLI/UI files change six human strings only with AST proof.",
+        "preproof": {
+          "manifest": "c96dcde60af31dc66c1b2412fd1a96b4535cdbd6cf8d3a93502e5fc2d958da75",
+          "receipt": "mixed-finishing-preproof/receipt.json",
+          "main_acceptance": "mixed-finishing-preproof/main-proof-acceptance.json",
+          "facts": "20 uncached paired cases/42 sensitive CPU fixture runs, both purposes across normal/low/spatial/hold/offline/causal/adaptive/forced+real flow. Actual NN inputs/raw outputs/state/Hann schedule/carry/accumulators/pending/Quick/motion identical, but final alpha differs1111 pixels. Positive authored controls change Stage1/2 outputs;168 yield-storage checks and held-tensor byte fences pass. Original proof bytes preserved."
+        },
+        "verification": "79 focused -Werror PASS41.157s/0skip;22 actual cached A->EditorB->cleanB scenarios with independent optins/modes/add-remove/ordinary+final tracks/guidance; corresponding B sensitive-fixture forwards zero only when enabled, B intentionally differs A but exactly equals cleanB EXR/native arrays, fresh keys/journals/outputs/zero old prefix/source+A retained. Full new suite adds13 cases incl frozen preproof.",
+        "negatives": "Retained authored strength/order/revisions/paths/guidance/source/shots and exact state/input/group dependencies still invalidate; original bad track binding/current authored-derived-guidance assets refuse despite matching namespace; quota/cancel/late publication cannot create stale completed seals. Valid intermediates can survive later whole-job failure."
+      },
+      "review": {
+        "decision": "Independent final SOURCE APPROVE all11 hashes + proof source/evidence; all probes terminal. Main distinct integration/self-review.",
+        "actual_probes": "B all-enabled cached zero forwards,1111 alpha differences vsA, exactcleanB/fresh full identities/journals/outputs/noprefix; invalid original binding rejects even renewed wrapperidentity. Fresh immutable full request with samev4key rejects corrupt derived-mask hash before model/cache replay.",
+        "logs": [
+          "mixed-finishing-reuse/independent-cached-current-b.log",
+          "mixed-finishing-reuse/independent-current-asset-final.log",
+          "mixed-finishing-reuse/independent-private-identity.log"
+        ],
+        "oracle_classification": "Earlier repeated-A request stopped at existing-journal admission, not counted as asset-specific proof. Author wrong-parent/cross-workspace/presave-path/decoder oracles preserved and corrected without key/path weakening. Two obsolete E003 assertions replaced with exact admitted serialized retention checks.",
+        "main_review": "batch18-main-preacceptance-review.json"
+      },
+      "performance": "No new benchmark or throughput/GPU/quality gain. Fixture avoided-forward counts prove compatible work reuse only. Checkpoint26 warm CPU renderer experiment remains separately scoped historical evidence; no RSS/allocator/peak/VRAM claim.",
+      "cleanup_dependencies": "Pure-only private selector consolidated into shared existing policy selector; direct old validators retained for compatibility. No module/dependency deletion or new service/DAG/cache/flags. Supported optional/Windows paths retained.",
+      "next_local": "Genuine neural correction/hint edits still change whole retained parent SHA, invalidating otherwise identical earlier calls. Independent facts in incremental-prefix-facts.md; bounded Stage2/temporal prefix proof/design next, not automatic implementation. IID lacks producer-batch identity and has documented GPU partial-batch roundoff caveat; do not broaden shared IID scope blindly. Hann global schedules remain conservative on reset/cut.",
+      "permissions": "PERM001/002/003 unchanged; no deferred action or Git mutation. Unknown index (255 staged paths observedcheckpoint25) preserved, attribution unverified.",
+      "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "publication": "Last pushed41e7c32; newer accepted work uncommitted/PERM001. No new commit/push.",
+      "external": "ActualCUDA/NVIDIA/approvedweights/licensedfootage/quality/FFmpeg/Windows/new-SHAhostedCI/Resolve unverified; Semgrep initialization failed before scan.",
+      "product_complete": false
+    },
+    "batch19_verification": {
+      "checkpoint": 29,
+      "accepted_utc": "2026-10-24T13:42:58.603898+00:00",
+      "status": "E005_Stage2_genuine_edit_prefix_and_QA006_RSS_test_accepted_FULLGOAL_OPEN",
+      "source_identity": "9e7935bbbf0e5ff451f9e02393168ed14fec89344349f3850765a2e6f1a93925",
+      "source_files": 477,
+      "tests": {
+        "executed": 1932,
+        "test_runner_seconds": 316.4,
+        "command_wall_seconds": 317.7501784170745,
+        "discovered": 1947,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch19-repaired-admissible-tests.json",
+        "partition": "batch19-repaired-partition-run.json"
+      },
+      "initial_failed_gate": {
+        "record": "batch19-admissible-tests.json",
+        "partition": "batch19-partition-run.json",
+        "executed": 1931,
+        "test_runner_seconds": 318.708,
+        "failures": 1,
+        "source_changed": [],
+        "failure": "test_process_memory native cross-sample total-RSS increase assertion; owned child and >24MiB resident threshold had passed",
+        "preserved": true,
+        "interpretation": "Deterministic counterexample proves invalid oracle; specific historical RSS movement not observed. No production memory defect inferred."
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch18": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch19-repaired-static.json",
+        "interpretation": "No new vs actual18 and legacy, not static-clean; checker and baseline unchanged"
+      },
+      "stage2_prefix": {
+        "manifest": {
+          "schema_version": 1,
+          "task": "PERF-E-005",
+          "owned_hashes": {
+            "corridorkey/recovery_identity.py": "a0fe68b904c8866c1c7c23698305cbe084dbb24d395a0d46b9552030ddb37206",
+            "corridorkey/stage2_identity.py": "8454a7618ee2194c1cc8156181ebca8ef54eef777f2bbec1ed3f56275c401c7e",
+            "corridorkey/recovery.py": "cc960eedc9729c90a67a8171f24460955e2c351386638fed06d7e04fd71c8324",
+            "corridorkey/worker.py": "c27b0eaf6a674cc74e0fc707736b8088bf1c477ca7958781bbe299218112a738",
+            "corridorkey/desktop_recovery.py": "29de3041e9b5b082ac81017adbb21b1068d02cbc70d0c9faee2f1e34d01f83ee",
+            "docs/stage2-recovery.md": "0c10742aa1669df9a9254ebdc3adfb0251e17619e789317bb39e72e29abf77f9",
+            "docs/upstream-finishing-reuse.md": "4954d94b73cea9e80dac3c3780928011b6cd1e64022f7d00c22e78106f29e3da",
+            "tests/test_stage2_finishing_identity.py": "548f6b3a7612fee7534f29d5e9631cf48b4adca1c3d942b474eae4b9d50be2c8",
+            "tests/test_despill_finishing_policy.py": "3319d75c787fe1a7ff389b5f7027c3a85e00f03d49f205f6ca3cdcb1bc9dc1b8",
+            "tests/test_purpose_finishing_identity.py": "ab4721e0e41933baa0ec8618898474de24607b8ed5c8841c4d3db53dc0ddc203",
+            "tests/test_mixed_finishing_identity.py": "2f4148c3ed1cdf4058586aece628364e70b8dae38df06ad0c7a0300f6e292296",
+            "tests/test_purpose_finishing_recovery.py": "c7a133b6c1fe29b900d18c2ad9030d8729760374b95966b49be06b08179ad55c",
+            "tests/test_refinement_regions.py": "00e3ac167d4433c836100335bcc8ef07b85ad6953ba8aadbcd726ed22b08c1fd",
+            "tests/test_mixed_finishing_cache.py": "e92cec1c66699d05365764ed1593d27ef135e7fd9e1a063a851928920b1edfa4",
+            "tests/test_stage2_incremental_identity.py": "435e8cd2cc75e6c7c544970d626e968e8d09c5cc40c3871ea69df0fc797a055f",
+            "tests/test_stage2_incremental_recovery.py": "ac16da024395a8f5ce33b99db6b6751387324a670dcb9015191d04ba7a33aec5"
+          },
+          "scope_sha256": "9fd0dfbf71c862e5dc7a80cb93fbfe3bca93fd535b57e12beb1bdf02bde4f1c0",
+          "patch_sha256": "7da49e8185fdbe93c157b5cb8c26303867fed5b10a58cbf1f41f8fba817c0043",
+          "baseline": "checkpoint28/source6793829cd3f2c26efcfd1a111bd552bf3731ad7026cc7282b5010bb7341d8fdd, actual batch18-health",
+          "verification": "terminal-command.json: 130 PASS120.638s; static-comparison.json: 0 new / 0 scoped Ruff/Pyright; syntax14; compatibility.json PASS",
+          "all_owned_bytes_unchanged_through_tests_static": true,
+          "E004_preproof_source_and_matrix_unchanged": true,
+          "original_snapshots_RED_logs_retained": true,
+          "stop": "Frozen for independent review; no further source writes/imports/tests until coordinator release."
+        },
+        "behavior": "Existing default-off Stage2 reuse flag now emits closed privatev5 input-qualified context. Strict original correction wrapper/document/tracks/source and first/full hint file/ordered-sequence identities checked BEFORE projection. Actual complete RGB/baton/frame/group/policy/device/autocast identity qualifies each whole raw call.",
+        "retained": "Full source, models/assets/implementation/environment/backend/precision/writer/settings/policies and unknown hint siblings/top-level fields remain. Full actual Replay/current hint+correction asset admission, bind, per-entry owner/cancel, final re-identification, writer-prefix/journals/profile/provenance unchanged. No custom mutated-model support.",
+        "compatibility": "Direct Stage2v1-v4 literal payload/key semantics unchanged. Sampled CURRENT upstream factories none/emptyv2,purev3,mixedv4 byte-identical old/current/literal; upstream scope NOT broadened. v1 upstream comparison false in original artifact denotes NOT PERFORMED/no specimen, not mismatch; see compatibility-clarification.json and copied scripts. No explicit old migration/rewrite/forced deletion; managed quota/eviction unchanged.",
+        "evidence": "130 focused PASS120.638s/14Python syntax/Ruff0/Pyright0 actual18;11 actual A->editedB->cleanB cases; literal before/RED/input packet matrices/compatibility/self-review preserved.",
+        "actual_cases": "Late authored conditioning and full-hint edits each4/7 exact early complete-call hits,3 changed-input suffix evaluations. Low4/6,spatial4/7,hold3/5,causal10/12; independent flags. Initial hint actually reconverges4/7, so later matching hits are valid. Regroup0/12. All exact cleanB outputs differA, fresh full identities/journals/destinations/zero old-prefix, original source/exports preserved.",
+        "negative_limits": "Current undecodable/missing hint/correction assets, malformed original/projected/unknown record forms, changed inputs/groups/model/device/precision/settings,quota/cancel/late-mutation publication covered. Invalid late hint can fail AFTER four valid early hits, never a completed stale job. Parent equality alone does not imply zero NN calls.",
+        "numeric_scope": "CPU sensitive-fixture correctness and avoided-call counts only, not GPU/latency/throughput/quality measurement. IID producer-group numerical caveat untouched."
+      },
+      "qa006": {
+        "manifest": {
+          "files": {
+            "tests/test_process_memory.py": "52501746ee84f119b929ae0bfd139881687aa322b6e0bf80086cfc4dc56bfdb9"
+          },
+          "production_unchanged_sha256": "daa42f75ee12b3625bec32cefacba561a4f98ca454d1b76ce9073968f682cb3d"
+        },
+        "diff_sha256": "076a069b2e21f93aa4c593f990299dac9b7800e75cd6ad90aeeceabadb4e9719",
+        "behavior": "Only tests/test_process_memory.py changed. Same-snapshot sum/inclusion replaces invalid cross-sample monotonic-root assumption; deterministic root128->32MiB +child32MiB yields correct64MiB. Production process_memory.py unchanged.",
+        "proof": "10 targeted PASS0.036s, native owned childRSS48906240, same32MiB allocation/>24MiB own threshold/20 observations/lifecycle unchanged; syntax/scoped0new. Independent omission mutant fails33554432!=67108864, so child inclusion not weakened.",
+        "historical_limit": "Original broad root/other RSS movement was not captured; no production-memory diagnosis or RAM reduction claimed."
+      },
+      "review": {
+        "decision": "Independent E005 source16/probes/raw matrix recomputation APPROVE; QA006 one-file controlled/mutant review APPROVE; all probes terminal. Main distinct integration review and repaired broad/static gate.",
+        "scope": "17 combined files; E004 frozen proof remains exact",
+        "main": "batch19-main-preacceptance-review.json",
+        "logs": [
+          "stage2-incremental-reuse/independent-late-hint.log",
+          "stage2-incremental-reuse/independent-correction-and-schema.log",
+          "rss-oracle-repair/independent-controlled.log"
+        ],
+        "old_test_changes": "Seven obsolete factory/blanket-zero assertions replaced with literal directlegacy/actual complete-key/current upstream/cut/reset/cleanB guards; no useful coverage suppressed."
+      },
+      "cleanup_dependencies": "Shared original-wrapper validator extracted instead of duplicate parsing logic. No new model/runtime.py/editor/adapter/store/seal implementation, dependencies/services/DAG/cache/flags or module deletion. Human Stage2 help only; Windows/optional backends retained.",
+      "performance": "No new performance experiment. Checkpoint26 warm synthetic CPU-renderer measurements remain separately scoped; no new GPU/FPS/RSS/VRAM/peak gain.",
+      "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "publication": "Last pushed41e7c32; subsequent accepted work uncommitted/PERM001. Unknown index preserved;255staged paths were observedcheckpoint25, ownership unverified. No Git mutation.",
+      "permissions_external": "PERM001/002/003 unchanged;15HTTP NOT VERIFIED. ActualCUDA/NVIDIA/approvedweights/licensedfootage/quality/FFmpeg/Windows/newSHAhostedCI/Resolve missing; Semgrep init failed before scan.",
+      "next_local": "RVM/Hann genuine-edit prefix remains conservative through shared upstream parent. Facts temporal-prefix-scope-facts.md identify existing reuse_scope+dispatch and BOTH IID guards for a temporal-only qualified context; need bounded design/proof, no new implementation yet. Do not broaden IID producer-group semantics or weaken global Hann cut/reset schedule.",
+      "product_complete": false
+    },
+    "batch20_verification": {
+      "checkpoint": 30,
+      "accepted_utc": "2026-10-24T15:18:30.537642+00:00",
+      "status": "E006_temporal_exact_input_prefix_accepted_FULLGOAL_OPEN",
+      "source_identity": "63ab1315bba387fe3d6dcbde9624930b3ba6b4a4cf9f045d12bd736a9b96e724",
+      "source_files": 479,
+      "tests": {
+        "executed": 1941,
+        "test_runner_seconds": 430.142,
+        "command_wall_seconds": 432.62513699999545,
+        "discovered": 1956,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch20-admissible-tests.json",
+        "partition": "batch20-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch19_repaired": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch20-static.json",
+        "interpretation": "Compile/import/dependency/static gate zero new vs actual batch19-repaired and legacy; NOT static-clean."
+      },
+      "temporal_prefix": {
+        "manifest": {
+          "schema_version": 1,
+          "task": "PERF-E-006",
+          "owned_hashes": {
+            "corridorkey/recovery_identity.py": "8ee3d79f3b6bf3ac8a20cf5a1b130fe1efde9c73dad06ae7e54e75f4c107e7ed",
+            "corridorkey/stage2_identity.py": "a2d34d813dd6b7f4f1a398718701870aa0afeea2c14590943006781dcb8cf6f1",
+            "corridorkey/durable_foundations.py": "ce9b4ab92eb48a5a17b57997c673360acc96db5054fb86af1b324baa98261a08",
+            "corridorkey/recovery.py": "71d9b76a7da22742b2ef2ebb8b0b84772a52e12d62658e4cbe6ce8930026b3dd",
+            "corridorkey/worker.py": "2516cd552d4040218056bf7936b71da516c832cf263ab64e1f1db29973a972a5",
+            "corridorkey/desktop_recovery.py": "ea1da5f259e000fd89bf1ba3d0d7462ae2bcb97ccbe7d6d770cc7fecfc3372dd",
+            "docs/stage2-recovery.md": "eb4c45b6dca376e21de67a70ba08fa825698a3c3c673e0e15d951d75897d7018",
+            "docs/upstream-finishing-reuse.md": "c45ff61d61c2f1ea75dd23aa686e2db34e4d98987ca4714480924f3409e11eb9",
+            "tests/test_purpose_finishing_recovery.py": "106f5240fc0d3a992e40c95acfdb5ca6e764e5ed22c17d5327781d397dc11016",
+            "tests/test_mixed_finishing_cache.py": "26ae238cda768c87124a27488053f693c851dc74554c78a7cb439fec7ab0ec71",
+            "tests/test_temporal_incremental_identity.py": "68075f4f435bda40b0e10d3b584b20af9388e7a723bdf0424a911d9c470f89a8",
+            "tests/test_temporal_incremental_recovery.py": "2197f2df0471f7161a84966c6341cdaf24be5131c9dacc819e2bf773c17dce77"
+          },
+          "scope_sha256": "e5232faf13a97ee7d718d37da1b449d4d5deb53c9150cd706dd7a92837a6c203",
+          "patch_sha256": "c035fb5ea786f8c34827a85bc5ee47b7f20fdfb13755eaaa168211c9fd381f9c",
+          "baseline": "checkpoint29/source9e7935bb; actual batch19-repaired-health",
+          "terminal_verification": "11 PASS41.877s; syntax10/Ruff0/Pyright0; compatibility PASS",
+          "prior_111_method_check": "Only new quick_key=None reporting errors; application/guides/authorized existing-test bytes unchanged through terminal check",
+          "all_owned_bytes_unchanged_through_terminal_checks": true,
+          "original_baselines_RED_logs_and_E004_proof_retained": true,
+          "stop": "Frozen; no further application imports/tests/source edits until coordinator release."
+        },
+        "behavior": "Private upstream v5 paired with rvm_hann_exact_inputs, strict original metadata validation before input-qualified hint/correction projection. Existing default-off policies route temporal factory only to RVM/Hann; legacy IID factory unchanged, both IID constructor and direct feature identity refuse temporal scope. O(1) private readonly scope is not a dataclass/serde field.",
+        "retained": "Whole actual input/state/group/schedule/model/backend/precision/context keys and current asset admission, correction/carry, provenance, fresh attempts, writer prefixes, journals, final re-identification and publication remain. Global cut/reset schedule conservatively qualified; active Stage1 recurrence rejected. Trusted loaded model only.",
+        "proof": "15 pairs (3 uncached +12 cache cases). RVM4/4 hits; critical early-span strength edit hits first raw Hann event but CURRENT correction changes outgoing carry, next5/5 events miss. Late authored/full hints4/6 early Hann keys match. Normal/low/spatial and Quick/adaptive/fallback controls; B==cleanB bytes/native and differs A by49152 alpha pixels; fresh full attempts/zero old-prefix/source+A preserved. Bad current late hint refuses completion after valid early hits.",
+        "focused": "COMPOSITE evidence: prior111-method run failed12 NEW report-only quick_key=None subcases; final11 targeted PASS41.877s after new report/typing fixes. Application/guides/authorized existing test bytes unchanged through final targeted/static. Do NOT call111 focused pass. Syntax10/scoped Ruff0/Pyright0 vs actual19-repaired.",
+        "compatibility": "Literal upstream v2-v4 factory, Stage2v5 factory, direct Stage2v1-v5/upstreamv1-v4 keys unchanged. Old IID assertions retained; authorized temporal blanket-forwards assertions replaced with complete entry-key membership and cleanB. Returned consumed aux1 channel compared; producer4 channels remain immutable, no storage change.",
+        "review": "Independent source/artifact APPROVE exact scope e5232faf and patch c035fb5e; complete parent+event keys/raw15 matrices recomputed, current carry/serde probes terminal. Main distinct source review and fresh broad/static passed.",
+        "logs": [
+          "temporal-incremental-reuse/independent-current-carry.log",
+          "temporal-incremental-reuse/independent-scope-serde.log",
+          "batch20-main-preacceptance-review.json"
+        ]
+      },
+      "performance": "Avoided fixture neural calls are correctness evidence only. No new GPU/latency/throughput/RSS/quality experiment. Historical checkpoint26 renderer measurements remain separately scoped.",
+      "cleanup_dependencies": "Shared original hint validation moved to lower identity layer rather than duplicated parser. No new dependencies/flags/engine/DAG/cache/store/seal/model/runtime.py changes or unsupported removal.",
+      "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "publication": "Uncommitted; PERM001. Unknown index untouched (255 staged paths observed checkpoint25; ownership UNVERIFIED). No Git mutation.",
+      "permissions_external": "PERM001/002/003 unchanged.15 real HTTP NOT VERIFIED. CUDA/weights/licensed representative footage/quality/FFmpegCLI/Windows/new-SHA hostedCI/Resolve unverified. Semgrep initialization failed before scan.",
+      "next_local": "Implement conditioned progressive sequence previews through existing Session/runtime with full original temporal context and whole Stage2 groups, selected-frame owned capture, distinct preview outcome and sensitive clean-full parity. CFR playback still needs trustworthy raw timing admission; OpenCV getters alone insufficient. No generic incremental DAG required for accepted exact boundary.",
+      "product_complete": false
+    },
+    "batch22_verification": {
+      "checkpoint": 31,
+      "accepted_utc": "2026-10-24T15:51:37.497243+00:00",
+      "status": "B002_conditioned_full_context_preview_and_capture_race_repair_accepted_FULLGOAL_OPEN",
+      "source_identity": "78bf81173ad8c85a61619c33297909a5c2ae8a1fc4510e6d35122d686752cef7",
+      "source_files": 480,
+      "tests": {
+        "executed": 1948,
+        "test_runner_seconds": 359.475,
+        "command_wall_seconds": 360.9701280409936,
+        "discovered": 1963,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch22-admissible-tests.json",
+        "partition": "batch22-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 511,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch20": {
+          "ruff": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch22-static.json",
+        "interpretation": "Fresh final480-file compile/import/dependency/static gate0new vs actual20 and legacy, NOT static-clean."
+      },
+      "conditioned_preview": {
+        "manifest": {
+          "identity": "96d578ca1d61b95ea8c1edf5fbe5ee4cd5525ccb294e859ebe4b188293e8804c",
+          "files": {
+            "corridorkey/runtime.py": "05c44ba795d28c557735e57114882f99a86739ae7030e0dec65beef9cf3a521e",
+            "corridorkey/session.py": "102bd15ec3fe746e46b4c7880ac6601f1f63deb20b241e4ba16dc3d2091c06cf",
+            "corridorkey/diagnostics.py": "c3029a6bd857bcceb97a2319cd9c403782e0c12474e7dbd7dbd6e5ee1a46dc52",
+            "corridorkey/worker_protocol.py": "59b0b610a4e8a881c55966b18256964ba45b2b07b3b6702253e3c8358c60ad34",
+            "corridorkey/worker_core.py": "3f8eabae7f26109cef8a90ef33521ec427a08550e3bbd7c8b6b0f62543e86667",
+            "corridorkey/preview_execution.py": "8c955616f885990a876e873fccfca60114b050a143b7e7d92a80f9180cec51eb",
+            "corridorkey/desktop_progressive.py": "52af45e553c5a15826da00c909e629d310b20f70773189cc7c5c8ec05b47e125",
+            "tests/test_conditioned_preview.py": "14b9ca090efcf54274bfda949f9cb47f03dd47b50dbf49fd3aebf4944e0d4c4b",
+            "tests/test_preview_execution.py": "7486f30979a1357c773a25cb0ed5893eb71e9859172ba87089639e7412c86d4b",
+            "tests/test_desktop_progressive.py": "03073146bb040c15f9043f68f5fc70b9f8df14ebbca43a5c2413b4fc1e1b783a",
+            "tests/worker_fixture.py": "b30c54f24eb57a391577b2f42df96f2606a9e6027b636bb14b86577af869f721",
+            "docs/conditioned-progressive-preview.md": "b5415cd3227c09f65ac812c1c91c804aecef2f3f7367128bd058168a8984fb9b"
+          },
+          "prior_rejected_identity": "e66851909991966dc469d7e0eb5cdea64bb8ea56566264b304a9a1465c2c267f",
+          "delta_files": [
+            "corridorkey/preview_execution.py",
+            "tests/test_conditioned_preview.py"
+          ]
+        },
+        "behavior": "Existing shared Session/runtime/worker/desktop progressive path retains complete original sequence range, initial/full hints, corrections/resets, RVM/carry/Hann windows and whole Stage2 groups; after ordinary finishing/render it writes only selected EXR index0. Separate preview_complete status and strict sparse admission leave full-export admission unchanged.",
+        "ownership": "Typed selector transported through existing diagnostics control pattern to explicit runtime kw; injected ordinary5arg runners compatible, selected custom runner fails closed. All context/source/hint/correction/tracked/guidance dependencies pinned/rechecked and scratch protected. Existing scheduler/stale/queue/model owner/cancel/cleanup remains.",
+        "accounting": "Original requested range is unchanged; full context processed separate from exactly1submitted output; telemetry total1/index0/sourceabsolute separate, no exportFPS claim. Writer finalize must succeed before preview completion.",
+        "proof": "Actual shared CPU runtime with sensitive substitutes: nonzero offset12-frame context, interior Stage2 target, reset, initial/full hints/authored correction, normal+low; exact whole stage traces and selected native F32 signed/HDR outputs equal clean full render. Mutation controls for hints/carry/RVM/correction/window/group/reset and one-frame restart show sensitivity.",
+        "focused": "Original86 PASS9.219s plus6strict Boolean followup; after repair34PASS6.131s and independent1regressionPASS0.027s. Composite focused evidence, not all commands same snapshot. Final broad1948covers repaired source.",
+        "review": "Independent full12file review requestedchanges on originale668; actual CPU exploit reproduced stale sparse admission. Twofile root repair retains original correction FilePin+capturedSHA throughout dependency graph admission. Independent delta APPROVE exact96d578ca; old exploit now rejects Admitted asset changed before workspace. Main source+delta review and final global gates passed.",
+        "race_evidence": [
+          "conditioned-preview/reviewer-manifest-swap-probe.py",
+          "conditioned-preview/reviewer-manifest-swap-probe.log",
+          "conditioned-preview/reviewer-manifest-swap-recheck.log",
+          "conditioned-preview/reviewer-manifest-swap-regression.log",
+          "conditioned-preview/manifest-swap-repair.patch",
+          "conditioned-preview/manifest-swap-repair-summary.json"
+        ],
+        "limits": "Each selected request processes/renders FULLtimeline; no earlystop/latency win. Existing perfile/count constraints and512MiB total source+guidance read bound; checks offUIthread. Workspace/temp-map/RSS policies preserved, not hardcaps. Video/QuickKey/derivedprofiles unsupported in recipes. Neural substitutes not GPU/pretrained quality."
+      },
+      "rejected_candidate": {
+        "scope": "e66851909991966dc469d7e0eb5cdea64bb8ea56566264b304a9a1465c2c267f",
+        "test_record": "batch21-admissible-tests.json",
+        "executed": 1947,
+        "test_runner_seconds": 363.789,
+        "result": "PASS but NOT accepted due independent manifest race; raw broad/source/review/RED/exploit retained.",
+        "source_files": 480,
+        "source_changed": []
+      },
+      "cleanup_dependencies": "Reuse existing FilePin/read_file, correction asset verification, scheduler/renderer/session/writer/loader and metadata controls. No new engine/cache/service/player/dependency/format deletion. No module removal justified.",
+      "performance": "No new performance experiment, latency/FPS/GPU/VRAM/RSS gain claimed. Extra context work and bounded IO cost explicitly documented. Prior renderer measurements remain separately scoped.",
+      "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "publication": "Uncommitted/PERM001; unknown index untouched (255paths observedcheckpoint25, ownershipUNVERIFIED); noGitmutation.",
+      "permissions_external": "PERM001/002/003unchanged;15HTTPNOTVERIFIED. ActualCUDA/weights/licensedfootage/quality/nativeWindows/newSHAhostedCI/Resolve unverified; Semgrep initialization failed before scan. CFR needs validated timing+displayedframe correspondence, not OpenCV-only or mocked certification.",
+      "next_local": "PERF-I-006 optional measured two-anchor authored-tracking disagreement overlay: retain already-computed map only under existing capture opt-in; old2-map receipts remain valid; absent/single-anchor stays unavailable, render/motion bits and bounds unchanged. CFR playback remains fail-closed pending validated raw timestamp-to-displayed-frame correspondence; no provider/CLI installation or invented certificate.",
+      "product_complete": false
+    },
+    "batch23_verification": {
+      "checkpoint": 32,
+      "accepted_utc": "2026-10-24T16:15:31.276328+00:00",
+      "status": "I006_real_two_anchor_disagreement_accepted_PRODUCT_WAITING_RECORDED_PREREQUISITES",
+      "source_identity": "c6c5abdcd235628d87b1ad03d064ac8c74b2e291097b6ad1919e619c318051b7",
+      "source_files": 481,
+      "tests": {
+        "executed": 1955,
+        "test_runner_seconds": 350.965,
+        "command_wall_seconds": 352.7295838330174,
+        "discovered": 1970,
+        "permission_blocked": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "source_changed": [],
+        "full_suite_completed": false,
+        "record": "batch23-admissible-tests.json",
+        "partition": "batch23-partition-run.json"
+      },
+      "static": {
+        "success": true,
+        "ruff": 510,
+        "pyright_errors": 678,
+        "pyright_warnings": 17,
+        "delta_vs_actual_batch22": {
+          "ruff": {
+            "new": {},
+            "resolved": {
+              "0761a952f686d52d846a40269ff58d8cd5ef3c96e312575fbed06b7918f2c7c5": 1
+            },
+            "new_count": 0,
+            "resolved_count": 1
+          },
+          "pyright": {
+            "new": {},
+            "resolved": {},
+            "new_count": 0,
+            "resolved_count": 0
+          }
+        },
+        "record": "batch23-static.json",
+        "interpretation": "Fresh final481-file compile/import/dependency/static gate0new vs actual22 and legacy;1 existing import-order finding resolved. NOT static-clean."
+      },
+      "disagreement": {
+        "manifest": {
+          "identity": "3c2a2398a8b919eb24aad0b6fb18434687bc3b956172eceb4ae12dd45d59b0ad",
+          "files": {
+            "corridorkey/motion.py": "d76c25da2149dfe0de059e4e8f8f273317ee71769af68fa5bab89a59d69606fb",
+            "corridorkey/correction_tracking.py": "382b4f63964a41994338c37ebc5bb8345e03fb35cb22e274297488b57c446648",
+            "corridorkey/tracking_overlays.py": "cb0c6a6be8fadc34387660cfcb18cf6749d0d143619a4b8f6884bae69d50e70d",
+            "corridorkey/correction_tracking_editor.py": "dde5643f433905bd84cb22159c9c0df10d492795b37d19917c1c421a480461e1",
+            "corridorkey/desktop_corrections.py": "0a8eb1fcd735e071bdef5eaae4c9f7f803f0ae7760e87e046deb0bad3e77f3c5",
+            "tests/test_tracking_disagreement.py": "a4551ea096b32f71f156f17f3881935ee560debd82320bcd107146f03dcd4cae",
+            "tests/test_tracking_overlay_editor.py": "e25682f9a3481cb4bf11b4eb325ba9ea9017367a49f79db67478bece9639de7c",
+            "tests/test_desktop_tracking_overlays.py": "16dbe55230903f9e9504176cf06b8f3e3767f81679e22dfb8db395cd45e4ab49",
+            "docs/tracking-overlays.md": "47affc789048e1498829fceba6b5c4b972baa17537f2413eb9cc627c42f1891d"
+          }
+        },
+        "patch_sha256": "9f01fe3d19181c81b384be266aa76e538dbf99a9911fd793a063e80187b4f536",
+        "behavior": "Existing authored BOTH-direction interior two-anchor propagation optionally retains actual abs(warped-left-alpha minus warped-right-alpha) in immutable little-endianF32 bytes under existing capture flag. Existing editor/bundle/receipt/loader/UI displays third diagnostic layer; no new motion algorithm.",
+        "invariants": "Defaultoff no additional retainedmap. Alpha/reliability/uncertainty/fallback/non-timing diagnostics/provenance and four flow calls unchanged. Measuredzero distinct from absence; authored/singleanchor/stopped-uncomputed unavailable, first actually computed rejected candidate may retain measurement. Old4positional Propagation/default candidate construction and old2-map receipts valid.",
+        "binding_bounds": "Strict ordered2 or optional3 maps, finiteunit/nativebytes/geometry/hash/filename/source/request/local+absolute frame binding. Existing native4Mi/proxy256/64Mi diagnostics and512Mi mask budgets, cancellation/source drift/stale/ownedcleanup and diagnosticregion opacity remain. Integrity/binding is not authentication against hostile rewriting.",
+        "proof": "98focusedPASS2.956s; captureoff/on mask/reliability/uncertainty/non-time scalars/provenance/flowcount parity, measuredzero/absent, offset/cut/reset/stopped cases, old2/new3 receipt/tamper/size/NaN/quota/cancelcleanup, actual editor/Qt thirdselection and legacydraft/trackedrender.",
+        "review": "Independent exact9scope3c2a2398/patch9f01fe3d APPROVE;7testsPASS0.908s including actualQt, separate nonzero-flow oracle equals WARPED notoriginal anchor difference. All9hashes unchanged. Main distinct source review and finalglobalgate passed.",
+        "evidence": [
+          "tracking-disagreement/summary.json",
+          "tracking-disagreement/exact-task.patch",
+          "tracking-disagreement/reviewer-focused.log",
+          "batch23-main-preacceptance-review.json"
+        ],
+        "limits": "Authored two-anchor diagnostic capture only; QuickKey spatialcapture unsupported. Area-averaged quantized proxy is coverage disagreement, not confidence/occlusion/finalmatteerror. Real motion/occlusion/footage/quality and targetplatform acceptance unverified."
+      },
+      "cleanup_dependencies": "Existing producer/candidate/capture/bundle/receipt/loader/UI extended, no duplicate tracker/cache/engine/service, no runtime/draft/preview/session/model edit or added dependency. One import-order diagnostic resolved, not a speed benefit. No further dependency/module removal justified by consumer evidence.",
+      "performance": "No new performance experiment or GPU/FPS/RSS/VRAM/quality improvement claim. Existing defaultoff avoids additional retained map; existing disagreement computation remains. Historical warm CPU renderer byte-parity measurements separately scoped; full-context preview cost explicit.",
+      "remaining_gate": {
+        "decision": "Bounded independent A-J/supporting acceptance triage established no additional straightforward currently-authorized local defect; do not invent work. Not full product completion.",
+        "CFR": "Implementation remains after provider prerequisite: PyAV optional experiment feasible but absent/networkrestricted PERM004. Sameprovider solves probe->preview correspondence, not automatically OpenCV inference/EXR indices/colour, seeks/error/EOF/flush; keepfailclosed.",
+        "high_bit_encoded_video": "Still unfinished; legacy uint8/unknown source precision already documented. Need precision-preserving provider, compatible explicit colour/admission policy and real codecfixtures; metadata-only patch would not close requirement.",
+        "actual_target": "RealGPU/approvedweights/licensedrepresentativefootage/performance+quality, optionalSAM2, FFmpeg/codecs, nativeWindows/newSHAhostedCI and ResolveSDK/host/export/humanreview unverified.",
+        "permissions": "PERM001 reviewedpublication+unknownindex, PERM002exact15HTTP, PERM003optionalmetadata, PERM004public18.6MB isolatedPyAVexperiment. No pending approvalrequest/command automatically executes on return.",
+        "native_goal": "Active/incomplete; no complete/paused/blocked status fabricated. Stop execution at recorded prerequisite boundary, no ownedprocess or external supervisor remains."
+      },
+      "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+      "publication": "No commit/push/Gitmutation. Newer work uncommitted/PERM001; unknown index untouched (255staged paths observedcheckpoint25 only, ownershipUNVERIFIED).",
+      "next_local": "Safe overnight checkpoint: no additional straightforward currently-authorized local defect established by bounded A-J triage. Next approve/reject PERM004 isolated PyAV experiment, then implement/prove remaining CFR timestamp+pixel/OpenCV-output correspondence and high-bit encoded video precision/admission; PERM001 publication/indexownership, PERM002HTTP, optionalPERM003 metadata separate. ActualCUDA/weights/licensedfootage/quality/Windows/newSHAhostedCI/Resolve prerequisites remain. No overall completion.",
+      "product_complete": false
+    },
+    "prerequisite_goal_audit": {
+      "observed_utc": "2026-10-24T16:20:08.717750+00:00",
+      "previous_goal_turn": "no progress: first automatic continuation revalidated unchanged prerequisites; no live owned process",
+      "current_goal_turn": "no progress: same genuine prerequisites independently revalidated again; no authorized action available",
+      "consecutive_blocked_goal_turns": 3,
+      "count_basis": "Original checkpoint32 prerequisite boundary + first automatic continuation + this second automatic continuation. No new approval, package, source change or owned live work.",
+      "evidence": {
+        "branch": "review/corridorkey-audit-20261023",
+        "head": "41e7c32905347b53579a027b9d3aefbc00a0e62c",
+        "accepted_source": "c6c5abdcd235628d87b1ad03d064ac8c74b2e291097b6ad1919e619c318051b7",
+        "python_files_rehashed": 481,
+        "changed": [],
+        "owned_processes": [],
+        "native_children": "all completed per native list_agents",
+        "PyAV": "not installed; proposed temporary target absent",
+        "permission_status": "PERM001-004 still deferred; automatic goal continuation is not approval"
+      },
+      "remaining": "CFR/highbitvideo provider implementation gated by absent package/network PERM004 and technical parity; publication/index PERM001; HTTP PERM002; optional metadataPERM003; actual CUDA/assets/footage/Windows/Resolve acceptance. Full objective incomplete.",
+      "policy": "No application edits, repeated suites, deferred command retries, downloads or Git/index mutation. No new product cycle/checkpoint.",
+      "next": "Native blocked threshold met; mark goal blocked, preserve full incomplete objective; resume after explicit applicable approval or changed prerequisite."
+    },
+    "permission_review": {
+      "observed_utc": "2026-10-24T16:34:46.657597+00:00",
+      "user_instruction": "review the existing staged changes and then publish",
+      "PERM001": "authorised user; exactGitplatform commands pending",
+      "PERM002": "15PASS1.021s actuallocalhost",
+      "PERM003": "optionaldeferred",
+      "PERM004": "isolatedinstall/import7PASS0.543s; actualproviderproof notimplemented",
+      "source_identity": "8274684322c3ab4b1f6939af904d63be09496fb6757c75c0cb9891b33f9bec52",
+      "semantic_source_delta": "Only two test EOF blankline repairs; AST+bytecode unchanged;29freshPASS25.334s",
+      "record": "docs/overnight/verification-summary.json"
     }
+  },
+  "objective_history": [
+    "docs/product-improvements-brief.md"
+  ],
+  "updated_utc": "2026-10-24T16:15:31.276328+00:00",
+  "last_product_checkpoint": {
+    "number": 32,
+    "source_identity": "c6c5abdcd235628d87b1ad03d064ac8c74b2e291097b6ad1919e619c318051b7",
+    "evidence": "benchmark-results/product-next/batch23-summary.json",
+    "overall_complete": false
   }
 }

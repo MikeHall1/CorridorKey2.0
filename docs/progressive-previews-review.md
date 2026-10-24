@@ -1,5 +1,7 @@
 # Progressive preview integration review
 
+**Historical one-frame implementation review.** Current supported conditioned full-context semantics supersede the old hint/correction refusals and temporal restart below; see [current guide](conditioned-progressive-preview.md) and [checkpoint](checkpoint.md). Original results are retained, not rewritten.
+
 Eighth extension batch, 2026-10-23. Main distinct review and independent
 scheduler, execution and actual-UI reviews accept this documented local scope. Full product acceptance remains
 incomplete, including unsupported preview contexts and external GPU/quality work.

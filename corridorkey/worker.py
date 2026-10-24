@@ -21,6 +21,10 @@ def main(argv=None):
     run.add_argument('--durable-rvm', action='store_true')
     run.add_argument('--durable-hann', action='store_true')
     run.add_argument('--durable-stage2', action='store_true')
+    run.add_argument('--reuse-upstream-finishing-edits', action='store_true',
+                     help='reuse enabled IID under conservative v2-v4; RVM/Hann use temporal-only v5 exact-input/state qualification across corrections and first/full hints; full current validation and fresh output required')
+    run.add_argument('--reuse-stage2-finishing-edits', action='store_true',
+                     help='with durable-stage2, reuse whole matching RGB/baton calls across final controls, corrections and first/full hint edits (private v5); complete current validation and fresh output still required')
     run.add_argument('--durable-writer-prefix', action='store_true',
                      help='seal EXR prefixes; restore only with explicit --resume into fresh output')
     args = parser.parse_args(argv)
@@ -32,13 +36,19 @@ def main(argv=None):
         return serve_stdio(capacity=args.capacity, engine=SharedEngine(weights=args.weights, asset_root=args.asset_root))
     if args.max_cache_bytes < 0:
         parser.error('max-cache-bytes must be nonnegative')
-    if args.workspace is None and (args.resume or args.durable_foundations or args.durable_rvm or args.durable_hann or args.durable_stage2 or args.durable_writer_prefix or args.max_cache_bytes):
+    if args.workspace is None and (args.resume or args.durable_foundations or args.durable_rvm or args.durable_hann or args.durable_stage2 or args.reuse_stage2_finishing_edits or args.reuse_upstream_finishing_edits or args.durable_writer_prefix or args.max_cache_bytes):
         parser.error('recovery options require --workspace')
+    if args.reuse_stage2_finishing_edits and not args.durable_stage2:
+        parser.error('finishing-edit reuse requires --durable-stage2')
+    if args.reuse_upstream_finishing_edits and not (args.durable_foundations or args.durable_rvm or args.durable_hann):
+        parser.error('upstream finishing-edit reuse requires an upstream durable cache')
     from .worker_client import run_worker_batch
     report = run_worker_batch(args.batch, args.report, capacity=args.capacity, workspace=args.workspace,
                               max_cache_bytes=args.max_cache_bytes, resume=args.resume,
                               durable_foundations=args.durable_foundations, durable_rvm=args.durable_rvm,
                               durable_hann=args.durable_hann, durable_stage2=args.durable_stage2,
+                              reuse_stage2_finishing_edits=args.reuse_stage2_finishing_edits,
+                              reuse_upstream_finishing_edits=args.reuse_upstream_finishing_edits,
                               durable_writer_prefix=args.durable_writer_prefix)
     if report.get('report_write', {}).get('status') == 'not_written':
         print(f"worker batch: {report['status']}; report NOT WRITTEN: {report.get('error', report['report_write'])}")

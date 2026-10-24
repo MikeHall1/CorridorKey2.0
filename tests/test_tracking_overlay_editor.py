@@ -89,7 +89,7 @@ class TrackingOverlayEditorTests(unittest.TestCase):
         assert summary is not None
         diagnostic = summary['diagnostics']
         self.assertEqual(diagnostic['available_frames'], [1, 2])
-        self.assertEqual(diagnostic['frame_events'][1], {'frame': 1, 'source_frame': 3, 'status': 'preview', 'available': True, 'reason': ''})
+        self.assertEqual(diagnostic['frame_events'][1], {'frame': 1, 'source_frame': 3, 'status': 'preview', 'available': True, 'kinds': ['reliability', 'uncertainty'], 'reason': ''})
         self.assertEqual(diagnostic['budget_bytes'], 64 * 1024**2)
         self.assertGreater(diagnostic['bytes_charged'], 0)
         self.assertLess(len(json.dumps(diagnostic)), 64 * 1024)
@@ -269,6 +269,24 @@ class TrackingOverlayEditorTests(unittest.TestCase):
         self.assertIsNone(overlay)
         self.assertEqual(display.pixels.dtype, np.uint8)
         self.assertIn('source frame 1', display.note)
+
+    def test_two_anchor_actual_disagreement_receipt_and_mask_parity(self):
+        mask = np.zeros((24, 32), np.uint8)
+        mask[6:18, 10:26] = 255
+        self.editor.commit_brush(mask, kind='keep', frame=2, strength=.5, direction='both', span=[0, 3])
+        ids = [entry['id'] for entry in self.editor.document.to_dict()['entries']]
+        prepare_tracking(self.editor, anchor_ids=ids, span=[0, 3], direction='both')
+        original = [row['asset']['sha256'] for row in self.private()['track']['frames']]
+        prepare_tracking(self.editor, anchor_ids=ids, span=[0, 3], direction='both', capture_diagnostics=True)
+        self.assertEqual([row['asset']['sha256'] for row in self.private()['track']['frames']], original)
+        self.assertIn('disagreement', self.summary()['diagnostics']['kinds'])
+        receipt = self.private()['diagnostic_receipts'][1]
+        self.assertEqual(len(receipt.to_dict()['maps']), 3)
+        display, _ = tracking_overlay_view(self.editor, 1, 'disagreement')
+        self.assertIn('source frame 3', display.note)
+        self.assertFalse(self.private()['inspected'])
+        with self.assertRaisesRegex(ValueError, 'unavailable'):
+            tracking_overlay_view(self.editor, 0, 'disagreement')
 
 
 if __name__ == '__main__':
