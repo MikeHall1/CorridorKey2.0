@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -37,6 +38,17 @@ class StoreTests(unittest.TestCase):
             with self.assertRaisesRegex(CacheInvalid, 'checksum|size'):
                 store.restore(key, self.root / 'not-created')
             self.assertFalse((self.root / 'not-created').exists())
+
+    def test_existing_workspace_marker_with_restored_mtime_remains_readable(self):
+        with BundleStore(self.cache, 10000) as store:
+            owner = store.owner
+        marker = self.cache / 'workspace.json'
+        raw = marker.read_bytes()
+        os.utime(marker, ns=(1000000000, 1000000000))
+        with BundleStore(self.cache, 10000) as store:
+            self.assertEqual(store.owner, owner)
+        self.assertEqual(marker.read_bytes(), raw)
+        self.assertEqual(marker.stat().st_mtime_ns, 1000000000)
 
     def test_budget_evicts_owned_entries_before_new_allocation(self):
         first, second = identity('one'), identity('two')

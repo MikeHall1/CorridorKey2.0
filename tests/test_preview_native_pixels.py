@@ -139,13 +139,10 @@ class NativePreviewUITests(unittest.TestCase):
     def setUp(self):
         from tests.test_desktop_playback import DesktopPlaybackTests
         self.fixture = DesktopPlaybackTests()
-        original = tempfile.TemporaryDirectory
-        def folder(*args, **kwargs):
-            kwargs.setdefault('dir', '/private/tmp')
-            return original(*args, **kwargs)
-        with patch('tempfile.TemporaryDirectory', side_effect=folder):
-            self.fixture.setUp()
+        self.fixture.setUp()
         self.addCleanup(self.fixture.tearDown)
+        self.assertEqual(Path(self.fixture.folder.name).parent.resolve(),
+                         Path(tempfile.gettempdir()).resolve())
         self.window = self.fixture.window
 
     def test_mode_change_fences_static_a_stale_results_and_refuses_autoplay(self):

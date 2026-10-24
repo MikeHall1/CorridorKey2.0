@@ -14,6 +14,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from .identities import verify_file_observation
+
 Check = Callable[[], None]
 MAX_FILES = 100000
 CHUNK_BYTES = 1024 * 1024
@@ -78,14 +80,18 @@ def read_file(pin: FilePin, *, check: Check | None = None, capture: bool = False
     """Read exactly admitted bytes through one pinned FD; optional exclusive copy."""
     check_now(check)
     assert_pin(pin)
-    flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
+    path_before = Path(pin.path).lstat()
+    if fingerprint(path_before) != pin.fingerprint:
+        raise ValueError('Asset changed before pinned read')
+    flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     fd = os.open(pin.path, flags)
     output = None
     blocks: list[bytes] = []
     digest = hashlib.sha256()
     try:
-        if fingerprint(os.fstat(fd)) != pin.fingerprint:
-            raise ValueError('Asset changed before pinned read')
+        before = os.fstat(fd)
+        fingerprint(before)
+        verify_file_observation(pin.path, path_before, before, before)
         if destination is not None:
             output = destination.open('xb')
         remaining = pin.size
@@ -100,8 +106,9 @@ def read_file(pin: FilePin, *, check: Check | None = None, capture: bool = False
                 blocks.append(block)
             if output is not None:
                 output.write(block)
-        if os.read(fd, 1) or fingerprint(os.fstat(fd)) != pin.fingerprint:
+        if os.read(fd, 1):
             raise ValueError('Asset grew/changed during read')
+        verify_file_observation(pin.path, path_before, before, os.fstat(fd))
         assert_pin(pin)
         check_now(check)
         result = digest.hexdigest()

@@ -2,22 +2,24 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import hashlib
 import importlib.metadata
 import json
 import os
-import stat
-from pathlib import Path
 import platform
 import shutil
+import stat
 import statistics
 import subprocess
 import sys
 import time
 from collections.abc import Callable
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import cast
 
 from .app_process import module_command
+from .identities import verify_file_observation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,12 +38,17 @@ def command(*args):
 
 def _repository_file(path, check, remaining):
     """Optional bounded streaming path; legacy callers retain their prior hashing."""
+    path_before = path.stat()
     flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     descriptor = os.open(path, flags)
     with os.fdopen(descriptor, 'rb', buffering=0) as stream:
         before = os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode) or (remaining is not None and before.st_size > remaining):
             raise ValueError('Repository verification byte limit exceeded or input is not regular')
+        try:
+            verify_file_observation(path, path_before, before, before)
+        except ValueError as exc:
+            raise ValueError('Repository input grew or changed during verification') from exc
         digest, read_bytes = hashlib.sha256(), 0
         while read_bytes < before.st_size:
             if check is not None:
@@ -56,9 +63,10 @@ def _repository_file(path, check, remaining):
                 raise ValueError('Repository input shrank during verification')
             read_bytes += len(block)
             digest.update(block)
-        identity = lambda info: (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-        if identity(before) != identity(os.fstat(stream.fileno())) or identity(before) != identity(path.stat()):
-            raise ValueError('Repository input grew or changed during verification')
+        try:
+            verify_file_observation(path, path_before, before, os.fstat(stream.fileno()))
+        except ValueError as exc:
+            raise ValueError('Repository input grew or changed during verification') from exc
         if check is not None:
             check()
         return digest.hexdigest(), read_bytes
@@ -112,7 +120,10 @@ def environment():
                 hardware[field + "_unavailable"] = str(exc)
     elif hasattr(__import__("os"), "sysconf"):
         import os
-        hardware["ram_bytes"] = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+        sysconf = vars(os).get("sysconf")
+        if callable(sysconf):
+            sysconf = cast(Callable[[str], int], sysconf)
+            hardware["ram_bytes"] = sysconf("SC_PHYS_PAGES") * sysconf("SC_PAGE_SIZE")
     return {"python": sys.version, "os": platform.platform(), "hardware": hardware,
             "dependencies": packages, "ffmpeg": shutil.which("ffmpeg"),
             "nvidia_smi": shutil.which("nvidia-smi"),
@@ -248,12 +259,13 @@ def correction_identity(path, source):
 
 
 def run_inference_benchmark(manifest_path, manifest, *, progress: Callable[[str, int, int], None] | None = None):
+    import tempfile
     from dataclasses import replace
+
     from .batch import jobs_from_data
     from .diagnostics import write_json_atomic
     from .local_json import read_object
     from .session import InferenceSession
-    import tempfile
 
     manifest_path = Path(manifest_path).resolve()
     batch_path = (manifest_path.parent / manifest["batch_manifest"]).resolve()

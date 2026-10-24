@@ -1,8 +1,11 @@
 """Pinned bounded local I/O; synthetic bytes only."""
 import os
+import sys
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from corridorkey.control import CancelledError
@@ -14,6 +17,21 @@ from corridorkey.project_collection import (
 )
 
 
+@contextmanager
+def windows_file_clocks():
+    """Model CPython Windows pathname birthtime versus descriptor ChangeTime."""
+    original = Path.stat
+
+    def pathname_stat(path, *args, **kwargs):
+        info = original(path, *args, **kwargs)
+        values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+        values['st_ctime_ns'] -= 1000000000
+        return SimpleNamespace(**values)
+
+    with patch.object(Path, 'stat', pathname_stat), patch.object(sys, 'platform', 'win32'):
+        yield
+
+
 class CollectionTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -23,6 +41,15 @@ class CollectionTests(unittest.TestCase):
 
     def tearDown(self):
         self.temp.cleanup()
+
+    def test_windows_clock_domains_copy_with_path_derived_pin(self):
+        os.utime(self.path, ns=(1000000000, 1000000000))
+        with windows_file_clocks():
+            pin = admit_file(self.path)
+            digest, raw = read_file(pin, capture=True, destination=self.root / 'copied.png')
+            self.assertEqual(raw, b'abc' * 100)
+            self.assertEqual(len(digest), 64)
+            self.assertEqual(admit_file(self.path).fingerprint, pin.fingerprint)
 
     def test_bounded_copy_exclusive_and_source_preserved(self):
         pin = admit_file(self.path)
@@ -50,7 +77,10 @@ class CollectionTests(unittest.TestCase):
 
     def test_same_size_mutation_and_inode_replacement_fenced(self):
         pin = admit_file(self.path)
+        before = self.path.stat()
         self.path.write_bytes(b'x' * pin.size)
+        # A stat pin needs observable metadata change, not a checksum guarantee.
+        os.utime(self.path, ns=(before.st_atime_ns, before.st_mtime_ns + 10_000_000_000))
         with self.assertRaises(ValueError):
             assert_pin(pin)
         pin = admit_file(self.path)

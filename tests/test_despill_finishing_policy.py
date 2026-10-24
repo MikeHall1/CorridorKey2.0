@@ -27,12 +27,16 @@ class DespillFinishingPolicyTests(unittest.TestCase):
         self.parent = self.fixture.identity(self.fixture.data)
 
     def test_legacy_v1_payload_keys_unchanged_and_v2_policy_explicit(self):
+        # Golden payloads must not inherit the workstation's temporary directory.
+        data = self.parent.to_dict()
+        data['settings']['temp_dir'] = 'fixture-temp/corridorkey_v2'
+        parent = self.fixture.identity(data)
         for factory, constructor, kind, expected_key in (
                 (stage2_finishing_context, Stage2FinishingContext, 'stage2_finishing_context',
-                 '0d7f7ed9a005b2d0b4b2ecbb458a5b0a888ea5038245c56e3b4e8393bbb6b740'),
+                 '52dec7de0c2604bc414b839a5a627c29927496fce6a469762eb40ba85e3d89e3'),
                 (upstream_finishing_context, UpstreamFinishingContext, 'upstream_finishing_context',
-                 'c185801f0a99fa2f3975864c22a72069482b527df92b5610859f165d1c39f72e')):
-            legacy = self.parent.to_dict()
+                 'f3f3541ddca6c156196712b34aea3733db1f701127b19a42d745de3c84d06fc4')):
+            legacy = parent.to_dict()
             legacy['kind'] = kind
             if constructor is UpstreamFinishingContext:
                 legacy['reuse_scope'] = 'iid_rvm_hann_raw_inputs'
@@ -43,7 +47,7 @@ class DespillFinishingPolicyTests(unittest.TestCase):
             self.assertEqual(old.key,expected_key)
             self.assertEqual(old.payload,payload)
             self.assertEqual(old.key,hashlib.sha256(payload.encode()).hexdigest())
-            current = factory(self.parent)
+            current = factory(parent)
             self.assertEqual(current.to_dict()['schema_version'],5 if constructor is Stage2FinishingContext else 2)
             self.assertNotEqual(current.key,old.key)
             self.assertEqual(set(self.parent.to_dict()['settings']) - set(current.to_dict()['settings']),FINAL_FIELDS | ({'corrections_path'} if constructor is Stage2FinishingContext else set()))

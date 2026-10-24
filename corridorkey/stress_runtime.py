@@ -10,8 +10,10 @@ import re
 import shutil
 import stat
 import time
+from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
+from typing import Any, cast
 
 from .control import CancelledError, ProgressEvent
 from .session import JobRequest
@@ -395,7 +397,8 @@ def execute_scenario(case, jobs, weights, root, *, check=None, progress=None,
             volume = case.get('fault_volume')
             if not volume or not root.resolve().is_relative_to(Path(volume).resolve()):
                 raise _Unavailable('Disk-full requires artifact root within the explicitly prepared disposable volume')
-            if not hasattr(os, 'statvfs') or os.statvfs(volume).f_bavail != 0:
+            statvfs = vars(os).get('statvfs')
+            if not callable(statvfs) or cast(Callable[[str], Any], statvfs)(volume).f_bavail != 0:
                 raise _Unavailable('Prepared volume is not already full; this tool never fills a volume')
             row['fault_observation'] = {'volume': str(volume), 'available_blocks_before': 0,
                                         'method': 'existing full operator-prepared filesystem, no filler'}

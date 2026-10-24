@@ -10,6 +10,7 @@ import ast
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
 import subprocess
 import sys
@@ -28,7 +29,7 @@ IMPORTS = ('numpy', 'cv2', 'torch', 'torchvision', 'transformers', 'timm',
 def source_files():
     names = subprocess.check_output(
         ['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'],
-        cwd=ROOT, encoding='utf-8').split('\0')
+        cwd=ROOT, encoding='utf-8', errors='strict').split('\0')
     return sorted({name for name in names
                    if name.endswith('.py') and (ROOT / name).is_file()})
 
@@ -63,7 +64,7 @@ def dependencies():
     installed = {canonicalize_name(d.metadata['Name']): d
                  for d in importlib.metadata.distributions()}
     errors = []
-    for line in (ROOT / 'requirements.txt').read_text().splitlines():
+    for line in (ROOT / 'requirements.txt').read_text(encoding='utf-8', errors='strict').splitlines():
         if not line.strip() or line.lstrip().startswith('#'):
             continue
         req = Requirement(line)
@@ -104,9 +105,11 @@ def run(output_dir, baseline_path=BASELINE):
     imports_code = ('import importlib; '
                     f'[importlib.import_module(n) for n in {IMPORTS!r}]; '
                     'print("Selected runtime imports PASS; no model instantiated")')
+    subprocess_env = {**os.environ, 'PYTHONIOENCODING': 'utf-8'}
     imports = subprocess.run([sys.executable, '-c', imports_code], check=False, cwd=ROOT,
-                             capture_output=True, text=True, timeout=180)
-    (output_dir / 'imports.txt').write_text(imports.stdout + imports.stderr)
+                             capture_output=True, encoding='utf-8', errors='strict',
+                             env=subprocess_env, timeout=180)
+    (output_dir / 'imports.txt').write_text(imports.stdout + imports.stderr, encoding='utf-8', errors='strict')
     baseline_bytes = Path(baseline_path).read_bytes() if Path(baseline_path).is_file() else None
     baseline = json.loads(baseline_bytes) if baseline_bytes is not None else {}
     checks = {}
@@ -119,9 +122,10 @@ def run(output_dir, baseline_path=BASELINE):
         args = (['check', '--output-format', 'json', *files] if tool == 'ruff' else
                 ['--pythonpath', sys.executable, '--pythonversion', '3.12', '--outputjson', *files])
         completed = subprocess.run([sys.executable, '-m', tool, *args], check=False, cwd=ROOT,
-                                   capture_output=True, text=True, timeout=180)
-        (output_dir / f'{tool}.json').write_text(completed.stdout)
-        (output_dir / f'{tool}-stderr.txt').write_text(completed.stderr)
+                                   capture_output=True, encoding='utf-8', errors='strict',
+                                   env=subprocess_env, timeout=180)
+        (output_dir / f'{tool}.json').write_text(completed.stdout, encoding='utf-8', errors='strict')
+        (output_dir / f'{tool}-stderr.txt').write_text(completed.stderr, encoding='utf-8', errors='strict')
         try:
             raw = json.loads(completed.stdout)
             diagnostics = raw if tool == 'ruff' else raw['generalDiagnostics']
@@ -157,7 +161,8 @@ def run(output_dir, baseline_path=BASELINE):
     report['success'] = (not syntax_errors and imports.returncode == 0 and
                          dependency_check['status'] == 'PASS' and
                          all(c.get('no_regressions', False) for c in checks.values()))
-    (output_dir / 'health.json').write_text(json.dumps(report, indent=2) + '\n')
+    (output_dir / 'health.json').write_text(json.dumps(report, indent=2) + '\n',
+                                             encoding='utf-8', errors='strict')
     return report
 
 

@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from unittest.mock import patch
 
 from corridorkey import cache_maintenance as maintenance
@@ -31,9 +31,10 @@ class CacheMaintenanceTests(unittest.TestCase):
                 identity = ReplayIdentity(canonical({'schema_version': 1, 'kind': 'whole_job_exr_replay', 'fixture': index}))
                 store.publish(identity, {'alpha/000001.exr': self.source}, {'status': 'complete'})
                 self.keys.append(identity.key)
-        # Deterministic lookup-recency ordering, not lexical content-key order.
+        # Distinct recency even on filesystems coarser than nanoseconds (NTFS: 100ns).
         for index, key in enumerate(self.keys):
-            os.utime(self.workspace / 'entries' / key, ns=(1000000000 + index, 1000000000 + index))
+            timestamp = 10_000_000_000 * (index + 1)
+            os.utime(self.workspace / 'entries' / key, ns=(timestamp, timestamp))
         journals = self.workspace / 'journals'
         journals.mkdir()
         (journals / ('a' * 64 + '.json')).write_bytes(b'preserved journal')
@@ -58,6 +59,30 @@ class CacheMaintenanceTests(unittest.TestCase):
         self.assertEqual([item['key'] for item in preview['remove']], self.keys)
         self.assertEqual(preview['after_bytes'], 0)
         self.assertIn('not measured', current['allocation'])
+
+    def test_windows_relative_keys_inventory_and_trim_real_owned_files(self):
+        relative_to = Path.relative_to
+
+        def windows_relative_to(path, *args, **kwargs):
+            return PureWindowsPath(relative_to(path, *args, **kwargs).as_posix())
+
+        with patch.object(Path, 'relative_to', windows_relative_to):
+            current, snapshot = maintenance._scan(self.workspace, None)
+            self.assertEqual(current['entry_count'], 3)
+            self.assertEqual(snapshot['directories']['.'], maintenance._stat(self.workspace, directory=True))
+            for key in self.keys:
+                self.assertIn(f'entries/{key}', snapshot['directories'])
+                self.assertIn(f'entries/{key}/complete.json', snapshot['files'])
+            self.assertTrue(all('\\' not in name for group in ('directories', 'files') for name in snapshot[group]))
+            preview = maintenance.plan_trim(self.workspace, 0)
+            result = maintenance.apply_trim(self.workspace, preview)
+            self.assertEqual(maintenance.inventory(self.workspace)['entry_count'], 0)
+        self.assertEqual(result['status'], 'complete')
+        self.assertEqual(result['removed'], self.keys)
+        self.assertEqual(result['removed_bytes'], current['sealed_bytes'])
+        self.assertEqual(self.source.read_bytes(), b'original source export' * 100)
+        self.assertTrue((self.stage / '.record-incomplete').exists())
+        self.assertEqual((self.workspace / 'journals' / ('a' * 64 + '.json')).read_bytes(), b'preserved journal')
 
     def test_trim_real_bundles_to_budget_preserves_exports_journals_and_staging(self):
         current = maintenance.inventory(self.workspace)

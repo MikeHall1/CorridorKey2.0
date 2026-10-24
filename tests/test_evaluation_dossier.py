@@ -272,7 +272,9 @@ class EvaluationDossierTests(unittest.TestCase):
     @unittest.skipUnless(hasattr(os, 'mkfifo'), 'requires POSIX FIFO support')
     def test_fifo_manifest_report_and_final_fence_refuse_without_blocking(self):
         fifo = self.root / 'blocked.json'
-        os.mkfifo(fifo)
+        mkfifo = getattr(os, 'mkfifo', None)
+        assert callable(mkfifo)
+        mkfifo(fifo)
         script = ('import json,sys; from corridorkey.evaluation_dossier import build_dossier; '
                   'print(json.dumps(build_dossier(sys.argv[1])))')
         for target in ('manifest', 'report'):
@@ -294,7 +296,9 @@ class EvaluationDossierTests(unittest.TestCase):
         report_path = self.root / 'pair.json'
         def substitute_after_read(event):
             report_path.rename(self.root / 'original-pair.json')
-            os.mkfifo(report_path)
+            mkfifo = getattr(os, 'mkfifo', None)
+            assert callable(mkfifo)
+            mkfifo(report_path)
         terminal = build_dossier(path, progress=substitute_after_read)
         self.assertEqual(terminal['status'], 'failed')
         self.assertIn('regular', terminal['error'].lower())

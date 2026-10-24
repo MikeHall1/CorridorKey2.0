@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .diagnostics import finite_json_float
+from .identities import verify_file_observation
 
 
 def _depth(raw: bytes, maximum: int):
@@ -43,17 +44,19 @@ def read_regular_bytes(path: Path, *, max_bytes: int) -> bytes:
     """Bound a same-descriptor regular-file read; refuse pipes before reading."""
     if type(max_bytes) is not int or max_bytes < 1:
         raise ValueError('Local byte limit must be a positive integer.')
+    path_before = path.stat(follow_symlinks=False)
     flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
     descriptor = os.open(path, flags)
     with os.fdopen(descriptor, 'rb') as stream:
         before = os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode) or before.st_size > max_bytes:
             raise ValueError('Local JSON requires a regular file within its byte limit.')
+        verify_file_observation(path, path_before, before, before)
         raw = stream.read(max_bytes + 1)
         after = os.fstat(stream.fileno())
-        identity = lambda info: (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-        if len(raw) > max_bytes or identity(before) != identity(after) or identity(after) != identity(path.stat()):
+        if len(raw) > max_bytes:
             raise ValueError('Local JSON grew or changed during its bounded read.')
+        verify_file_observation(path, path_before, before, after)
     return raw
 
 

@@ -13,9 +13,10 @@ import os
 import sys
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .control import CancelledError
 
@@ -51,7 +52,10 @@ class _Linux:
     name = 'linux-proc-current-rss (target-platform validation pending)'
 
     def __init__(self, max_nodes):
-        self.page_size = os.sysconf('SC_PAGE_SIZE')
+        sysconf = vars(os).get('sysconf')
+        if not callable(sysconf):
+            raise MeasurementError('Linux page size is unavailable on this platform')
+        self.page_size = cast(Callable[[str], int], sysconf)('SC_PAGE_SIZE')
         self.parents = {}
 
     def read(self, pid):

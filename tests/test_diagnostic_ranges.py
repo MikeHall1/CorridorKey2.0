@@ -266,7 +266,9 @@ class DiagnosticRangesTests(unittest.TestCase):
     @unittest.skipUnless(hasattr(os, 'mkfifo'), 'requires POSIX FIFO support')
     def test_fifo_refuses_without_blocking(self):
         path = Path(self.job.output_dir) / 'pipe.jsonl'
-        os.mkfifo(path)
+        mkfifo = getattr(os, 'mkfifo', None)
+        assert callable(mkfifo)
+        mkfifo(path)
         self.record['diagnostics']['quick_key']['frame_diagnostics_path'] = str(path)
         with self.assertRaisesRegex(ValueError, 'regular'):
             self.snapshot()

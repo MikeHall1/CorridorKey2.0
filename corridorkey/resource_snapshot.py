@@ -5,8 +5,9 @@ import os
 import shutil
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 def _peak_rss() -> dict[str, Any]:
@@ -15,7 +16,11 @@ def _peak_rss() -> dict[str, Any]:
         scale = {'darwin': 1, 'linux': 1024}.get(sys.platform)
         if scale is None:
             raise ValueError('Peak RSS units unsupported on this platform')
-        value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) * scale
+        getrusage = vars(resource).get('getrusage')
+        usage_self = vars(resource).get('RUSAGE_SELF')
+        if not callable(getrusage) or usage_self is None:
+            raise ValueError('Peak RSS API unsupported on this platform')
+        value = int(cast(Callable[[int], Any], getrusage)(usage_self).ru_maxrss) * scale
         if value < 0:
             raise ValueError('Negative peak RSS')
         return {'peak_rss_bytes': value, 'scope': 'Process lifetime peak RSS; not current RSS or a RAM limit.'}

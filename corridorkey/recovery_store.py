@@ -14,7 +14,7 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 
-from .identities import file_sha256
+from .identities import file_sha256, verify_file_observation
 from .lifecycle import cleanup_all
 from .recovery_identity import canonical
 
@@ -30,10 +30,6 @@ class CacheCapacity(ValueError):
 MAX_OWNER_RECORD_BYTES = 4 * 1024 * 1024
 
 
-def _file_identity(info):
-    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-
-
 @contextmanager
 def _open_regular(path):
     flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
@@ -46,6 +42,16 @@ def _open_regular(path):
         yield stream, info
 
 
+def _verify_read_identity(path, path_before, before, after):
+    if (not stat.S_ISREG(after.st_mode) or after.st_nlink != 1
+            or getattr(after, 'st_file_attributes', 0) & 0x400):
+        raise CacheInvalid('cache file changed during bounded read: expected a regular single-link file')
+    try:
+        return verify_file_observation(path, path_before, before, after)
+    except ValueError as exc:
+        raise CacheInvalid('cache file changed during bounded read') from exc
+
+
 def _read_extent(path, *, max_bytes, expected_size=None, expected_sha256=None, check=None):
     if type(max_bytes) is not int or max_bytes < 0:
         raise ValueError('cache read bound must be a nonnegative integer')
@@ -53,7 +59,9 @@ def _read_extent(path, *, max_bytes, expected_size=None, expected_sha256=None, c
         raise ValueError('expected payload size must be a nonnegative integer')
     if check is not None:
         check()
+    path_before = Path(path).stat(follow_symlinks=False)
     with _open_regular(path) as (stream, before):
+        _verify_read_identity(path, path_before, before, before)
         size = before.st_size if expected_size is None else expected_size
         if size > max_bytes or before.st_size != size:
             raise CacheInvalid('cache file exceeds admitted read extent')
@@ -71,9 +79,7 @@ def _read_extent(path, *, max_bytes, expected_size=None, expected_sha256=None, c
         if stream.read(1):
             raise CacheInvalid('cache file grew beyond admitted read extent')
         after = os.fstat(stream.fileno())
-        current = Path(path).stat(follow_symlinks=False)
-        if _file_identity(before) != _file_identity(after) or _file_identity(after) != _file_identity(current):
-            raise CacheInvalid('cache file changed during bounded read')
+        _verify_read_identity(path, path_before, before, after)
     if expected_sha256 is not None and digest.hexdigest() != expected_sha256:
         raise CacheInvalid('cache payload checksum changed during bounded read')
     if check is not None:
@@ -177,7 +183,9 @@ def _file_sha256_bounded(path, expected_size, *, check=None):
     """Hash no more than the admitted file extent plus one growth sentinel."""
     digest = hashlib.sha256()
     seen = 0
+    path_before = Path(path).stat(follow_symlinks=False)
     with _open_regular(path) as (stream, before):
+        _verify_read_identity(path, path_before, before, before)
         if before.st_size != expected_size:
             raise CacheInvalid('artifact size changed before bounded hash')
         while True:
@@ -191,10 +199,8 @@ def _file_sha256_bounded(path, expected_size, *, check=None):
             digest.update(block)
             seen += len(block)
         after = os.fstat(stream.fileno())
-        current = Path(path).stat(follow_symlinks=False)
-    def identity(info):
-        return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-    if seen != expected_size or identity(before) != identity(after) or identity(after) != identity(current):
+        _verify_read_identity(path, path_before, before, after)
+    if seen != expected_size:
         raise CacheInvalid('artifact changed during bounded hash')
     return digest.hexdigest()
 

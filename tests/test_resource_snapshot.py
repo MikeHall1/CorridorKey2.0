@@ -12,6 +12,14 @@ from corridorkey.worker_client import WorkerClient
 
 
 class ResourceSnapshotTests(unittest.TestCase):
+    def test_missing_peak_rss_api_is_explicitly_unavailable(self):
+        with patch.dict(sys.modules, {'resource': SimpleNamespace()}), \
+                patch('corridorkey.resource_snapshot.sys.platform', 'linux'):
+            sample = process_snapshot()['process']
+        self.assertIsNone(sample['peak_rss_bytes'])
+        self.assertIn('NOT VERIFIED', sample['scope'])
+        self.assertIn('API unsupported', sample['scope'])
+
     def test_no_torch_import_or_cuda_initialization_for_status(self):
         with patch.dict(sys.modules, {'torch': None}):
             snapshot = process_snapshot()

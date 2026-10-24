@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from .control import CancelledError
+from .identities import verify_file_observation
 
 _MAX_PIXELS = 2**20
 _FIELDS = {'schema_version', 'kind', 'description', 'artifact_parent', 'repetitions', 'cache_bytes',
@@ -106,6 +107,7 @@ def _identity(root, check, frame_count):
         for name in sorted(found):
             _check(check)
             path = root / case / name
+            path_before = path.lstat()
             flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
             digest = hashlib.sha256()
             with os.fdopen(os.open(path, flags), 'rb') as stream:
@@ -113,6 +115,7 @@ def _identity(root, check, frame_count):
                 if (not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size > 8 * 1024 * 1024 or
                         getattr(before, 'st_file_attributes', 0) & 0x400):
                     raise ValueError('Generated fixture must remain a bounded owned regular file.')
+                verify_file_observation(path, path_before, before, before)
                 remaining = before.st_size
                 while remaining:
                     _check(check)
@@ -124,9 +127,7 @@ def _identity(root, check, frame_count):
                 if stream.read(1):
                     raise ValueError('Generated source grew during identity capture.')
                 after = os.fstat(stream.fileno())
-            identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
-            if identity(before) != identity(after) or identity(before) != identity(path.lstat()):
-                raise ValueError('Generated source changed during identity capture.')
+                verify_file_observation(path, path_before, before, after)
             rows.append({'path': path.relative_to(root).as_posix(), 'bytes': before.st_size, 'sha256': digest.hexdigest()})
     return rows
 

@@ -19,6 +19,7 @@ from typing import Any
 from .batch import jobs_from_data
 from .control import CancellationToken, CancelledError, ProgressEvent
 from .diagnostics import json_value, write_json_atomic
+from .identities import verify_file_observation
 from .local_json import read_object, read_regular_bytes
 from .runtime_paths import RuntimePaths
 
@@ -119,12 +120,14 @@ def _identity(info):
 
 
 def _file_digest(path, check):
+    path_before = path.stat()
     flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
     fd = os.open(path, flags)
     with os.fdopen(fd, 'rb') as stream:
         before = os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode):
             raise ValueError('Stress inputs must be regular local files')
+        verify_file_observation(path, path_before, before, before)
         digest, remaining = hashlib.sha256(), before.st_size
         while remaining:
             check()
@@ -133,10 +136,10 @@ def _file_digest(path, check):
                 raise ValueError('Stress input shortened during hashing')
             digest.update(block)
             remaining -= len(block)
-        if (stream.read(1) or _identity(before) != _identity(os.fstat(stream.fileno()))
-                or _identity(before) != _identity(path.stat())):
+        if stream.read(1) or _identity(before) != _identity(os.fstat(stream.fileno())):
             raise ValueError('Stress input grew or changed during hashing')
-    return {'sha256': digest.hexdigest(), 'bytes': before.st_size, 'identity': list(_identity(before))}
+        final = verify_file_observation(path, path_before, before, os.fstat(stream.fileno()))
+    return {'sha256': digest.hexdigest(), 'bytes': before.st_size, 'identity': list(_identity(final))}
 
 
 def _source_digest(path, check):

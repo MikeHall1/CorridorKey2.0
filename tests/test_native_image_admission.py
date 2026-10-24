@@ -233,3 +233,159 @@ class NativeImageAdmissionTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, 'changed while admitting'):
             self.admit(check=check)
+
+
+class WindowsPathClockReaderTests(unittest.TestCase):
+    """Real descriptors retain ChangeTime while controlled path stats expose birthtime."""
+
+    def setUp(self):
+        import stat
+        from types import SimpleNamespace
+
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.path = self.root / 'asset.bin'
+        self.path.write_bytes(b'bounded local reader fixture')
+        self.payload = self.path.read_bytes()
+        self.digest = hashlib.sha256(self.payload).hexdigest()
+        self.stat = os.stat
+        self.lstat = os.lstat
+        self.birthtimes = {}
+
+        def birthtime(info):
+            if not stat.S_ISREG(info.st_mode):
+                return info
+            fields = {key: getattr(info, key) for key in dir(info) if key.startswith('st_')}
+            fields['st_ctime_ns'] = self.birthtimes.setdefault(
+                (info.st_dev, info.st_ino), info.st_ctime_ns - 1_000_000)
+            return SimpleNamespace(**fields)
+
+        for scoped_patch in (
+                patch('os.stat', side_effect=lambda *args, **kwargs: birthtime(self.stat(*args, **kwargs))),
+                patch('os.lstat', side_effect=lambda *args, **kwargs: birthtime(self.lstat(*args, **kwargs))),
+                patch('corridorkey.identities.sys.platform', 'win32')):
+            scoped_patch.start()
+            self.addCleanup(scoped_patch.stop)
+
+    def test_native_image_preserves_path_identity_for_header_fence(self):
+        path = self.root / 'native.png'
+        self.assertTrue(cv2.imwrite(str(path), np.zeros((2, 3, 3), np.uint8)))
+        image = admit_image(path, expected_hw=(2, 3), max_pixels=6)
+        self.assertEqual(image.encoded_bytes, path.read_bytes())
+
+    def test_trimap_reader_accepts_distinct_path_clock(self):
+        from corridorkey.trimap_refinement import _read
+        self.assertEqual(_read(self.path, lambda: None), (self.payload, self.digest))
+
+    def test_tracked_correction_reader_accepts_distinct_path_clock(self):
+        from corridorkey.corrections import load_tracked_asset
+        path = self.root / 'mask.exr'
+        pixels = np.full((2, 3), .5, np.float32)
+        self.assertTrue(cv2.imwrite(str(path), pixels))
+        result = load_tracked_asset(path, expected_hw=(2, 3),
+                                    expected_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+        self.assertTrue(np.array_equal(result, pixels))
+
+    def test_guidance_resource_reader_accepts_distinct_path_clock(self):
+        from corridorkey.guidance_provenance import verify_guidance_resources
+        data = {'guidance': [{'resources': [{'asset': {'path': self.path.name, 'sha256': self.digest}}]}]}
+        verify_guidance_resources(data, self.root)
+
+    def test_trace_reader_accepts_distinct_path_clock(self):
+        from corridorkey.diagnostic_ranges import _read_lines
+        self.path.write_bytes(b'{"frame":0}\n')
+        rows = list(_read_lines(self.path, 1, None))
+        self.assertEqual(rows[0], {'frame': 0})
+        self.assertEqual(rows[-1]['_receipt']['bytes'], self.path.stat().st_size)
+
+    def test_writer_receipt_accepts_distinct_path_clock(self):
+        from types import SimpleNamespace
+
+        from corridorkey.durable_writer_prefix import DurableWriterPrefix
+        owner: Any = SimpleNamespace(store=SimpleNamespace(max_bytes=4096),
+                                     stats={'receipt_bytes_hashed': 0}, _check=lambda: None)
+        self.assertEqual(DurableWriterPrefix._receipt(owner, self.path),
+                         {'bytes': len(self.payload), 'sha256': self.digest})
+
+    def test_review_media_copy_and_seal_accept_distinct_path_clock(self):
+        from corridorkey.evaluation_dossier_export import _copy_media, _sealed
+        destination = self.root / 'copied.bin'
+        expected = {'bytes': len(self.payload), 'sha256': self.digest}
+        identity = _copy_media(self.path, destination, expected, None)
+        self.assertEqual(identity[-1], self.path.stat().st_ctime_ns)
+        self.assertNotEqual(identity[-1], self.stat(self.path).st_ctime_ns)
+        marker = b'complete'
+        (self.root / 'COMPLETE.json').write_bytes(marker)
+        self.assertTrue(_sealed(self.root, marker, [{'path': destination.name, **expected}]))
+
+    def test_stress_reader_serializes_path_clock(self):
+        from corridorkey.stress_suite import _file_digest
+        result = _file_digest(self.path, lambda: None)
+        self.assertEqual(result['sha256'], self.digest)
+        self.assertEqual(result['identity'][-1], self.path.stat().st_ctime_ns)
+
+    def test_repository_reader_accepts_distinct_path_clock(self):
+        from corridorkey.benchmark import _repository_file
+        self.assertEqual(_repository_file(self.path, None, 4096), (self.digest, len(self.payload)))
+
+    def test_decode_fixture_reader_accepts_distinct_path_clock(self):
+        from corridorkey.benchmark_decode_reuse import _CASES, _identity
+        self.path.unlink()
+        for case in _CASES:
+            directory = self.root / case
+            directory.mkdir()
+            extension = 'png' if case == 'uint16_png' else 'exr'
+            (directory / f'0000.{extension}').write_bytes(self.payload)
+        rows = _identity(self.root, None, 1)
+        self.assertEqual(len(rows), 3)
+        self.assertTrue(all(row['sha256'] == self.digest for row in rows))
+
+    def test_sam2_asset_hashes_complete_before_mocked_model_builder(self):
+        import contextlib
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+
+        from corridorkey.control import JobControl
+        from corridorkey.subject_guidance import (
+            ExclusiveResourceLease,
+            LocalSAM2Provider,
+        )
+        config = self.root / 'config.yaml'
+        config.write_bytes(b'config fixture')
+        lease = ExclusiveResourceLease('cpu', 'clock-fixture', lambda: True)
+        provider = LocalSAM2Provider(config, self.path, device='cpu', lease=lease)
+        builder = Mock(side_effect=RuntimeError('asset hashes reached mocked builder'))
+        modules = {
+            'torch': SimpleNamespace(),
+            'hydra': SimpleNamespace(initialize_config_dir=lambda **kwargs: contextlib.nullcontext()),
+            'hydra.core.global_hydra': SimpleNamespace(GlobalHydra=SimpleNamespace(
+                instance=lambda: SimpleNamespace(is_initialized=lambda: False))),
+            'sam2.build_sam': SimpleNamespace(build_sam2=builder),
+            'sam2.sam2_image_predictor': SimpleNamespace(SAM2ImagePredictor=object)}
+        with patch('corridorkey.subject_guidance.importlib.import_module', side_effect=modules.__getitem__), \
+                patch.object(provider, '_precision_policy'), \
+                self.assertRaisesRegex(RuntimeError, 'asset hashes reached mocked builder'):
+            provider._load(JobControl())
+        builder.assert_called_once()
+
+    def test_descriptor_clock_mutation_is_not_hidden_by_stable_path_birthtime(self):
+        from types import SimpleNamespace
+
+        from corridorkey.trimap_refinement import _read
+        original_fstat = os.fstat
+        changed = False
+
+        def touch():
+            nonlocal changed
+            changed = True
+
+        def descriptor_stat(fd):
+            info = original_fstat(fd)
+            values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+            # Model a real ChangeTime event; setting the original mtime may be a Windows no-op.
+            values['st_ctime_ns'] += 1_000_000_000 if changed else 0
+            return SimpleNamespace(**values)
+
+        with patch('os.fstat', side_effect=descriptor_stat), self.assertRaisesRegex(ValueError, 'changed'):
+            _read(self.path, touch)

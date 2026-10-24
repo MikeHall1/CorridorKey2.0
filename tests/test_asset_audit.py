@@ -159,16 +159,31 @@ class AssetAuditTests(unittest.TestCase):
         constructor.assert_not_called()
 
     def test_npz_constructor_uses_same_capped_descriptor_despite_path_replacement(self):
+        self._check_npz_constructor_path_replacement(refuse_replacement=False)
+
+    def test_npz_constructor_keeps_bounds_when_open_file_replacement_is_refused(self):
+        self._check_npz_constructor_path_replacement(refuse_replacement=True)
+
+    def _check_npz_constructor_path_replacement(self, *, refuse_replacement):
         path = self.selection.root / 'vfms/rvm/pretrain_rvm_small16_256_204031069.npz'
         original_bytes = path.read_bytes()
         constructor = audit.zipfile.ZipFile
         observed = []
+        replaced = []
 
         def opening(stream):
             self.assertIsInstance(stream, audit._BoundedAssetFile)
             replacement = path.with_suffix('.replacement')
             replacement.write_bytes(b'invalid changed path after pre-admission')
-            replacement.replace(path)
+            try:
+                replacement.replace(path)
+            except PermissionError:
+                # Windows can refuse replacement while the admitted FD is open.
+                self.assertEqual(path.read_bytes(), original_bytes)
+                replacement.unlink()
+                replaced.append(False)
+            else:
+                replaced.append(True)
             with self.assertRaisesRegex(ValueError, 'allocation'):
                 stream.read(audit.MAX_HEADER_BYTES + 1)
             with self.assertRaisesRegex(ValueError, 'range'):
@@ -177,11 +192,19 @@ class AssetAuditTests(unittest.TestCase):
             return constructor(stream)
 
         with patch.object(audit.zipfile, 'ZipFile', opening):
-            status, _ = audit._npz(path, len(original_bytes), None)
+            if refuse_replacement:
+                with patch.object(Path, 'replace', side_effect=PermissionError('controlled open-file sharing refusal')):
+                    status, _ = audit._npz(path, len(original_bytes), None)
+            else:
+                status, _ = audit._npz(path, len(original_bytes), None)
         self.assertEqual(status, 'PASS')
         self.assertEqual(observed, [True])
-        # Public audit's existing identity fence rejects the changed alias.
-        self.assertEqual(self.entries(audit.audit_assets(self.selection))['rvm_ckpt']['format_status'], 'FAIL')
+        self.assertEqual(len(replaced), 1)
+        if refuse_replacement:
+            self.assertEqual(replaced, [False])
+        # A successful replacement is rejected; OS refusal preserves valid input.
+        self.assertEqual(self.entries(audit.audit_assets(self.selection))['rvm_ckpt']['format_status'],
+                         'FAIL' if replaced[0] else 'PASS')
 
     def test_tree_frontier_is_capped_before_enqueuing_branches(self):
         tree = self.root / 'branching-tree'

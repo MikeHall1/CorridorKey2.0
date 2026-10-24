@@ -1,16 +1,16 @@
 """Versioned local authored raster corrections and conservative dependencies."""
-from dataclasses import dataclass
 import hashlib
 import json
 import math
 import os
-from pathlib import Path
 import stat
 import struct
+from dataclasses import dataclass
+from pathlib import Path
 
-from .diagnostics import finite_json_float, write_json_atomic
-from .identities import file_sha256, source_identity
 from . import guidance_provenance
+from .diagnostics import finite_json_float, write_json_atomic
+from .identities import file_sha256, source_identity, verify_file_observation
 
 REGION_TARGETS = {'refinement': 'edge_finishing', 'composite': 'despill', 'diagnostic': 'tracking_overlay'}
 
@@ -275,10 +275,10 @@ def load_tracked_asset(path, *, expected_hw, expected_sha256, expected_mask_sha2
     path = Path(path)
     check()
     before = _derived_size(path, shape)
-    fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+    fd = os.open(path, os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
     try:
-        if _derived_identity(os.fstat(fd)) != _derived_identity(before):
-            raise ValueError('tracked mask changed before read')
+        opened = os.fstat(fd)
+        verify_file_observation(path, before, opened, opened)
         chunks, remaining, digest = [], before.st_size, hashlib.sha256()
         while remaining:
             check()
@@ -288,8 +288,9 @@ def load_tracked_asset(path, *, expected_hw, expected_sha256, expected_mask_sha2
             chunks.append(chunk)
             digest.update(chunk)
             remaining -= len(chunk)
-        if os.read(fd, 1) or _derived_identity(os.fstat(fd)) != _derived_identity(before) or _derived_identity(path.lstat()) != _derived_identity(before):
+        if os.read(fd, 1) or _derived_identity(os.fstat(fd)) != _derived_identity(opened):
             raise ValueError('tracked mask changed during read')
+        verify_file_observation(path, before, opened, os.fstat(fd))
         raw = b''.join(chunks)
     finally:
         os.close(fd)
