@@ -275,7 +275,7 @@ def load_tracked_asset(path, *, expected_hw, expected_sha256, expected_mask_sha2
     path = Path(path)
     check()
     before = _derived_size(path, shape)
-    fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+    fd = os.open(path, os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
     try:
         opened = os.fstat(fd)
         verify_file_observation(path, before, opened, opened)

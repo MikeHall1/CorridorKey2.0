@@ -59,7 +59,7 @@ def _read(path, max_bytes, check):
         raise ValueError('Image must be a regular single-link file without aliases.')
     if not 0 < initial.st_size <= max_bytes:
         raise ValueError('Image encoded byte bound exceeded or file empty.')
-    flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
+    flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     fd = os.open(path, flags)
     try:
         before = os.fstat(fd)

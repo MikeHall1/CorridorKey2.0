@@ -370,15 +370,22 @@ class WindowsPathClockReaderTests(unittest.TestCase):
         builder.assert_called_once()
 
     def test_descriptor_clock_mutation_is_not_hidden_by_stable_path_birthtime(self):
+        from types import SimpleNamespace
+
         from corridorkey.trimap_refinement import _read
-        initial = self.stat(self.path)
+        original_fstat = os.fstat
         changed = False
 
         def touch():
             nonlocal changed
-            if not changed:
-                changed = True
-                os.utime(self.path, ns=(initial.st_atime_ns, initial.st_mtime_ns))
+            changed = True
 
-        with self.assertRaisesRegex(ValueError, 'changed'):
+        def descriptor_stat(fd):
+            info = original_fstat(fd)
+            values = {name: getattr(info, name) for name in dir(info) if name.startswith('st_')}
+            # Model a real ChangeTime event; setting the original mtime may be a Windows no-op.
+            values['st_ctime_ns'] += 1_000_000_000 if changed else 0
+            return SimpleNamespace(**values)
+
+        with patch('os.fstat', side_effect=descriptor_stat), self.assertRaisesRegex(ValueError, 'changed'):
             _read(self.path, touch)

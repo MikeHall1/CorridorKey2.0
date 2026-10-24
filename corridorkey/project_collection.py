@@ -83,7 +83,7 @@ def read_file(pin: FilePin, *, check: Check | None = None, capture: bool = False
     path_before = Path(pin.path).lstat()
     if fingerprint(path_before) != pin.fingerprint:
         raise ValueError('Asset changed before pinned read')
-    flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
+    flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
     fd = os.open(pin.path, flags)
     output = None
     blocks: list[bytes] = []

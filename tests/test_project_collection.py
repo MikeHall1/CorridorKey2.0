@@ -77,7 +77,10 @@ class CollectionTests(unittest.TestCase):
 
     def test_same_size_mutation_and_inode_replacement_fenced(self):
         pin = admit_file(self.path)
+        before = self.path.stat()
         self.path.write_bytes(b'x' * pin.size)
+        # A stat pin needs observable metadata change, not a checksum guarantee.
+        os.utime(self.path, ns=(before.st_atime_ns, before.st_mtime_ns + 10_000_000_000))
         with self.assertRaises(ValueError):
             assert_pin(pin)
         pin = admit_file(self.path)

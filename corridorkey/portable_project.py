@@ -90,7 +90,7 @@ def _metadata(pin: FilePin, maximum: int, check: Check | None) -> bytes:
     path_before = Path(pin.path).lstat()
     if fingerprint(path_before) != pin.fingerprint:
         raise ValueError('Metadata changed before read')
-    fd = os.open(pin.path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+    fd = os.open(pin.path, os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
     try:
         before = os.fstat(fd)
         fingerprint(before)

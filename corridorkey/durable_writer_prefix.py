@@ -262,7 +262,7 @@ class DurableWriterPrefix(BoundModelCache):
         limit = min(MAX_PAYLOAD_BYTES, self.store.max_bytes) if sync else MAX_PAYLOAD_BYTES
         if before.st_size > limit:
             raise CacheCapacity('writer EXR exceeds bounded prefix payload admission')
-        flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
+        flags = os.O_RDONLY | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_NOFOLLOW', 0)
         descriptor = os.open(path, flags)
         try:
             opened = os.fstat(descriptor)
