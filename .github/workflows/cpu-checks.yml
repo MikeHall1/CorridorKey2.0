@@ -60,6 +60,9 @@ jobs:
                   print("path_stat", {name: getattr(path_stat, name) for name in fields})
                   print("descriptor_stat", {name: getattr(descriptor_stat, name) for name in fields})
           '@ | python -
+      - name: Windows native-source preflight (full suite follows on pass)
+        if: runner.os == 'Windows'
+        run: python -m unittest discover -s tests -p test_native_image_admission.py -v --failfast
       - name: Unit, integration, offscreen Qt and available native harness tests
         run: python -m unittest discover -s tests -v
       - name: Source dispatcher and worker smoke (no inference)
